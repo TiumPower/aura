@@ -1,0 +1,61 @@
+<% content_for :title, "Hạng KTV" %>
+
+<p style="color:var(--ink-2); font-size:13.5px; max-width:640px; margin-bottom:16px;">
+  Hạng quyết định <strong>phụ thu</strong> khi khách chọn KTV hạng cao và <strong>% hoa hồng</strong>
+  mặc định của hạng đó. Từng KTV vẫn ghi đè được hoa hồng riêng.
+</p>
+
+<div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
+  <div>
+    <% if @levels.empty? %>
+      <div class="l-panel" style="text-align:center; padding:32px;">
+        <div style="font-size:38px;">🎖️</div>
+        <p style="font-weight:700; margin-top:8px;">Chưa có hạng nào</p>
+        <% if @presets.any? %>
+          <%= button_to "Nạp #{@presets.size} hạng gợi ý", seed_presets_merchant_staff_levels_path,
+                class: "l-btn l-btn-primary", style: "margin-top:12px;" %>
+        <% end %>
+      </div>
+    <% else %>
+      <% @levels.each do |l| %>
+        <div class="l-row">
+          <div class="ic" style="background:<%= l.color.presence || 'color-mix(in srgb, var(--primary) 11%, #fff)' %>; color:#fff;">🎖️</div>
+          <div class="bd">
+            <div class="t"><%= l.name %></div>
+            <div class="s">
+              <%= l.surcharge_label %> ·
+              hoa hồng <%= l.commission_percent.presence || current_workspace.setting("commission_default_percent") %>% ·
+              <%= @counts[l.id].to_i %> KTV
+            </div>
+          </div>
+          <%= link_to "Sửa", edit_merchant_staff_level_path(l), class: "l-chip" %>
+        </div>
+      <% end %>
+      <% if @presets.any? %>
+        <%= button_to "Nạp thêm hạng gợi ý", seed_presets_merchant_staff_levels_path, class: "l-btn l-btn-ghost", style: "margin-top:8px;" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Thêm hạng</div>
+    <%= form_with model: @level, url: merchant_staff_levels_path, method: :post do |f| %>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Tên hạng <span style="color:#e5484d;">*</span></label>
+        <%= f.text_field :name, class: "l-field", placeholder: "VD: Chuyên gia" %>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Phụ thu (đ)</label>
+          <%= f.number_field :surcharge, class: "l-field", step: 10_000, min: 0 %>
+        </div>
+        <div>
+          <label class="l-label">Hoa hồng (%)</label>
+          <%= f.number_field :commission_percent, class: "l-field", min: 0, max: 100,
+                placeholder: current_workspace.setting("commission_default_percent") %>
+        </div>
+      </div>
+      <%= f.submit "Thêm hạng", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+  </div>
+</div>

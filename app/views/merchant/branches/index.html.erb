@@ -1,0 +1,86 @@
+<% content_for :title, "Cơ sở & phòng" %>
+
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+  <div style="color:var(--ink-2); font-size:13.5px;">
+    <%= @branches.size %> cơ sở đang hoạt động ·
+    <%= @capacity.values.sum %> chỗ phục vụ đồng thời
+  </div>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <%= link_to "Loại phòng", merchant_room_types_path, class: "l-btn l-btn-ghost" %>
+    <% if current_membership&.can_manage? %>
+      <%= link_to "+ Thêm cơ sở", new_merchant_branch_path, class: "l-btn l-btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @branches.empty? && @archived.empty? %>
+  <div class="l-panel" style="text-align:center; padding:44px;">
+    <div style="font-size:42px;">🏠</div>
+    <p style="font-weight:700; margin-top:10px;">Chưa có cơ sở nào</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 16px;">
+      Phòng, KTV và lịch hẹn đều treo vào cơ sở — tạo cơ sở đầu tiên để bắt đầu.
+    </p>
+    <%= link_to "Tạo cơ sở đầu tiên", new_merchant_branch_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% end %>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;">
+  <% @branches.each do |b| %>
+    <div class="l-panel">
+      <div style="display:flex; align-items:flex-start; gap:12px;">
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="font-size:17px; font-weight:700;"><%= b.name %></h3>
+            <span class="l-pill" style="--_c:<%= b.active? ? '#3F7A57' : '#B4402F' %>;"><%= b.status_label %></span>
+          </div>
+          <div style="font-size:13px; color:var(--ink-2); margin-top:4px;">
+            <%= b.short_address.presence || "Chưa có địa chỉ" %>
+          </div>
+          <% if b.phone.present? %>
+            <div style="font-size:13px; color:var(--ink-2);">☎ <%= b.phone %></div>
+          <% end %>
+        </div>
+        <%= link_to "Quản lý →", merchant_branch_path(b), class: "l-chip l-chip-brand" %>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px;">
+        <div class="l-tile" style="padding:12px;">
+          <div class="l-eyebrow">Phòng</div>
+          <div class="l-num" style="font-size:22px;"><%= @room_counts[b.id].to_i %></div>
+        </div>
+        <div class="l-tile" style="padding:12px;">
+          <div class="l-eyebrow">Chỗ</div>
+          <div class="l-num" style="font-size:22px;"><%= @capacity[b.id].to_i %></div>
+        </div>
+        <div class="l-tile" style="padding:12px;">
+          <div class="l-eyebrow">Nhân sự</div>
+          <div class="l-num" style="font-size:22px;"><%= @staff_counts[b.id].to_i %></div>
+        </div>
+      </div>
+
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+        <% wins = b.open_windows(Date.current) %>
+        <% if wins.any? %>
+          Hôm nay: <%= wins.map { |(f, t)| "#{f.strftime('%H:%M')}–#{t.strftime('%H:%M')}" }.join(", ") %>
+        <% else %>
+          Hôm nay: <strong style="color:#B4402F;">nghỉ</strong>
+        <% end %>
+        <%= " · không nhận đặt online" unless b.online_bookable %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<% if @archived.any? %>
+  <div class="l-section-h" style="margin-top:26px;"><h3>Cơ sở đã đóng</h3></div>
+  <% @archived.each do |b| %>
+    <%= link_to merchant_branch_path(b), class: "l-row", style: "opacity:.7;" do %>
+      <div class="ic">🏚️</div>
+      <div class="bd">
+        <div class="t"><%= b.name %></div>
+        <div class="s"><%= b.short_address %> · <%= @room_counts[b.id].to_i %> phòng (giữ lịch sử)</div>
+      </div>
+      <div class="go">›</div>
+    <% end %>
+  <% end %>
+<% end %>

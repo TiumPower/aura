@@ -1,0 +1,20 @@
+<div style="font-family:Arial,sans-serif; color:#1B2733; max-width:520px;">
+  <h2 style="margin:0 0 6px;">Hoá đơn dịch vụ tháng mới</h2>
+  <p style="color:#5C6B7A; margin:0 0 18px;">Xin chào <strong><%= @workspace.name %></strong>,</p>
+
+  <p>Hệ thống đã tạo hoá đơn cho kỳ dịch vụ sắp tới:</p>
+  <table style="width:100%; border-collapse:collapse; margin:12px 0;">
+    <tr><td style="padding:6px 0; color:#5C6B7A;">Gói</td><td style="text-align:right; font-weight:600;"><%= @workspace.plan %></td></tr>
+    <tr><td style="padding:6px 0; color:#5C6B7A;">Kỳ</td><td style="text-align:right; font-weight:600;"><%= @invoice.period_label %></td></tr>
+    <tr><td style="padding:6px 0; color:#5C6B7A;">Số tiền</td><td style="text-align:right; font-weight:700; font-size:18px;"><%= number_with_delimiter(@invoice.amount.to_i) %>đ</td></tr>
+  </table>
+
+  <p style="margin:18px 0;">
+    <a href="<%= @pay_url %>" style="background:#1F5FA6; color:#fff; text-decoration:none; padding:12px 22px; border-radius:12px; font-weight:700; display:inline-block;">Thanh toán ngay</a>
+  </p>
+
+  <p style="color:#5C6B7A; font-size:13px; line-height:1.6;">
+    Vui lòng thanh toán trước ngày đến hạn. Quá <strong>10 ngày</strong> kể từ ngày hết hạn mà chưa thanh toán,
+    tài khoản sẽ <strong>tự động tạm ngưng</strong> cho đến khi thanh toán.
+  </p>
+</div>

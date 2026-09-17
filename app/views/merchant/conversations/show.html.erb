@@ -1,0 +1,17 @@
+<% content_for :title, "Chat · #{@conversation.unit.display_name}" %>
+<% merchant_back merchant_conversations_path %>
+<div class="l-panel l-chatshell" style="padding:0; overflow:hidden; height:calc(100dvh - 150px); display:flex; flex-direction:column;">
+  <div style="padding:11px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px;">
+    <div style="flex:1; min-width:0; font-weight:700;">
+      <%= @conversation.unit.display_name %> · <%= @conversation.unit.building&.name %>
+    </div>
+    <% if @conversation.messages.exists? %>
+      <%= button_to "🗑 Xoá lịch sử", clear_merchant_conversation_path(@conversation), method: :delete,
+            class: "l-btn l-btn-ghost", style: "padding:7px 12px; font-size:12.5px; flex:none;",
+            form: { data: { turbo_confirm: "Xoá TOÀN BỘ lịch sử chat của phòng này? Không thể hoàn tác." } } %>
+    <% end %>
+  </div>
+  <%= render "shared/chat_room", conversation: @conversation, messages: @messages,
+        as: "staff", post_url: merchant_conversation_messages_path(@conversation),
+        msg_path_tpl: merchant_conversation_message_path(@conversation, "MSGID") %>
+</div>

@@ -1,0 +1,34 @@
+<% content_for :title, "Sửa hạng KTV" %>
+<%= form_with model: @level, url: merchant_staff_level_path(@level), method: :patch do |f| %>
+  <% if @level.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <%= @level.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+  <div class="l-panel" style="max-width:520px;">
+    <div style="margin-bottom:12px;">
+      <label class="l-label">Tên hạng</label>
+      <%= f.text_field :name, class: "l-field" %>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Phụ thu (đ)</label>
+        <%= f.number_field :surcharge, class: "l-field", step: 10_000 %>
+      </div>
+      <div>
+        <label class="l-label">Hoa hồng (%)</label>
+        <%= f.number_field :commission_percent, class: "l-field", min: 0, max: 100 %>
+      </div>
+      <div>
+        <label class="l-label">Thứ tự</label>
+        <%= f.number_field :position, class: "l-field" %>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <%= f.submit "Lưu", class: "l-btn l-btn-primary" %>
+      <%= link_to "Huỷ", merchant_staff_levels_path, class: "l-btn l-btn-ghost" %>
+      <%= button_to "Xoá", merchant_staff_level_path(@level), method: :delete, class: "l-btn l-btn-ghost",
+            style: "margin-left:auto; color:#B4402F;", form: { data: { turbo_confirm: "Xoá hạng này?" } } %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,58 @@
+<% bh = ->(k, **o) { t("merchant.dashboard.#{k}", **o) } %>
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px;">
+  <div>
+    <h3 class="l-display" style="font-size:18px; margin:0;"><%= bh.(:busy_title) %></h3>
+    <p style="color:var(--ink-2); font-size:13px; margin:2px 0 0;"><%= bh.(:busy_note) %></p>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <% if @busy_branches.present? %>
+      <select class="l-field" style="width:auto; padding:6px 10px; font-size:13px;"
+              data-busyhour-target="outlet" data-action="change->busyhour#switch"
+              aria-label="<%= bh.(:view_scope) %>">
+        <option value="" <%= 'selected' unless @busy_outlet %>><%= bh.(:all_branches) %></option>
+        <% @busy_branches.each do |o| %>
+          <option value="<%= o.id %>" <%= 'selected' if @busy_outlet&.id == o.id %>><%= o.name %></option>
+        <% end %>
+      </select>
+    <% end %>
+    <select class="l-field" style="width:auto; padding:6px 10px; font-size:13px;"
+            data-busyhour-target="rangeSelect" data-action="change->busyhour#rangeChanged"
+            aria-label="<%= bh.(:range_label) %>">
+      <% %w[30d 90d mtd ytd 12m all].each do |rk| %>
+        <option value="<%= rk %>" <%= 'selected' if @range[:key] == rk %>><%= bh.("range_#{rk}") %></option>
+      <% end %>
+      <% if @range[:key] == 'custom' %><option value="custom" selected><%= @range[:label] %></option><% end %>
+    </select>
+    <input type="date" data-busyhour-target="fromDate" data-action="change->busyhour#switch"
+           value="<%= @range[:key] == 'custom' ? @range[:from].to_date.iso8601 : '' %>"
+           class="l-field" style="width:auto; padding:5px 8px; font-size:13px;" aria-label="<%= bh.(:range_from) %>">
+    <input type="date" data-busyhour-target="toDate" data-action="change->busyhour#switch"
+           value="<%= @range[:key] == 'custom' ? @range[:to].to_date.iso8601 : '' %>"
+           class="l-field" style="width:auto; padding:5px 8px; font-size:13px;" aria-label="<%= bh.(:range_to) %>">
+    <button type="button" class="l-btn l-btn-soft" style="padding:6px 12px; font-size:13px; white-space:nowrap;"
+            data-busyhour-target="refreshBtn" data-action="busyhour#refresh">
+      🔄 <%= bh.(:busy_refresh) %>
+    </button>
+  </div>
+</div>
+
+<% if @busiest_slot %>
+  <div style="overflow-x:auto; color:var(--primary); margin-top:10px;">
+    <%= heatmap_svg(@busy_hours, day_labels: Reward.wday_labels) %>
+  </div>
+  <div style="margin-top:12px; padding:12px 14px; border-radius:12px; background:var(--surface-2); font-size:13.5px; line-height:1.5;">
+    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+      <span style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-2); font-weight:700;">🤖 <%= bh.(:busy_ai_badge) %></span>
+      <% if @busy_insight&.generated_at %>
+        <span style="font-size:11px; color:var(--ink-2);">· <%= l(@busy_insight.generated_at, format: :short) %></span>
+      <% end %>
+    </div>
+    <% if @busy_insight&.body.present? %>
+      <%= @busy_insight.body %>
+    <% else %>
+      <span style="color:var(--ink-2);"><%= bh.(:busy_insight_none) %></span>
+    <% end %>
+  </div>
+<% else %>
+  <p style="color:var(--ink-2); font-size:13px; margin-top:10px;"><%= bh.(:busy_empty) %></p>
+<% end %>

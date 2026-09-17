@@ -1,0 +1,71 @@
+<% content_for :title, "Khách hàng" %>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+  <%= form_with url: merchant_customers_path, method: :get, style: "display:flex; gap:8px; flex-wrap:wrap; flex:1;" do %>
+    <%= search_field_tag :q, params[:q], class: "l-field", style: "max-width:260px;",
+          placeholder: "Tìm tên, số điện thoại, mã KH…" %>
+    <%= select_tag :tier_id, options_from_collection_for_select(@tiers, :id, :name, params[:tier_id]),
+          include_blank: "Mọi hạng thẻ", class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
+    <%= select_tag :sort, options_for_select([["Mới nhất", "recent"], ["Chi tiêu nhiều nhất", "spent"],
+          ["Đến nhiều nhất", "visits"], ["Theo tên", "name"]], @sort),
+          class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
+    <%= submit_tag "Tìm", class: "l-btn l-btn-ghost" %>
+  <% end %>
+  <div style="display:flex; gap:8px;">
+    <%= link_to "Hạng thẻ", merchant_member_tiers_path, class: "l-btn l-btn-ghost" %>
+    <%= link_to "+ Thêm khách", new_merchant_customer_path, class: "l-btn l-btn-primary" %>
+  </div>
+</div>
+
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <span class="l-chip"><%= @total %> hồ sơ</span>
+  <span class="l-chip">📱 <%= @app_users %> đã cài app</span>
+  <%= link_to merchant_customers_path(birthday: "1"), class: "l-chip #{'l-chip-brand' if params[:birthday] == '1'}" do %>
+    🎂 <%= @birthday_count %> sinh nhật tháng này
+  <% end %>
+  <%= link_to merchant_customers_path(status: "blocked"), class: "l-chip #{'l-chip-brand' if params[:status] == 'blocked'}" do %>
+    ⛔ Khách bị chặn
+  <% end %>
+</div>
+
+<% if @members.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">👤</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có khách nào khớp</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 14px;">
+      Lễ tân chỉ cần tên + số điện thoại là tạo được hồ sơ. Khi khách tự tải app bằng
+      đúng số đó, toàn bộ lịch sử đã nằm sẵn ở đây.
+    </p>
+    <%= link_to "Thêm khách", new_merchant_customer_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <% @members.each do |m| %>
+    <%= link_to merchant_customer_path(m), class: "l-row" do %>
+      <div class="ic"><%= m.initials %></div>
+      <div class="bd">
+        <div class="t">
+          <%= m.display_name %>
+          <% if m.member_tier %>
+            <span class="l-pill" style="--_c:<%= m.member_tier.color.presence || '#6B635A' %>; margin-left:4px;"><%= m.tier_name %></span>
+          <% end %>
+          <% if m.blocked? %><span class="l-pill" style="--_c:#B4402F; margin-left:4px;">Bị chặn</span><% end %>
+          <% if m.app_user? %><span title="Đã cài app">📱</span><% end %>
+        </div>
+        <div class="s">
+          <%= m.phone %> ·
+          <%= m.visits_count %> lượt · <%= vnd(m.total_spent) %>
+          <%= " · KTV quen: #{m.preferred_staff.display_name}" if m.preferred_staff %>
+          <% if m.last_visit_at %>
+            · lần cuối <%= time_ago_in_words(m.last_visit_at) %> trước
+          <% else %>
+            · chưa từng đến
+          <% end %>
+        </div>
+      </div>
+      <div class="go">›</div>
+    <% end %>
+  <% end %>
+  <% if @members.size >= 200 %>
+    <p style="font-size:12.5px; color:var(--ink-2); text-align:center;">Đang hiện 200 hồ sơ đầu — dùng ô tìm kiếm để thu hẹp.</p>
+  <% end %>
+<% end %>

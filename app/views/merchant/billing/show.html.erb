@@ -1,0 +1,240 @@
+<% content_for :title, "Gói & thanh toán" %>
+<%
+  pending  = @invoices.find(&:pending?)
+  overdue  = @workspace.subscription_overdue_days
+  grace    = Workspace::GRACE_DAYS
+  days_left = @workspace.subscription_days_left
+%>
+
+<style>
+  .bl-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-bottom:16px; }
+  .bl-use { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:14px; }
+  .bl-use .u { }
+  .bl-use .bar { height:6px; border-radius:999px; background:var(--surface-2); overflow:hidden; margin-top:7px; }
+  .bl-use .bar i { display:block; height:100%; border-radius:999px; background:var(--primary); }
+  .bl-use .bar.full i { background:#e5484d; }
+  .bl-quote { font-size:12px; color:var(--ink-2); margin-top:8px; line-height:1.5; text-align:center; }
+  .bl-warn { font-size:12px; color:#8a6508; background:color-mix(in srgb, #b8860b 10%, #fff);
+    border-radius:9px; padding:7px 10px; margin-bottom:10px; line-height:1.45; }
+  .bl-inv { display:flex; align-items:center; gap:14px; padding:14px 18px; flex-wrap:wrap; }
+  .bl-inv + .bl-inv { border-top:1px solid var(--line); }
+</style>
+
+<div>
+  <div class="bl-grid">
+    <%# ---- Current plan ---- %>
+    <div class="l-panel" style="display:flex; align-items:center; gap:16px;">
+      <div style="flex:1; min-width:0;">
+        <div class="l-eyebrow">Gói hiện tại</div>
+        <% if @workspace.trial? %>
+          <div class="l-display" style="font-size:26px;">Dùng thử</div>
+          <div style="color:var(--ink-2); font-size:13px;">Mở khoá đầy đủ tính năng, chưa mất phí.</div>
+        <% else %>
+          <div class="l-display" style="font-size:26px;"><%= @plan.name %></div>
+          <%# status_label is the raw row status, so an unpaid workspace read
+              "Đang hoạt động" right next to "Đã quá hạn thanh toán". %>
+          <div style="color:var(--ink-2); font-size:13px;"><%= @workspace.payment_label %></div>
+        <% end %>
+      </div>
+      <div style="text-align:right; flex:none;">
+        <%# Quoting the plan price during a free trial read as "you are being
+            charged 399.000đ/tháng" when in fact nothing is owed yet. %>
+        <% if @workspace.trial? %>
+          <div class="l-num" style="font-size:28px;">0đ</div>
+          <div style="color:var(--ink-2); font-size:12.5px;">trong thời gian dùng thử</div>
+        <% else %>
+          <div class="l-num" style="font-size:28px;"><%= @plan.price_label %></div>
+          <div style="color:var(--ink-2); font-size:13px;">mỗi tháng</div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# ---- Subscription status ---- %>
+    <div class="l-panel">
+      <div class="l-eyebrow">Trạng thái thuê bao</div>
+      <% if @workspace.trial? %>
+        <div style="font-weight:700; color:var(--primary); margin-top:4px;">Đang dùng thử</div>
+        <div style="color:var(--ink-2); font-size:13px;">
+          Còn <strong><%= days_left %> ngày</strong> (đến <%= l(@workspace.paid_until.to_date, format: :long) %>).
+          Chọn gói bên dưới trước ngày đó để không bị gián đoạn.
+        </div>
+      <% elsif @workspace.subscription_active? %>
+        <div style="font-weight:700; color:var(--good, #1a7f5a); margin-top:4px;">Đang hoạt động</div>
+        <div style="color:var(--ink-2); font-size:13px;">
+          Đã thanh toán đến <%= l(@workspace.paid_until.to_date, format: :long) %><%= " · còn #{days_left} ngày" if days_left %>.
+        </div>
+        <div style="color:var(--ink-2); font-size:12.5px; margin-top:3px;">
+          Kỳ tiếp theo: <%= l(@next_start, format: "%d/%m/%Y") %> – <%= l(@next_end, format: "%d/%m/%Y") %>.
+        </div>
+      <% else %>
+        <%# "Chưa thanh toán kỳ này" never said what happens if it stays unpaid —
+            the workspace is auto-suspended after the grace window. %>
+        <div style="font-weight:700; color:#e5484d; margin-top:4px;">Đã quá hạn thanh toán</div>
+        <div style="color:var(--ink-2); font-size:13px;">
+          <% if overdue&.positive? %>Quá hạn <strong><%= overdue %> ngày</strong>. <% end %>
+          <% remaining = overdue ? grace - overdue : grace %>
+          <% if remaining.positive? %>
+            Còn <strong style="color:#e5484d;"><%= remaining %> ngày</strong> trước khi hệ thống tự động tạm ngưng tài khoản.
+          <% else %>
+            Tài khoản có thể bị tạm ngưng bất cứ lúc nào — thanh toán để mở lại ngay.
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# A <form> nested inside a <label> is invalid HTML; the label now sits
+          inside the form where it belongs. %>
+      <%= form_with url: merchant_billing_auto_renew_path, method: :patch, data: { turbo: false } do %>
+        <input type="hidden" name="auto_renew" value="0">
+        <label style="display:flex; align-items:flex-start; gap:9px; margin-top:14px; font-size:13px; cursor:pointer;">
+          <input type="checkbox" name="auto_renew" value="1" <%= "checked" if @workspace.auto_renew? %>
+                 onchange="this.form.requestSubmit()" style="width:18px; height:18px; flex:none; margin-top:1px;"
+                 <%= "disabled" unless @can_pay %>>
+          <span>
+            Tự động tạo hoá đơn hàng tháng khi đến hạn
+            <span style="display:block; color:var(--ink-2); font-size:12px;">
+              <%= @workspace.auto_renew? ? "Hoá đơn kỳ mới sẽ tự xuất — bạn chỉ cần thanh toán." : "Đang tắt: bạn phải tự bấm gia hạn mỗi kỳ." %>
+            </span>
+          </span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ---- Usage against the plan caps ---- %>
+  <div class="l-panel" style="margin-bottom:16px;">
+    <div class="l-eyebrow" style="margin-bottom:12px;">Mức sử dụng<%= " (gói #{@plan.name})" unless @workspace.trial? %></div>
+    <div class="bl-use">
+      <%= render "usage", label: "Cơ sở",   used: @branches_count, cap: @workspace.branch_limit %>
+      <%= render "usage", label: "Nhân sự", used: @staff_count,    cap: @workspace.staff_limit %>
+      <%= render "usage", label: "Phòng",   used: @rooms_count,    cap: @workspace.room_limit %>
+      <%= render "usage", label: "Người thuê", used: @members_count, cap: nil %>
+    </div>
+    <% if @workspace.trial? %>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+        Trong thời gian dùng thử không có giới hạn. Khi chọn gói, hãy chọn gói đủ chỗ cho
+        <strong><%= @branches_count %> cơ sở</strong>, <strong><%= @staff_count %> nhân sự</strong> và <strong><%= @rooms_count %> phòng</strong> hiện tại.
+      </div>
+    <% end %>
+  </div>
+
+  <%# ---- Payment gateway not configured ---- %>
+  <% unless @payos_ready %>
+    <div class="l-panel" style="margin-bottom:16px; background:#fff8f0; border-color:#f0d9b5;">
+      <div style="font-weight:700;">⚠️ Cổng thanh toán chưa sẵn sàng</div>
+      <div style="font-size:13px; color:var(--ink-2);">PayOS chưa được cấu hình ở môi trường này nên chưa thể thanh toán online. Liên hệ hỗ trợ để đổi gói hoặc gia hạn thủ công.</div>
+    </div>
+  <% end %>
+
+  <%# ---- Pending invoice ---- %>
+  <% if pending %>
+    <div class="l-panel" style="margin-bottom:16px; background:color-mix(in srgb, var(--primary) 6%, #fff); border-color:color-mix(in srgb, var(--primary) 25%, var(--line)); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px;">
+        <div style="font-weight:700;">Hoá đơn chờ thanh toán · <%= Plan.for(pending.plan).name %></div>
+        <div style="font-size:13px; color:var(--ink-2);">Kỳ <%= pending.period_label %> · <strong style="color:var(--primary);"><%= number_with_delimiter(pending.amount) %>đ</strong></div>
+      </div>
+      <% if @payos_ready && @can_pay %>
+        <%= button_to "Thanh toán ngay", merchant_billing_repay_path(pending), class: "l-btn l-btn-primary", form: { target: "_blank", data: { turbo: false } } %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# ---- Plans ---- %>
+  <div class="l-eyebrow" style="margin-bottom:10px;">Các gói</div>
+  <% unless @can_pay %>
+    <div class="bl-warn" style="max-width:640px;">Chỉ chủ hộ hoặc quản lý mới đổi gói và thanh toán được. Bạn vẫn xem được thông tin gói ở đây.</div>
+  <% end %>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-bottom:24px;">
+    <% @plans.each do |plan| %>
+      <%
+        is_current = plan.key == @workspace.plan && !@workspace.trial?
+        amount, q_start, q_end = @workspace.checkout_quote(plan.key)
+        too_small = (plan.max_branches && @branches_count > plan.max_branches) ||
+                    (plan.max_staff && @staff_count > plan.max_staff) ||
+                    (plan.max_rooms && @rooms_count > plan.max_rooms)
+        switching = !is_current && !@workspace.trial? && @workspace.subscription_active?
+      %>
+      <div class="l-panel" style="display:flex; flex-direction:column; <%= 'border-color:var(--primary); box-shadow:0 0 0 1px var(--primary);' if is_current %>">
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <div class="l-display" style="font-size:20px;"><%= plan.name %></div>
+          <% if is_current %><span class="l-chip l-chip-brand" style="margin-left:auto;">Đang dùng</span>
+          <% elsif @workspace.trial? && plan.key == @workspace.plan && !too_small %><span class="l-chip l-chip-brand" style="margin-left:auto;">Đề xuất</span><% end %>
+        </div>
+        <div class="l-num" style="font-size:24px; margin:4px 0 12px;"><%= plan.price_label %><span style="font-size:12px; color:var(--ink-2);">/tháng</span></div>
+        <ul style="list-style:none; padding:0; margin:0 0 14px; display:flex; flex-direction:column; gap:7px; flex:1;">
+          <% (plan.localized_features || []).each do |f| %>
+            <li style="font-size:13px; color:var(--ink-2);">✓ <%= f %></li>
+          <% end %>
+        </ul>
+
+        <%# A plan smaller than what the landlord already runs would break them
+            the moment the trial ends — say so before they pay for it. %>
+        <% if too_small %>
+          <div class="bl-warn">
+            Không đủ cho quy mô hiện tại (<%= @branches_count %> cơ sở · <%= @staff_count %> nhân sự · <%= @rooms_count %> phòng).
+            Sau khi hết dùng thử bạn sẽ không thêm được toà/căn mới.
+          </div>
+        <% end %>
+        <% if switching %>
+          <div class="bl-warn">
+            Đổi gói áp dụng <strong>ngay</strong> và tính đủ tiền gói mới cho kỳ hiện tại;
+            phần đã trả của gói <%= @plan.name %> kỳ này không được hoàn lại.
+          </div>
+        <% end %>
+
+        <% if @payos_ready && @can_pay %>
+          <%# On a trial there is no plan to "switch" from — every plan is a
+              first choice, and the one the workspace was set up with leads. %>
+          <% if @workspace.trial?
+               label = "Chọn #{plan.name}"
+               lead  = plan.key == @workspace.plan && !too_small
+             elsif is_current
+               label = "Gia hạn"
+               lead  = false
+             else
+               higher = plan.price > @plan.price
+               label  = higher ? "Nâng cấp #{plan.name}" : "Chuyển #{plan.name}"
+               lead   = higher
+             end %>
+          <%= button_to label, merchant_billing_pay_path(plan: plan.key),
+                class: "l-btn #{lead ? 'l-btn-primary' : 'l-btn-ghost'} l-btn-block",
+                form: { target: "_blank", data: { turbo: false } } %>
+          <%# The landlord used to be thrown straight at PayOS without ever
+              seeing what they were about to be charged — the trial proration
+              in particular differs from the price on the card. %>
+          <div class="bl-quote">
+            Thanh toán <strong style="color:var(--ink);"><%= number_with_delimiter(amount) %>đ</strong>
+            cho kỳ <%= l(q_start, format: "%d/%m/%Y") %> – <%= l(q_end, format: "%d/%m/%Y") %>
+            <% if amount < plan.price %><br>(đã tính theo số ngày còn lại của kỳ)<% end %>
+          </div>
+        <% elsif is_current %>
+          <div class="l-chip l-chip-brand" style="text-align:center;">Gói của bạn</div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ---- Invoice history ---- %>
+  <% if @invoices.any? %>
+    <div class="l-eyebrow" style="margin-bottom:10px;">Lịch sử hoá đơn</div>
+    <div class="l-panel" style="padding:0; overflow:hidden;">
+      <% @invoices.each do |inv| %>
+        <% sc = { "paid" => "#1a7f5a", "pending" => "#b8860b", "failed" => "#e5484d", "cancelled" => "#8a8a8a" }[inv.status] %>
+        <div class="bl-inv">
+          <div style="flex:1; min-width:150px;">
+            <div style="font-weight:600;"><%= Plan.for(inv.plan).name %> · <%= number_with_delimiter(inv.amount) %>đ</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Kỳ <%= inv.period_label %></div>
+            <div style="font-size:12px; color:var(--ink-2);">
+              <%= inv.paid? && inv.paid_at ? "Đã trả #{l(inv.paid_at.to_date, format: '%d/%m/%Y')}" : "Tạo #{l(inv.created_at.to_date, format: '%d/%m/%Y')}" %>
+            </div>
+          </div>
+          <span class="l-pill" style="--_c:<%= sc %>;">
+            <%= { "paid" => "Đã thanh toán", "pending" => "Chờ thanh toán", "failed" => "Thất bại", "cancelled" => "Đã huỷ" }[inv.status] %>
+          </span>
+          <% if inv.pending? && @payos_ready && @can_pay %>
+            <%= button_to "Trả tiếp", merchant_billing_repay_path(inv), class: "l-btn l-btn-soft", style: "padding:6px 12px; font-size:13px;", form: { target: "_blank", data: { turbo: false } } %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

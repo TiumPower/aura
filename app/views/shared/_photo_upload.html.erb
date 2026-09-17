@@ -1,0 +1,34 @@
+<%# Reusable styled photo dropzone (Vietnamese, hover + drag&drop).
+    locals:
+      name              input name, e.g. "unit[photos][]" (required)
+      multiple          allow multiple files (default: true)
+      submit_on_change  auto-submit the surrounding form on pick (default: false)
+      hint              override the main hint line (optional)
+      accept            accept attribute (default: "image/*")
+      capture           camera capture hint for mobile, e.g. "environment" (optional)
+%>
+<% multiple = local_assigns.fetch(:multiple, true) %>
+<style>
+  .uploadzone { border:2px dashed var(--line, #d9d3ca); border-radius:16px; padding:24px 16px;
+    text-align:center; cursor:pointer; background:var(--surface-2, #faf8f5); transition:border-color .18s, background .18s, transform .18s; }
+  .uploadzone:hover { border-color:var(--primary, #1F5FA6); background:color-mix(in srgb, var(--primary, #1F5FA6) 6%, #fff); }
+  .uploadzone[data-drag] { border-color:var(--primary, #1F5FA6); background:color-mix(in srgb, var(--primary, #1F5FA6) 12%, #fff); transform:scale(1.01); }
+  .uploadzone-hint { font-size:13.5px; color:var(--ink, #2a2a2a); margin-top:8px; font-weight:600; }
+  .uploadzone-sub { font-size:11.5px; color:var(--ink-2, #8a8a8a); margin-top:3px; }
+  .uploadzone-preview { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:14px; }
+  .uploadzone-preview:empty { margin-top:0; }
+  .uploadzone-preview img { width:64px; height:64px; object-fit:cover; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.12); }
+</style>
+<div class="uploadzone" data-controller="fileupload"
+     data-fileupload-submit-on-change-value="<%= local_assigns[:submit_on_change] ? 'true' : 'false' %>"
+     data-action="dragover->fileupload#dragover dragleave->fileupload#dragleave drop->fileupload#drop click->fileupload#open">
+  <div style="font-size:30px; line-height:1;">📷</div>
+  <div data-fileupload-target="hint" class="uploadzone-hint">
+    <%= local_assigns[:hint] || "Bấm để chọn ảnh, hoặc kéo thả vào đây" %>
+  </div>
+  <div class="uploadzone-sub"><%= local_assigns[:sub] || "JPG, PNG#{" · chọn nhiều ảnh cùng lúc" if multiple}" %></div>
+  <input type="file" name="<%= name %>" accept="<%= local_assigns[:accept] || 'image/*' %>"
+         <%= "multiple" if multiple %> <%= "capture=#{local_assigns[:capture]}".html_safe if local_assigns[:capture] %> hidden
+         data-fileupload-target="input" data-action="change->fileupload#changed">
+  <div data-fileupload-target="preview" class="uploadzone-preview"></div>
+</div>

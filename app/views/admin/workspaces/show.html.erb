@@ -1,0 +1,60 @@
+<% content_for :title, @workspace.name %>
+<div style="display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start;">
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+        <div class="av" style="width:44px;height:44px;"><%= @workspace.logo_initials %></div>
+        <div><h2 class="l-display" style="font-size:22px;"><%= @workspace.name %></h2>
+          <div style="color:var(--ink-2); font-size:13px;"><%= @workspace.subdomain %>.aura.czin.net · <%= @workspace.status_label %></div></div>
+      </div>
+      <div class="l-kpis" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+        <div class="l-kpi"><div class="k">Cơ sở</div><div class="v"><%= @branches_count %></div></div>
+        <div class="l-kpi"><div class="k">Phòng</div><div class="v"><%= @rooms_count %></div></div>
+        <div class="l-kpi"><div class="k">Nhân sự</div><div class="v"><%= @staff_count %></div></div>
+        <div class="l-kpi"><div class="k">Người thuê</div><div class="v"><%= @members_count %></div></div>
+      </div>
+    </div>
+
+    <% if @branches.any? %>
+      <div class="l-eyebrow" style="margin-bottom:10px;">Cơ sở</div>
+      <div class="l-panel" style="padding:0; overflow:hidden;">
+        <% @branches.each do |b| %>
+          <div style="display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--line);">
+            <div style="flex:1;"><strong><%= b.name %></strong><div style="font-size:12px; color:var(--ink-2);"><%= b.full_address %></div></div>
+            <div class="l-num"><%= b.rooms.count %> phòng</div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <h3 class="l-display" style="font-size:18px; margin-bottom:10px;">Quản trị</h3>
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <% if @workspace.pending? || @workspace.status == "suspended" %>
+        <%= button_to "✓ Duyệt / Kích hoạt", approve_admin_workspace_path(@workspace), method: :patch, class: "l-btn l-btn-primary", style: "flex:1;" %>
+      <% elsif @workspace.active? %>
+        <%= button_to "Tạm ngưng", suspend_admin_workspace_path(@workspace), method: :patch, class: "l-btn l-btn-ghost", style: "flex:1;", form: { data: { turbo_confirm: "Tạm ngưng?" } } %>
+      <% end %>
+    </div>
+    <%= form_with model: @workspace, url: admin_workspace_path(@workspace), method: :patch do |f| %>
+      <label class="l-label">Subdomain</label>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <%= f.text_field :subdomain, class: "l-field", style: "text-align:right;" %>
+        <span class="l-mono" style="color:var(--ink-2); white-space:nowrap; font-size:12px;">.aura.czin.net</span>
+      </div>
+      <label class="l-label" style="margin-top:12px;">Tên miền riêng (tuỳ chọn)</label>
+      <%= f.text_field :custom_domain, class: "l-field", placeholder: "canho.tenmiennha.vn" %>
+      <label class="l-label" style="margin-top:12px;">Trạng thái</label>
+      <%= f.select :status, Workspace::STATUSES.map { |s| [Workspace::STATUS_LABELS[s], s] }, {}, class: "l-field" %>
+      <label class="l-label" style="margin-top:12px;">Gói dịch vụ</label>
+      <%= f.select :plan, Workspace::PLANS.map { |p| [p.capitalize, p] }, {}, class: "l-field" %>
+      <%= f.submit "Cập nhật", class: "l-btn l-btn-soft l-btn-block", style: "margin-top:16px;" %>
+    <% end %>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
+      <%= button_to "Mở dashboard chủ hộ", impersonate_admin_workspace_path(@workspace), method: :post, class: "l-btn l-btn-primary l-btn-block", form: { data: { turbo: false } } %>
+      <%= link_to "Mở app người thuê", customer_url_for(@workspace), target: "_blank", rel: "noopener", class: "l-btn l-btn-ghost l-btn-block" %>
+      <div style="font-size:11.5px; color:var(--ink-2); margin-top:6px; text-align:center;">Mở dashboard sẽ đăng nhập với tư cách chủ hộ (chế độ hỗ trợ).</div>
+    </div>
+  </div>
+</div>

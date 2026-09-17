@@ -1,0 +1,148 @@
+<% content_for :title, "Tổng quan" %>
+<% content_for :title_en, "OVERVIEW" %>
+
+<style>
+  .db-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+  .db-cap { display:flex; gap:10px; align-items:flex-end; height:64px; margin-top:10px; }
+  .db-bar { flex:1; border-radius:8px 8px 4px 4px; background:var(--surface-2); position:relative; }
+  .db-bar span { position:absolute; inset:auto 0 0 0; border-radius:8px 8px 4px 4px; background:var(--primary); }
+  .db-todo { display:flex; align-items:center; gap:10px; padding:12px 0; border-top:1px solid var(--line); }
+  .db-todo:first-of-type { border-top:none; }
+</style>
+
+<% if @setup_todos.any? %>
+  <div class="l-panel" style="margin-bottom:18px; border-color:color-mix(in srgb, var(--primary-2) 55%, var(--line)); background:color-mix(in srgb, var(--primary-2) 8%, #fff);">
+    <div class="l-eyebrow">Còn thiếu để nhận khách</div>
+    <% @setup_todos.each do |todo| %>
+      <div class="db-todo">
+        <span style="font-size:17px;">◻</span>
+        <span style="flex:1; font-weight:600; font-size:14px;"><%= todo[:text] %></span>
+        <%= link_to "Làm ngay →", todo[:path], class: "l-chip l-chip-brand" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ---- Sức chứa: mẫu số của mọi chỉ số hiệu suất về sau ---- %>
+<div class="l-eyebrow" style="margin-bottom:8px;">Sức chứa hôm nay<%= " · #{@branch.name}" if @branch %></div>
+<div class="db-grid" style="margin-bottom:20px;">
+  <div class="l-kpi">
+    <div class="k">Chỗ phục vụ đồng thời</div>
+    <div class="v"><%= @seat_capacity %></div>
+    <div style="font-size:12px; color:var(--ink-2); margin-top:2px;">
+      <%= @rooms_active %>/<%= @rooms_count %> phòng sẵn sàng<%= " · #{@rooms_maintenance} đang bảo trì" if @rooms_maintenance.positive? %>
+    </div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Giờ-chỗ mở bán hôm nay</div>
+    <div class="v"><%= @today_capacity_hours %></div>
+    <div style="font-size:12px; color:var(--ink-2); margin-top:2px;">
+      <%= @today_open_hours %> giờ mở cửa × <%= @seat_capacity %> chỗ
+    </div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Giờ KTV có mặt hôm nay</div>
+    <div class="v"><%= @today_staff_hours %></div>
+    <div style="font-size:12px; color:var(--ink-2); margin-top:2px;">
+      <% if @today_capacity_hours.positive? && @today_staff_hours.positive? %>
+        <% ratio = (@today_staff_hours * 100.0 / @today_capacity_hours).round %>
+        <%= ratio >= 100 ? "Đủ người kín sức chứa" : "Phủ #{ratio}% sức chứa" %>
+      <% else %>
+        Chưa xếp ca cho hôm nay
+      <% end %>
+    </div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">KTV đang trong ca</div>
+    <div class="v"><%= @on_duty_now %></div>
+    <div style="font-size:12px; color:var(--ink-2); margin-top:2px;">
+      Tổng <%= @therapist_count %> KTV · <%= @bookable_count %> cho khách chọn
+    </div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1.25fr .85fr; gap:18px; align-items:start;">
+  <div>
+    <div class="l-panel" style="margin-bottom:18px;">
+      <div class="l-section-h" style="margin:0 0 6px;">
+        <h3>Khách hàng</h3>
+        <%= link_to "Xem tất cả", merchant_customers_path %>
+      </div>
+      <div class="db-grid">
+        <div>
+          <div class="l-eyebrow">Tổng hồ sơ</div>
+          <div class="l-num" style="font-size:28px;"><%= @members_count %></div>
+        </div>
+        <div>
+          <div class="l-eyebrow">Mới trong tháng</div>
+          <div class="l-num" style="font-size:28px;"><%= @new_members_month %></div>
+        </div>
+        <div>
+          <div class="l-eyebrow">Đã cài app</div>
+          <div class="l-num" style="font-size:28px;"><%= @app_members %></div>
+          <div style="font-size:12px; color:var(--ink-2);">
+            <%= @members_count.positive? ? "#{(@app_members * 100.0 / @members_count).round}% khách nhận được push" : "—" %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if @birthday_members.any? %>
+      <div class="l-panel">
+        <div class="l-section-h" style="margin:0 0 10px;">
+          <h3>🎂 Sinh nhật tháng này</h3>
+          <%= link_to "Gửi lời chúc", merchant_new_announcement_path(segment: "birthday") %>
+        </div>
+        <% @birthday_members.each do |m| %>
+          <%= link_to merchant_customer_path(m), class: "l-row", style: "margin-bottom:8px;" do %>
+            <div class="ic"><%= m.initials %></div>
+            <div class="bd">
+              <div class="t"><%= m.display_name %></div>
+              <div class="s">Ngày <%= m.dob_day %>/<%= m.dob_month %><%= " · #{m.tier_name}" if m.tier_name %></div>
+            </div>
+            <div class="go">›</div>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="l-panel" style="margin-bottom:18px;">
+      <div class="l-eyebrow">Chi phí tháng này</div>
+      <div class="l-num" style="font-size:30px; color:#b4402f;"><%= vnd(@expense_month) %></div>
+      <%= link_to "Ghi nhận khoản chi →", new_merchant_expense_path, style: "font-size:13px; font-weight:600; color:var(--primary-ink); text-decoration:none;" %>
+    </div>
+
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Cơ sở</div>
+      <% @branches.each do |b| %>
+        <%= link_to merchant_branch_path(b), class: "l-row", style: "margin-bottom:8px;" do %>
+          <div class="ic">🏠</div>
+          <div class="bd">
+            <div class="t"><%= b.name %></div>
+            <div class="s"><%= b.open_on?(Date.current) ? "Hôm nay mở cửa" : "Hôm nay nghỉ" %></div>
+          </div>
+          <div class="go">›</div>
+        <% end %>
+      <% end %>
+      <% if @branches.size < 2 %>
+        <%= link_to "+ Thêm cơ sở", new_merchant_branch_path, class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:4px;" %>
+      <% end %>
+    </div>
+
+    <% if @recent_audits.any? %>
+      <div class="l-panel" style="margin-top:18px;">
+        <div class="l-eyebrow" style="margin-bottom:8px;">Thao tác gần đây</div>
+        <% @recent_audits.each do |log| %>
+          <div style="font-size:12.5px; color:var(--ink-2); padding:6px 0; border-top:1px solid var(--line);">
+            <strong style="color:var(--ink);"><%= log.actor_name || "Hệ thống" %></strong>
+            <%= log.action %> <%= log.summary %>
+            <span style="opacity:.7;">· <%= l(log.created_at, format: "%H:%M %d/%m") %></span>
+          </div>
+        <% end %>
+        <%= link_to "Xem nhật ký đầy đủ →", merchant_audit_logs_path, style: "font-size:13px; font-weight:600; color:var(--primary-ink); text-decoration:none; display:inline-block; margin-top:8px;" %>
+      </div>
+    <% end %>
+  </div>
+</div>

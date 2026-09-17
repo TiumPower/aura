@@ -1,0 +1,90 @@
+<% content_for :title, "Doanh thu & giao dịch" %>
+
+<%# ---- Summary KPIs ---- %>
+<div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi" style="outline:2px solid var(--primary); outline-offset:-1px;">
+    <div class="k">Doanh thu định kỳ (MRR)</div>
+    <div class="v" style="font-size:26px; color:var(--primary);"><%= number_with_delimiter(@mrr) %>đ</div>
+  </div>
+  <div class="l-kpi"><div class="k">Đã thu tháng này</div><div class="v" style="font-size:24px;"><%= number_with_delimiter(@collected_month) %>đ</div></div>
+  <div class="l-kpi"><div class="k">Tổng đã thu</div><div class="v" style="font-size:24px;"><%= number_with_delimiter(@collected_total) %>đ</div></div>
+</div>
+
+<%# ---- Filters ---- %>
+<%= form_with url: admin_billing_path, method: :get, data: { turbo: false } do %>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+    <input type="search" name="q" value="<%= @q %>" placeholder="Tìm theo chủ hộ hoặc tên toà nhà…"
+           class="l-field" style="flex:1; min-width:240px; max-width:420px;">
+    <select name="status" class="l-field" style="width:auto;" onchange="this.form.requestSubmit()">
+      <option value="">Tất cả trạng thái</option>
+      <% Invoice::STATUSES.each do |s| %>
+        <option value="<%= s %>" <%= "selected" if @status == s %>><%= { "pending" => "Chờ", "paid" => "Đã thu", "failed" => "Thất bại", "cancelled" => "Đã huỷ" }[s] %></option>
+      <% end %>
+    </select>
+    <input type="month" name="month" value="<%= @month&.strftime('%Y-%m') %>" class="l-field" style="width:auto;" onchange="this.form.requestSubmit()">
+    <%= submit_tag "Tìm", class: "l-btn l-btn-primary" %>
+    <% if @q.present? || @status || @month %>
+      <%= link_to "Xoá lọc", admin_billing_path, class: "l-btn l-btn-ghost" %>
+    <% end %>
+  </div>
+<% end %>
+
+<%# ---- Transactions ---- %>
+<div class="l-panel" style="padding:0; overflow:hidden;">
+  <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line);">
+    <div style="font-weight:700;">Giao dịch thuê bao</div>
+    <div style="font-size:12.5px; color:var(--ink-2);"><%= number_with_delimiter(@total) %> giao dịch</div>
+  </div>
+
+  <% if @invoices.empty? %>
+    <div style="text-align:center; padding:44px; color:var(--ink-2);">
+      <div style="font-size:40px;">🧾</div>
+      <p style="font-weight:600; margin-top:8px; color:var(--ink);">Không có giao dịch</p>
+      <p style="font-size:13px;">Khi chủ hộ thanh toán gói thuê bao, giao dịch sẽ hiện ở đây.</p>
+    </div>
+  <% else %>
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13.5px; min-width:640px;">
+        <thead><tr style="text-align:left; color:var(--ink-2); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">
+          <th style="padding:10px 18px;">Thời gian</th><th>Chủ hộ</th><th>Gói</th><th>Kỳ</th><th style="text-align:right;">Số tiền</th><th style="text-align:right; padding-right:18px;">Trạng thái</th>
+        </tr></thead>
+        <tbody>
+          <% @invoices.each do |inv| %>
+            <tr style="border-top:1px solid var(--line);">
+              <td style="padding:12px 18px; white-space:nowrap; color:var(--ink-2);">
+                <%= l((inv.paid_at || inv.created_at).to_date, format: "%d/%m/%Y") %>
+              </td>
+              <td>
+                <%= link_to admin_workspace_path(inv.workspace), style: "color:inherit; text-decoration:none;" do %>
+                  <strong><%= inv.workspace.name %></strong>
+                  <div style="font-size:11px; color:var(--ink-2);" class="l-mono"><%= inv.workspace.subdomain %></div>
+                <% end %>
+              </td>
+              <td style="text-transform:capitalize;"><%= inv.plan %></td>
+              <td style="color:var(--ink-2);"><%= inv.period_label %></td>
+              <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;"><%= number_with_delimiter(inv.amount) %>đ</td>
+              <td style="text-align:right; padding-right:18px;">
+                <% c = { "paid" => "#1a7f5a", "pending" => "#b8860b", "failed" => "#e5484d", "cancelled" => "#5C6B7A" }[inv.status] %>
+                <% lbl = { "paid" => "Đã thu", "pending" => "Chờ", "failed" => "Thất bại", "cancelled" => "Đã huỷ" }[inv.status] %>
+                <span style="font-size:12px; font-weight:700; color:<%= c %>; background:color-mix(in srgb, <%= c %> 12%, transparent); padding:4px 10px; border-radius:999px;"><%= lbl %></span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# ---- Pagination ---- %>
+    <% if @pages > 1 %>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 18px; border-top:1px solid var(--line);">
+        <% prev_disabled = @page <= 1 %>
+        <%= link_to "← Trước", admin_billing_path(request.query_parameters.merge(page: @page - 1)),
+              class: "l-btn l-btn-ghost", style: "padding:6px 14px; font-size:13px; #{'opacity:.4; pointer-events:none;' if prev_disabled}" %>
+        <span style="font-size:13px; color:var(--ink-2);">Trang <%= @page %> / <%= @pages %></span>
+        <% next_disabled = @page >= @pages %>
+        <%= link_to "Sau →", admin_billing_path(request.query_parameters.merge(page: @page + 1)),
+              class: "l-btn l-btn-ghost", style: "padding:6px 14px; font-size:13px; #{'opacity:.4; pointer-events:none;' if next_disabled}" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

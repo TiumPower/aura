@@ -1,0 +1,18 @@
+<% content_for :title, t("merchant.payment.title") %>
+<% content_for :title_en, "PAYMENT" %>
+<div class="l-panel" style="max-width:520px; margin:0 auto; text-align:center; padding:40px;">
+  <% if @invoice&.paid? %>
+    <div style="width:72px; height:72px; margin:0 auto 14px; border-radius:50%; background:var(--good); color:#fff; display:grid; place-items:center; font-size:36px;">✓</div>
+    <h2 class="l-display" style="font-size:24px;"><%= t("merchant.payment.success") %></h2>
+    <p style="color:var(--ink-2); margin-top:6px;"><%= t("merchant.payment.success_detail", plan: @invoice.plan, amount: number_with_delimiter(@invoice.amount), period: @invoice.period_label) %></p>
+    <p style="color:var(--ink-2); font-size:13px;"><%= t("merchant.payment.active_until", date: l(@workspace.paid_until.to_date, format: :long)) %></p>
+  <% elsif @invoice&.status == "cancelled" %>
+    <div style="font-size:44px;">✖️</div>
+    <h2 class="l-display" style="font-size:22px; margin-top:8px;"><%= t("merchant.payment.cancelled") %></h2>
+  <% else %>
+    <div style="font-size:44px;">⏳</div>
+    <h2 class="l-display" style="font-size:22px; margin-top:8px;"><%= t("merchant.payment.processing") %></h2>
+    <p style="color:var(--ink-2); font-size:13px;"><%= t("merchant.payment.processing_note") %></p>
+  <% end %>
+  <%= link_to t("merchant.payment.back"), merchant_billing_path, class: "l-btn l-btn-primary l-btn-block", style: "margin-top:20px;" %>
+</div>

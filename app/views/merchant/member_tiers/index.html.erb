@@ -1,0 +1,68 @@
+<% content_for :title, "Hạng thẻ thành viên" %>
+
+<p style="color:var(--ink-2); font-size:13.5px; max-width:660px; margin-bottom:16px;">
+  Khách tự động lên hạng khi đạt ngưỡng chi tiêu tích luỹ. Mỗi hạng có % giảm giá và hệ số
+  điểm riêng. Tắt “tự động” ở một hạng nếu spa chỉ muốn nâng hạng bằng tay.
+</p>
+
+<div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
+  <div>
+    <% if @tiers.empty? %>
+      <div class="l-panel" style="text-align:center; padding:32px;">
+        <div style="font-size:38px;">💳</div>
+        <p style="font-weight:700; margin-top:8px;">Chưa có hạng thẻ nào</p>
+        <% if @presets.any? %>
+          <%= button_to "Nạp #{@presets.size} hạng gợi ý", seed_presets_merchant_member_tiers_path,
+                class: "l-btn l-btn-primary", style: "margin-top:12px;" %>
+        <% end %>
+      </div>
+    <% else %>
+      <% @tiers.each do |t| %>
+        <div class="l-row">
+          <div class="ic" style="background:<%= t.color.presence || '#6B635A' %>; color:#fff;">★</div>
+          <div class="bd">
+            <div class="t"><%= t.name %> <span class="l-pill" style="--_c:<%= t.color.presence || '#6B635A' %>;"><%= t.discount_label %></span></div>
+            <div class="s">
+              Từ <%= vnd(t.min_spent) %><%= " · #{t.min_visits} lượt" if t.min_visits.positive? %> ·
+              điểm ×<%= t.points_multiplier %> · <%= @counts[t.id].to_i %> khách
+              <%= " · nâng hạng tay" unless t.auto_assign %>
+            </div>
+          </div>
+          <%= link_to "Sửa", edit_merchant_member_tier_path(t), class: "l-chip" %>
+        </div>
+      <% end %>
+      <% if @presets.any? %>
+        <%= button_to "Nạp thêm hạng gợi ý", seed_presets_merchant_member_tiers_path, class: "l-btn l-btn-ghost", style: "margin-top:8px;" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Thêm hạng</div>
+    <%= form_with model: @tier, url: merchant_member_tiers_path, method: :post do |f| %>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Tên hạng <span style="color:#e5484d;">*</span></label>
+        <%= f.text_field :name, class: "l-field", placeholder: "VD: Kim cương" %>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Chi tiêu từ (đ)</label>
+          <%= f.number_field :min_spent, class: "l-field", step: 1_000_000, min: 0 %>
+        </div>
+        <div>
+          <label class="l-label">Giảm giá (%)</label>
+          <%= f.number_field :discount_percent, class: "l-field", min: 0, max: 100 %>
+        </div>
+        <div>
+          <label class="l-label">Hệ số điểm</label>
+          <%= f.number_field :points_multiplier, class: "l-field", step: 0.1, min: 0 %>
+        </div>
+        <div>
+          <label class="l-label">Màu</label>
+          <%= f.text_field :color, class: "l-field", placeholder: "#C9A96A" %>
+        </div>
+      </div>
+      <%= f.submit "Thêm hạng", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+  </div>
+</div>

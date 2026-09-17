@@ -1,0 +1,675 @@
+@import "tailwindcss";
+
+/* ================================================================
+   AURA — design tokens (mặc định = bộ "Jade & vàng champagne").
+   Every workspace overrides a few base tokens via the inline
+   <style> block from layouts/_theme_vars (rendered inside <body>),
+   and the rest derive here with color-mix so layouts never break.
+   ================================================================ */
+:root {
+  --primary:      #2F6F63;
+  --primary-2:    #C9A96A;
+  --on-primary:   #FFFFFF;
+  --surface:      #FAF7F2;
+  --surface-2:    #F1EAE0;
+  --ink:          #2A2622;
+  --ink-2:        #6B635A;
+  --line:         #E4DBCF;
+  --radius:       20px;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body:    "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* derived */
+  --primary-soft: color-mix(in srgb, var(--primary) 12%, #fff);
+  --primary-ink:  color-mix(in srgb, var(--primary) 80%, #000);
+  --btn-primary:     var(--primary);
+  --btn-primary-ink: var(--on-primary);
+  --shadow:       0 1px 2px rgba(42,38,34,.05), 0 10px 30px rgba(42,38,34,.08);
+  --shadow-lg:    0 30px 70px rgba(42,38,34,.18);
+  --good:         #3F7A57;
+  --warn:         #B4402F;
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- typography helpers ---- */
+.l-display { font-family: var(--font-display); letter-spacing: -.01em; }
+.l-num     { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.l-eyebrow { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.l-mono    { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+/* ================= BUTTONS ================= */
+.l-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:12px 18px; border-radius:14px; font-weight:600; font-size:15px; cursor:pointer;
+  border:1px solid transparent; text-decoration:none; transition:.15s; }
+/* Buttons follow the leftbar's dominant colour. --btn-primary defaults to the
+   brand --primary (merchant + customer, whose sidebar IS the brand); Super
+   Admin overrides it to its dark sidebar colour so its buttons match too. */
+.l-btn-primary { background: var(--btn-primary); color: var(--btn-primary-ink);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--btn-primary) 32%, transparent); }
+.l-btn-primary:hover { background: color-mix(in srgb, var(--btn-primary) 86%, #fff);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--btn-primary) 42%, transparent); transform: translateY(-1px); }
+.l-btn-primary:active { transform: translateY(0); box-shadow: 0 4px 12px color-mix(in srgb, var(--btn-primary) 30%, transparent); }
+.l-btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.l-btn-ghost:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: color-mix(in srgb, var(--ink) 22%, var(--line)); }
+.l-btn-soft  { background: color-mix(in srgb, var(--btn-primary) 12%, #fff); color: var(--btn-primary); }
+.l-btn-soft:hover { background: color-mix(in srgb, var(--btn-primary) 20%, #fff); }
+.l-btn-block { width:100%; }
+
+.l-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px;
+  font-size:12px; font-weight:600; background: var(--surface-2); color: var(--ink-2); transition: background .15s, color .15s; }
+.l-chip-brand { background: var(--primary-soft); color: var(--primary-ink); }
+/* interactive chips (links / buttons) get a hover */
+a.l-chip:hover, button.l-chip:hover { background: color-mix(in srgb, var(--ink) 10%, var(--surface-2)); color: var(--ink); }
+a.l-chip-brand:hover, button.l-chip-brand:hover { background: color-mix(in srgb, var(--primary) 22%, #fff); color: var(--primary-ink); }
+/* wheel prize row remove button */
+.wheel-x { width:34px; height:38px; flex:none; border:1px solid var(--line); background:#fff; border-radius:10px;
+  color:var(--ink-2); cursor:pointer; font-size:14px; line-height:1; transition:border-color .15s, color .15s; }
+.wheel-x:hover { border-color:var(--warn); color:var(--warn); }
+
+/* styled file-upload button (dropzone look) */
+.l-upload { display:flex; align-items:center; gap:10px; width:100%; text-align:left; cursor:pointer;
+  border:1.5px dashed var(--line); border-radius:12px; background:var(--surface); color:var(--ink-2);
+  padding:14px 16px; font-size:14px; font-weight:600; transition:border-color .15s, background .15s, color .15s; }
+.l-upload:hover { border-color:var(--primary); color:var(--primary); background:color-mix(in srgb, var(--primary) 6%, var(--surface)); }
+.l-upload svg { flex:none; }
+
+/* clickable outlet cards (whole card is a link; actions sit above it) */
+.l-outlet-card { position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+  transition:box-shadow .15s, transform .15s, border-color .15s; }
+.l-outlet-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); border-color:color-mix(in srgb, var(--primary) 45%, var(--line)); cursor:pointer; }
+.l-outlet-hit { position:absolute; inset:0; z-index:1; border-radius:inherit; }
+.l-outlet-actions { position:relative; z-index:2; }
+
+/* larger, more prominent shortcut chips (home) — white cards so they stand out
+   from the warm page background and read as tappable (like the tiles above). */
+.l-chip-lg { padding:11px 18px; font-size:15px; gap:9px; background:#fff; color:var(--ink);
+  border:1px solid var(--line); box-shadow:var(--shadow); }
+.l-chip-lg svg { width:20px; height:20px; color:var(--primary); }
+a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
+  border-color:color-mix(in srgb, var(--primary) 40%, var(--line)); box-shadow:var(--shadow-lg); transform:translateY(-1px); }
+.l-wtabs button { transition: background .15s, color .15s; }
+.l-wtabs button:hover:not(.active) { color: var(--ink); }
+.l-preset { transition: border-color .15s, box-shadow .15s; }
+.l-preset:hover { border-color: var(--primary); box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 18%, transparent); }
+
+.l-field { width:100%; padding:13px 15px; border-radius:14px; border:1px solid var(--line);
+  background:#fff; font-size:16px; color: var(--ink); }
+.l-field:focus { outline:none; border-color: var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+/* Native date inputs render as fixed-width button-like controls on iOS/Safari
+   and overflow the field box — normalise them to a full-width text field. */
+.l-field[type="date"], .l-field[type="time"] {
+  -webkit-appearance:none; appearance:none; box-sizing:border-box; min-width:0; max-width:100%;
+  min-height:48px; line-height:1.2; }
+.l-field[type="date"]::-webkit-date-and-time-value { text-align:left; margin:0; }
+.l-field[type="date"]::-webkit-calendar-picker-indicator { margin-left:auto; }
+/* Birthday field with a ghost template (DD/MM/YYYY) behind the input */
+.l-datefield { position:relative; background:#fff; border:1px solid var(--line); border-radius:14px; }
+.l-datefield:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+.l-datefield-ghost, .l-datefield-input {
+  padding:13px 15px; font-size:16px; font-family:var(--font-body); line-height:1.3;
+  letter-spacing:normal; white-space:pre; box-sizing:border-box; }
+.l-datefield-ghost { position:absolute; inset:0; pointer-events:none; color:var(--ink-2); }
+.l-datefield-input { position:relative; width:100%; border:none; background:transparent; color:var(--ink); border-radius:14px; outline:none; }
+.l-label { display:block; font-size:13px; font-weight:600; color: var(--ink-2); margin-bottom:6px; }
+
+/* =====================================================================
+   MEMBER — mobile-first PWA
+   ===================================================================== */
+.l-phone { min-height:100dvh; max-width:480px; margin:0 auto; background: var(--surface);
+  position:relative; display:flex; flex-direction:column; }
+.l-screen { flex:1; padding:18px 18px calc(96px + env(safe-area-inset-bottom)); }
+.l-appbar { display:flex; align-items:center; gap:12px; padding:16px 18px 6px; }
+.l-appbar .avatar { width:44px; height:44px; border-radius:14px; background: var(--primary);
+  color: var(--on-primary); display:grid; place-items:center; font-weight:700; font-family:var(--font-display); }
+.l-appbar .hi { font-size:13px; color: var(--ink-2); }
+.l-appbar .nm { font-weight:700; font-size:16px; }
+
+/* membership card — premium bank-card feel, tinted by tier gradient */
+.l-card { border-radius: var(--radius); padding:22px; color:#fff; position:relative; overflow:hidden;
+  box-shadow: var(--shadow-lg); background:
+    linear-gradient(135deg, var(--tier-from, #B08D57) 0%, var(--tier-to, #7A5C3A) 100%); }
+.l-card::after { content:""; position:absolute; inset:0; background:
+  radial-gradient(120% 80% at 90% -10%, rgba(255,255,255,.25), transparent 60%); pointer-events:none; }
+.l-card .k { font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.85; }
+.l-card .pts { font-family:var(--font-display); font-size:46px; line-height:1; margin:6px 0 2px; font-variant-numeric:tabular-nums; }
+.l-card .tier-badge { position:absolute; top:16px; right:16px; display:inline-flex; align-items:center; gap:9px;
+  color:#fff; font-weight:800; font-size:14px; letter-spacing:.02em; padding:9px 18px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.4); box-shadow:0 5px 16px rgba(0,0,0,.22); text-shadow:0 1px 2px rgba(0,0,0,.28); }
+.l-card .tier-badge .medal { font-size:17px; line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.l-card .name { margin-top:16px; font-weight:600; letter-spacing:.04em; opacity:.95; }
+.l-card .meta { font-size:12px; opacity:.8; margin-top:2px; }
+
+.l-quick { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:16px; }
+.l-quick a { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:6px; padding:13px 4px;
+  border-radius:16px; background:#fff; border:1px solid var(--line); text-decoration:none; color:var(--ink);
+  font-size:11.5px; font-weight:600; line-height:1.15; text-align:center; min-width:0; box-shadow: var(--shadow); }
+.l-quick .ic { width:28px; height:28px; display:grid; place-items:center; color: var(--primary); }
+
+.l-section-h { display:flex; align-items:center; justify-content:space-between; margin:22px 2px 10px; }
+.l-section-h h3 { font-size:16px; font-weight:700; }
+.l-section-h a { font-size:13px; color: var(--primary-ink); font-weight:600; text-decoration:none; }
+
+.l-tile { background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px; box-shadow: var(--shadow); }
+
+/* offer carousel — full-bleed so cards scroll to the screen edge with a peek */
+.l-carousel { display:flex; gap:12px; overflow-x:auto; padding:0 18px 6px; margin:0 -18px;
+  scroll-snap-type:x mandatory; scroll-padding-left:18px; -webkit-overflow-scrolling:touch; }
+.l-carousel::-webkit-scrollbar { display:none; }
+.l-offer { flex:0 0 calc(50% - 6px); scroll-snap-align:start; border-radius:18px; padding:16px; color:#fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); box-shadow: var(--shadow); min-height:132px; }
+.l-offer .big { font-family:var(--font-display); font-size:25px; line-height:1.1; margin:2px 0; }
+
+/* carousel dots */
+.l-dots { display:flex; gap:6px; justify-content:center; margin-top:12px; }
+.l-dot { width:7px; height:7px; border-radius:50%; background:var(--line); border:none; padding:0; cursor:pointer; transition:.2s; }
+.l-dot.active { background:var(--primary); width:18px; border-radius:999px; }
+
+/* checklist */
+.l-check { display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); }
+.l-check:last-child { border-bottom:none; }
+.l-check .box { width:22px; height:22px; border-radius:7px; border:2px solid var(--line); flex:none; }
+.l-check.done .box { background: var(--primary); border-color: var(--primary); }
+
+/* bottom tab bar — full-width fixed bar, items centred inside */
+.l-tabbar { position:fixed; bottom:0; left:0; right:0; width:100%; z-index:50;
+  background:#fff; border-top:1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom); box-shadow:0 -2px 12px rgba(42,38,34,.05); }
+.l-tabbar-inner { max-width:480px; margin:0 auto; display:grid; grid-template-columns:repeat(5,1fr);
+  align-items:center; padding:8px 10px; }
+.l-tabbar a { display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0;
+  color: var(--ink-2); text-decoration:none; font-size:10.5px; font-weight:600; }
+.l-tabbar a.active { color: var(--primary); }
+/* Scan button: the primary action — larger, and peeking just slightly above
+   the bar's top edge so it stands out from the flat tabs (a subtle FAB). */
+.l-tabbar .scan-fab { justify-self:center; align-self:start; margin-top:-12px; z-index:1;
+  background: var(--primary); color: var(--on-primary);
+  width:62px; height:62px; border-radius:20px; display:grid; place-items:center;
+  box-shadow:0 8px 20px color-mix(in srgb,var(--primary) 42%,transparent); }
+
+/* ===================== SCROLLBARS (subtle) ===================== */
+* { scrollbar-width: thin; scrollbar-color: rgba(120,120,130,.3) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(120,120,130,.28); border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(120,120,130,.5); }
+.l-side { scrollbar-color: rgba(255,255,255,.18) transparent; }
+.l-side::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); }
+.l-side::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.3); }
+.l-carousel::-webkit-scrollbar, .l-phone::-webkit-scrollbar { display: none; }
+.l-carousel, .l-phone { scrollbar-width: none; }
+
+/* =====================================================================
+   MERCHANT / ADMIN — dashboard shell
+   ===================================================================== */
+.l-shell { display:grid; grid-template-columns: 250px minmax(0,1fr); min-height:100vh; }
+@media (max-width:900px){ .l-shell{ grid-template-columns:1fr; } .l-side{ display:none; } }
+.l-side { background: color-mix(in srgb, var(--ink) 92%, #000); color:#EDE4D8;
+  display:flex; flex-direction:column; padding:18px 12px; position:sticky; top:0; height:100vh; overflow:auto; }
+.l-side .brand { display:flex; align-items:center; gap:10px; padding:6px 8px 14px; }
+.l-side .brand .logo { width:38px; height:38px; border-radius:11px; background:var(--primary); color:var(--on-primary);
+  display:grid; place-items:center; font-family:var(--font-display); font-weight:700; }
+.l-side .brand .nm { font-weight:700; font-size:16px; }
+.l-side .brand .sub { font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.5; }
+.l-ws { margin:6px 4px 12px; padding:11px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); }
+.l-ws .k { font-size:9px; letter-spacing:.16em; text-transform:uppercase; opacity:.55; }
+.l-ws .v { font-weight:600; margin-top:3px; font-size:14px; }
+.l-navgrp { font-size:9px; letter-spacing:.16em; text-transform:uppercase; opacity:.45; margin:16px 10px 6px; }
+.l-nav-item { display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:11px;
+  color:#EDE4D8; text-decoration:none; font-size:14px; }
+.l-nav-item:hover { background:rgba(255,255,255,.07); }
+.l-nav-item.active { background:rgba(255,255,255,.1); box-shadow: inset 3px 0 0 var(--primary-2); }
+.l-nav-item .en { display:block; font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; opacity:.5; }
+/* Prominent counter-scanner CTA in the merchant sidebar — the most-used action. */
+.l-nav-scan { display:flex; align-items:center; gap:10px; padding:13px 14px; margin-bottom:10px;
+  border-radius:13px; background:#fff; color:var(--primary); font-weight:800; font-size:15.5px;
+  text-decoration:none; box-shadow:0 6px 16px rgba(0,0,0,.18); transition:transform .12s ease, box-shadow .12s ease; }
+.l-nav-scan:hover { transform:translateY(-1px); box-shadow:0 9px 22px rgba(0,0,0,.24); }
+.l-nav-scan.active { outline:2px solid rgba(255,255,255,.85); }
+.l-nav-scan svg { flex:none; }
+/* Emoji quick-pick popover — only shown when the icon field is focused/clicked */
+.l-iconpick { position:absolute; z-index:30; left:0; right:0; top:100%; margin-top:6px;
+  display:grid; grid-template-columns:repeat(6,1fr); gap:6px; padding:10px;
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  box-shadow:0 16px 40px rgba(30,20,12,.22); max-height:210px; overflow-y:auto; }
+.l-iconpick[hidden] { display:none; }
+.l-iconpick-btn { font-size:18px; line-height:1; padding:6px 0; border:1px solid var(--line);
+  border-radius:9px; background:var(--surface); cursor:pointer; transition:border-color .12s, transform .12s; }
+.l-iconpick-btn:hover { border-color:var(--primary); transform:translateY(-1px); }
+/* Reward create/edit modal */
+.l-modal { position:fixed; inset:0; margin:auto; border:none; border-radius:22px; padding:0;
+  width:min(600px, calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 40px);
+  background:var(--surface); color:var(--ink); box-shadow:0 30px 70px rgba(20,12,8,.32); }
+.l-modal::backdrop { background:rgba(24,15,9,.45); }
+.l-modal-card { padding:24px 24px 26px; max-height:calc(100dvh - 60px); overflow-y:auto; }
+.l-modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.l-modal-x { border:none; background:var(--surface-2,#eee); color:var(--ink-2); width:34px; height:34px;
+  border-radius:50%; font-size:15px; cursor:pointer; line-height:1; flex:none; }
+.l-modal-x:hover { background:var(--line); color:var(--ink); }
+.l-modal-loading { padding:64px 24px; text-align:center; color:var(--ink-2); }
+/* Weekday selector chips for reward schedule */
+.l-daychip { cursor:pointer; }
+.l-daychip span { display:inline-block; padding:6px 11px; border:1px solid var(--line); border-radius:9px;
+  font-size:13px; font-weight:600; color:var(--ink-2); transition:all .12s; }
+.l-daychip input:checked + span { background:var(--primary); color:var(--on-primary,#fff); border-color:var(--primary); }
+/* Onboarding live customer-app demo (recolors from scoped theme vars) */
+.l-appdemo { background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:16px;
+  box-shadow:0 10px 30px rgba(40,30,20,.12); display:flex; flex-direction:column; gap:12px; transition:background .2s; }
+.l-appdemo-card { background:linear-gradient(135deg, var(--primary), var(--primary-2)); color:var(--on-primary,#fff);
+  border-radius:16px; padding:16px; }
+.l-appdemo-card-top { display:flex; align-items:center; justify-content:space-between; font-weight:700; font-size:14px; }
+.l-appdemo-tier { background:rgba(255,255,255,.25); padding:2px 9px; border-radius:999px; font-size:11px; }
+.l-appdemo-pts { font-family:"Fraunces",Georgia,serif; font-size:30px; font-weight:600; margin-top:10px; }
+.l-appdemo-pts small { font-size:12px; font-weight:400; opacity:.85; font-family:inherit; }
+.l-appdemo-tagline { font-size:12px; opacity:.9; margin-top:4px; }
+.l-appdemo-row { display:flex; gap:8px; }
+.l-appdemo-chip { flex:1; text-align:center; background:var(--surface-2); color:var(--ink); border-radius:11px;
+  padding:8px; font-size:12px; font-weight:600; }
+.l-appdemo-btn { background:var(--primary); color:var(--on-primary,#fff); border:none; border-radius:12px;
+  padding:11px; font-weight:700; font-size:14px; cursor:default; }
+@media (max-width:720px){ [data-controller="onboardpreview"]{ grid-template-columns:1fr !important; } }
+.l-side .foot { margin-top:auto; display:flex; align-items:center; gap:10px; padding:11px 8px; border-top:1px solid rgba(255,255,255,.1); }
+.l-side .foot .av { width:32px; height:32px; border-radius:9px; background:rgba(255,255,255,.14); display:grid; place-items:center; font-size:12px; font-weight:600; }
+
+.l-main { min-width:0; display:flex; flex-direction:column; }
+
+/* ---- Landlord mobile bottom nav (only when the sidebar is hidden) ---- */
+.l-mtab { display:none; }
+@media (max-width:900px) {
+  /* Hide the sidebar on phones (a base .l-side rule declared later than the
+     original hide rule was overriding it) and switch the shell to one column. */
+  .l-side { display:none !important; }
+  .l-shell { grid-template-columns:1fr !important; }
+  .l-mtab { display:block; position:fixed; bottom:0; left:0; right:0; z-index:60;
+    background:color-mix(in srgb, #fff 92%, transparent); -webkit-backdrop-filter:saturate(1.4) blur(12px); backdrop-filter:saturate(1.4) blur(12px);
+    box-shadow:0 -1px 0 var(--line), 0 -10px 26px -16px rgba(20,35,60,.22); padding-bottom:env(safe-area-inset-bottom); }
+  .l-mtab-inner { display:grid; grid-template-columns:repeat(5,1fr); align-items:center; padding:7px 8px 5px; }
+  .l-mtab a { display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 0;
+    color:var(--ink-2); text-decoration:none; font-size:10.5px; font-weight:600; }
+  .l-mtab a.active { color:var(--primary); }
+  .l-mtab a .ce-tab-ic { position:relative; width:46px; height:30px; border-radius:999px; display:grid; place-items:center; transition:background .16s; }
+  .l-mtab a.active .ce-tab-ic { background:color-mix(in srgb, var(--primary) 14%, #fff); }
+  .l-mtab .ce-tab-badge { position:absolute; top:-3px; right:2px; min-width:16px; height:16px; padding:0 4px;
+    border-radius:999px; background:#e5484d; color:#fff; font-size:9.5px; font-weight:800; line-height:16px; text-align:center; box-shadow:0 0 0 2px #fff; }
+  /* Centre "Tổng quan" — raised, larger, brand-filled, no white ring */
+  .l-mtab a.ce-tab-home { color:var(--primary); }
+  .l-mtab a.ce-tab-home .ce-tab-ic { width:56px; height:56px; margin-top:-22px; border-radius:50%;
+    background:var(--primary); color:var(--on-primary);
+    box-shadow:0 10px 22px -6px color-mix(in srgb, var(--primary) 65%, transparent); }
+  .l-mtab a.ce-tab-home.active .ce-tab-ic { background:var(--primary); }
+  .l-mtab a.ce-tab-home:active .ce-tab-ic { transform:scale(.94); }
+  .l-mtab a.ce-tab-home span:last-child { margin-top:1px; font-weight:700; }
+  .l-main { padding-bottom:90px; }
+  .l-content { padding-bottom:24px; }
+  .l-topbar { position:sticky; top:0; }
+  /* Page headers pair a title with action buttons. On phones the buttons were
+     overlapping the title (or squeezing into unreadable columns), so stack them
+     onto their own full-width row. */
+  .l-pagehead { flex-direction:column; align-items:stretch !important; gap:12px; }
+  .l-pagehead > div:last-child { margin-left:0 !important; display:grid;
+    grid-template-columns:1fr 1fr; gap:8px; }
+  .l-pagehead .l-btn { width:100%; justify-content:center; text-align:center;
+    white-space:normal; line-height:1.3; }
+  .l-actionbar { display:grid !important; grid-template-columns:1fr 1fr; gap:8px; }
+  .l-actionbar > * { width:100%; margin:0 !important; }
+  .l-actionbar .l-btn { width:100%; justify-content:center; text-align:center;
+    white-space:normal; line-height:1.3; }
+  .l-hide-mobile { display:none !important; }
+  .l-grid-mobile1 { grid-template-columns:1fr !important; }
+  /* Chat: edge-to-edge on mobile (no inner rounded card), like the customer app */
+  /* Fill exactly the gap between the sticky topbar and the bottom tab bar, so
+     the composer sits just above the menu instead of behind it. The negative
+     bottom margin cancels .l-content's 24px + .l-main's 90px bottom padding,
+     which would otherwise push the page into a scroll. */
+  .l-chatshell { margin:-16px calc(-1 * clamp(16px,3vw,32px)) -114px; border:none !important; border-radius:0 !important;
+    box-shadow:none !important;
+    height:calc(100dvh - 75px - 76px - env(safe-area-inset-bottom)) !important; }
+}
+.l-topbar { display:flex; align-items:center; gap:16px; padding:16px clamp(16px,3vw,32px);
+  border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:20; }
+.l-topbar .title { font-family:var(--font-display); font-weight:700; font-size:19px; }
+.l-topbar .title .en { display:block; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2); }
+.l-content { padding: clamp(16px,3vw,32px); }
+
+.l-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+.l-kpi { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow: var(--shadow); }
+.l-kpi .k { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-weight:600; }
+.l-kpi .v { font-family:var(--font-display); font-size:34px; margin-top:6px; font-variant-numeric:tabular-nums; }
+.l-kpi .d { font-size:12px; color:var(--good); margin-top:2px; font-weight:600; }
+
+.l-panel { background:#fff; border:1px solid var(--line); border-radius:20px; padding:22px; box-shadow: var(--shadow); }
+.l-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); }
+.l-toggle-row:last-child { border-bottom:none; }
+.l-switch { display:inline-block; width:46px; height:27px; border-radius:999px; background:var(--surface-2); position:relative; cursor:pointer; border:1px solid var(--line); flex:none; vertical-align:middle; }
+.l-switch input { position:absolute; opacity:0; inset:0; cursor:pointer; }
+.l-switch .knob { position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:.16s; }
+.l-switch:has(input:checked), .l-switch.on { background: var(--primary); border-color: var(--primary); }
+.l-switch:has(input:checked) .knob, .l-switch.on .knob { left:21px; }
+/* bare button wrapper so a button_to can render as a toggle */
+.l-switch-btn { background:none; border:none; padding:0; cursor:pointer; }
+
+/* flash */
+.l-flash { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:1000;
+  background: var(--ink); color:#fff; padding:11px 18px; border-radius:12px; font-size:14px; box-shadow: var(--shadow-lg); }
+
+/* preset swatch */
+.l-preset { border:1px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; background:#fff; text-align:left; }
+.l-preset .sw { display:flex; gap:6px; margin-bottom:8px; }
+.l-preset .sw span { width:22px; height:22px; border-radius:7px; }
+
+/* ---- wallet tabs ---- */
+.l-wtabs { display:flex; gap:6px; background:var(--surface-2); padding:5px; border-radius:14px; margin-bottom:16px; }
+.l-wtabs button { flex:1; border:none; background:transparent; padding:9px 8px; border-radius:10px; font-size:13px; font-weight:600; color:var(--ink-2); cursor:pointer; }
+.l-wtabs button.active { background:#fff; color:var(--ink); box-shadow:var(--shadow); }
+
+/* ---- ticket-style voucher card ---- */
+.l-ticket { position:relative; display:flex; background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:var(--shadow); text-decoration:none; color:var(--ink); }
+.l-ticket .stub { width:108px; flex:none; background:linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:14px 10px; }
+.l-ticket .stub .v { font-family:var(--font-display); font-size:22px; line-height:1.05; max-width:100%; overflow-wrap:anywhere; }
+.l-ticket .stub .u { font-size:10px; opacity:.85; letter-spacing:.1em; text-transform:uppercase; margin-top:4px; }
+.l-ticket .body { flex:1; min-width:0; padding:14px 16px; }
+.l-ticket .perf { position:absolute; left:100px; top:0; bottom:0; width:16px; background:
+  radial-gradient(circle at center, var(--surface) 0 4px, transparent 4px) center/16px 14px repeat-y; }
+.l-ticket.used, .l-ticket.expired { opacity:.6; }
+.l-ticket .state { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+.l-ticket .state.active  { background:var(--good-soft, #DEEBE1); color:var(--good); }
+.l-ticket .state.used    { background:var(--surface-2); color:var(--ink-2); }
+.l-ticket .state.expired { background:#F3DDD7; color:var(--warn); }
+
+/* ---- stamp card ---- */
+.l-stamp-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:14px; }
+.l-stamp-dot { aspect-ratio:1; border-radius:50%; border:2px dashed var(--line); display:grid; place-items:center;
+  color:var(--ink-2); font-weight:700; font-size:14px; }
+.l-stamp-dot.filled { background:var(--primary); border-style:solid; border-color:var(--primary); color:#fff;
+  animation:stampPop .3s ease-out; }
+.l-stamp-dot.reward { border-color:var(--primary-2); color:var(--primary-2); }
+@keyframes stampPop { 0%{ transform:scale(0.4); } 70%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
+
+/* ---- missions ---- */
+.l-mission { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); }
+.l-mission:last-child { border-bottom:none; }
+.l-mission .ic { width:44px; height:44px; border-radius:14px; background:var(--surface-2); display:grid; place-items:center; font-size:22px; flex:none; }
+.l-bar { height:7px; border-radius:999px; background:var(--surface-2); overflow:hidden; margin-top:6px; }
+.l-bar > span { display:block; height:100%; background:var(--primary); border-radius:999px; }
+
+/* ---- badges ---- */
+.l-badge-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.l-badge { text-align:center; padding:16px 8px; border-radius:16px; background:#fff; border:1px solid var(--line); }
+.l-badge .ic { font-size:34px; }
+.l-badge.locked { opacity:.45; filter:grayscale(1); }
+.l-badge .nm { font-size:12px; font-weight:600; margin-top:6px; }
+
+/* ---- lucky wheel ---- */
+.l-wheel-wrap { position:relative; width:280px; height:280px; margin:10px auto; border-radius:50%; box-shadow:var(--shadow-lg); }
+.l-wheel { width:100%; height:100%; border-radius:50%; transition:transform 5s cubic-bezier(.12,.78,.22,1);
+  border:8px solid #fff; box-sizing:border-box;
+  /* force a clean circular raster while rotating (removes square GPU-tile artifacts on mobile/PWA) */
+  clip-path: circle(50%); -webkit-backface-visibility:hidden; backface-visibility:hidden; will-change:transform; }
+.l-wheel-pointer { position:absolute; top:-6px; left:50%; transform:translateX(-50%); font-size:30px; z-index:2; filter:drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+.l-wheel-hub { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:56px; height:56px;
+  border-radius:50%; background:#fff; box-shadow:var(--shadow); display:grid; place-items:center; font-weight:800; color:var(--primary); z-index:2; }
+
+/* Hide scrollbars in the customer app (keep scrolling functional) */
+.pwa-app, .pwa-app * { scrollbar-width: none; -ms-overflow-style: none; }
+.pwa-app::-webkit-scrollbar, .pwa-app *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* ---- HTML confirm dialog ---- */
+.l-confirm-overlay { position:fixed; inset:0; z-index:2000; display:grid; place-items:center; padding:20px;
+  background:rgba(20,14,8,.45); opacity:0; transition:opacity .18s; }
+.l-confirm-overlay.open { opacity:1; }
+.l-confirm { width:100%; max-width:340px; background:#fff; border-radius:20px; padding:26px 22px; text-align:center;
+  box-shadow:var(--shadow-lg); transform:translateY(8px) scale(.98); transition:transform .18s; }
+.l-confirm-overlay.open .l-confirm { transform:none; }
+.l-confirm-icon { width:52px; height:52px; margin:0 auto 12px; border-radius:50%; background:var(--primary-soft);
+  color:var(--primary-ink); display:grid; place-items:center; font-family:var(--font-display); font-size:26px; font-weight:700; }
+.l-confirm-msg { font-size:16px; font-weight:600; color:var(--ink); }
+.l-confirm-actions { display:flex; gap:10px; margin-top:20px; }
+.l-confirm-actions .l-btn { flex:1; }
+
+/* form controls follow the brand */
+input[type="range"], input[type="checkbox"], input[type="radio"], progress { accent-color: var(--primary); }
+
+/* ---- Toast notifications (top-right) ---- */
+.l-toast-wrap { position:fixed; top:16px; right:16px; z-index:3000; display:flex; flex-direction:column; gap:10px; max-width:calc(100vw - 32px); }
+.l-toast { display:flex; align-items:flex-start; gap:10px; min-width:260px; max-width:380px; padding:13px 14px;
+  border-radius:14px; background:#fff; box-shadow:var(--shadow-lg); border:1px solid var(--line); border-left:4px solid var(--good);
+  animation: toastIn .32s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes toastIn { from { transform:translateX(120%); opacity:0; } to { transform:none; opacity:1; } }
+.l-toast.leaving { transform:translateX(120%); opacity:0; transition:transform .3s ease, opacity .3s ease; }
+.l-toast.error { border-left-color:var(--warn); }
+.l-toast .ic { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; flex:none; color:#fff; background:var(--good); font-size:13px; font-weight:700; margin-top:1px; }
+.l-toast.error .ic { background:var(--warn); }
+.l-toast .msg { flex:1; font-size:14px; color:var(--ink); line-height:1.4; }
+.l-toast .x { background:none; border:none; cursor:pointer; color:var(--ink-2); font-size:15px; line-height:1; padding:2px 4px; flex:none; }
+.l-toast .x:hover { color:var(--ink); }
+
+/* ---- Subscription warning banner (merchant dashboard) ---- */
+.l-subwarn { display:flex; align-items:center; gap:16px; padding:14px 16px; border-radius:14px; margin-bottom:16px;
+  border:1px solid var(--line); border-left:4px solid var(--warn); background:color-mix(in srgb, var(--warn) 8%, #fff); color:var(--ink); }
+.l-subwarn.danger { border-left-color:var(--warn); background:color-mix(in srgb, var(--warn) 12%, #fff); }
+.l-subwarn.warn { border-left-color:#C9871F; background:color-mix(in srgb, #C9871F 10%, #fff); }
+.l-subwarn.info { border-left-color:var(--primary); background:color-mix(in srgb, var(--primary) 8%, #fff); }
+
+/* ---- Add-to-Home-Screen popup (customer PWA) — centered modal, top layer ---- */
+.l-a2hs-overlay { position:fixed; inset:0; z-index:2600; display:grid; place-items:center; padding:20px; background:rgba(20,14,8,.5); }
+.l-a2hs { width:100%; max-width:360px; background:#fff; border-radius:20px; padding:26px 22px 20px; text-align:center; box-shadow:var(--shadow-lg); position:relative; }
+.l-a2hs .ic { width:58px; height:58px; margin:0 auto 12px; border-radius:16px; background:var(--primary-soft); display:grid; place-items:center; font-size:28px; }
+.l-a2hs-x { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:var(--surface-2);
+  border:none; cursor:pointer; color:var(--ink-2); font-size:18px; line-height:1; display:grid; place-items:center; }
+.l-a2hs-x:hover { background:color-mix(in srgb, var(--ink) 10%, var(--surface-2)); color:var(--ink); }
+
+/* launcher (dev) */
+.l-launch { max-width:1000px; margin:0 auto; padding:48px 20px; }
+.l-launch h1 { font-family:var(--font-display); font-size:34px; }
+.l-launch .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; margin-top:24px; }
+
+/* Fullscreen QR zoom modal (check-in codes) */
+.l-qrmodal { position:fixed; inset:0; z-index:1000; display:none; place-items:center; padding:24px;
+  background:rgba(20,15,12,.62); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.l-qrmodal.is-open { display:grid; }
+.l-qrmodal-card { position:relative; background:#fff; border-radius:24px; padding:34px 30px;
+  width:100%; max-width:min(92vw,460px); box-shadow:var(--shadow-lg); }
+.l-qrmodal-qr { display:grid; place-items:center; }
+.l-qrmodal-qr svg { width:100%; height:auto; max-width:400px; }
+.l-qrmodal-close { position:absolute; top:14px; right:14px; width:36px; height:36px; border-radius:50%;
+  border:1px solid var(--line); background:var(--surface-2); color:var(--ink); font-size:15px; line-height:1;
+  cursor:pointer; display:grid; place-items:center; }
+
+/* Editable list rows (stamp cards): highlight the row currently being edited */
+.l-editrow { border-bottom:1px solid var(--line); border-radius:12px; margin:0 -12px; padding:0 12px; transition:background .15s ease; }
+.l-editrow[open] { background: color-mix(in srgb, var(--primary) 7%, transparent);
+  box-shadow: inset 3px 0 0 var(--primary); padding-bottom:6px; }
+.l-editrow[open] > summary .l-chip { background: var(--primary); color: var(--on-primary); }
+
+/* =====================================================================
+   MEMBER PWA — refined design layer (professional polish)
+   ===================================================================== */
+/* Sticky, glassy app bar for sub-screens */
+.l-appbar { position:sticky; top:0; z-index:20; padding:14px 16px;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  -webkit-backdrop-filter:saturate(1.3) blur(10px); backdrop-filter:saturate(1.3) blur(10px); }
+.l-appbar.bordered { border-bottom:1px solid var(--line); }
+.l-appbar .back { width:38px; height:38px; border-radius:12px; display:grid; place-items:center;
+  background:var(--surface-2); color:var(--ink); text-decoration:none; font-size:19px; flex:none;
+  transition:background .15s; }
+.l-appbar .back:hover { background:color-mix(in srgb, var(--ink) 8%, var(--surface-2)); }
+.l-appbar .title { font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-.01em; }
+
+/* List row (tile that is a tappable list item) */
+.l-row { display:flex; gap:13px; align-items:center; text-decoration:none; color:inherit;
+  background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px 15px;
+  box-shadow:var(--shadow); margin-bottom:11px; transition:transform .14s, box-shadow .14s, border-color .14s; }
+.l-row:hover { border-color:color-mix(in srgb, var(--primary) 30%, var(--line)); }
+.l-row:active { transform:scale(.985); }
+.l-row .ic { width:46px; height:46px; border-radius:14px; flex:none; display:grid; place-items:center; font-size:21px;
+  background:color-mix(in srgb, var(--primary) 11%, #fff); }
+.l-row .bd { flex:1; min-width:0; }
+.l-row .bd .t { font-weight:700; font-size:14.5px; }
+.l-row .bd .s { font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.l-row .go { color:var(--ink-2); font-size:19px; flex:none; }
+
+/* Status pill */
+.l-pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap;
+  color:var(--_c,#5C6B7A); background:color-mix(in srgb, var(--_c,#5C6B7A) 13%, transparent); }
+
+/* Empty state */
+.l-empty { text-align:center; padding:48px 24px; }
+.l-empty .em { font-size:44px; }
+.l-empty h3 { font-size:16px; font-weight:700; margin-top:10px; }
+.l-empty p { color:var(--ink-2); font-size:13px; margin-top:4px; }
+
+/* Info grid used on detail screens */
+.l-info { display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
+.l-info .k { color:var(--ink-2); font-size:11.5px; }
+.l-info .v { font-weight:600; font-size:14px; margin-top:1px; }
+
+/* Amount emphasis */
+.l-amount { font-family:var(--font-display); font-weight:700; }
+
+/* =====================================================================
+   CUSTOMER APP — "Modern & trustworthy" redesign layer (Estate).
+   Every rule is scoped under .l-phone / .pwa-app so the merchant &
+   admin dashboards (which share these class names) stay untouched.
+   ===================================================================== */
+/* iOS Safari auto-zooms (and shifts the fixed layout) whenever a focused
+   field has a computed font-size below 16px. Keep EVERY text field in the
+   customer PWA at ≥16px so focusing an input never triggers that zoom. */
+.pwa-app input:not([type=checkbox]):not([type=radio]):not([type=range]),
+.pwa-app textarea,
+.pwa-app select { font-size:16px; }
+
+.l-phone {
+  --ce-shadow-sm: 0 1px 2px rgba(20,35,60,.05);
+  --ce-shadow:    0 1px 2px rgba(20,35,60,.04), 0 14px 30px -16px rgba(20,35,60,.20);
+  --ce-shadow-lg: 0 24px 50px -22px rgba(20,35,60,.38);
+  --ce-r: 18px; --ce-r-lg: 22px;
+}
+.l-phone .l-screen { padding:16px 16px calc(98px + env(safe-area-inset-bottom)); }
+
+/* App bar — solid back button that reads as tappable */
+.l-phone .l-appbar { padding:14px 16px; gap:12px; }
+.l-phone .l-appbar.bordered { border-bottom:1px solid var(--line); }
+.l-phone .l-appbar .back { width:40px; height:40px; border-radius:13px; background:#fff; border:1px solid var(--line);
+  box-shadow:var(--ce-shadow-sm); color:var(--ink); display:grid; place-items:center; }
+.l-phone .l-appbar .back:hover { background:var(--surface-2); }
+.l-phone .l-appbar .back svg { width:20px; height:20px; }
+.l-phone .l-appbar .title { font-family:var(--font-body); font-weight:800; font-size:18px; letter-spacing:-.015em; }
+
+/* Cards, panels, tiles — softer cool depth + consistent radii */
+.l-phone .l-panel { border-radius:var(--ce-r-lg); box-shadow:var(--ce-shadow); border-color:var(--line); padding:18px; }
+.l-phone .l-tile  { border-radius:var(--ce-r); box-shadow:var(--ce-shadow); border-color:var(--line); }
+
+/* Tappable list rows */
+.l-phone .l-row { border-radius:var(--ce-r); box-shadow:var(--ce-shadow); padding:13px 14px; gap:13px; margin-bottom:10px; align-items:center; }
+.l-phone .l-row:hover { box-shadow:var(--ce-shadow-lg); transform:translateY(-1px); }
+.l-phone .l-row .ic { width:46px; height:46px; border-radius:14px; font-size:22px;
+  background:color-mix(in srgb, var(--primary) 11%, #fff); color:var(--primary); }
+.l-phone .l-row .ic svg { width:23px; height:23px; }
+.l-phone .l-row .bd .t { font-size:15px; font-weight:700; letter-spacing:-.01em; }
+.l-phone .l-row .bd .s { font-size:13px; margin-top:2px; }
+.l-phone .l-row .go svg { width:20px; height:20px; }
+
+/* Buttons — a bit taller, brand glow on primary */
+.l-phone .l-btn { border-radius:14px; padding:14px 18px; font-weight:700; font-size:15px; }
+.l-phone .l-btn-primary { box-shadow:0 12px 24px -10px color-mix(in srgb, var(--btn-primary) 70%, transparent); }
+.l-phone .l-btn-soft { font-weight:700; }
+
+/* Inputs */
+.l-phone .l-field { border-radius:14px; padding:14px 15px; box-shadow:var(--ce-shadow-sm); }
+.l-phone .l-label { font-size:12.5px; font-weight:600; margin-bottom:7px; }
+
+/* Status pills a touch bolder */
+.l-phone .l-pill { font-weight:700; padding:5px 11px; }
+
+/* Section header */
+.l-phone .l-section-h { margin:22px 2px 12px; }
+.l-phone .l-section-h h3 { font-size:16px; font-weight:800; letter-spacing:-.01em; }
+
+/* Empty states — softer, more air */
+.l-phone .l-empty { padding:46px 22px; }
+.l-phone .l-empty .em { font-size:42px; }
+.l-phone .l-empty h3 { font-size:16.5px; margin-top:12px; }
+.l-phone .l-empty p { font-size:13.5px; margin-top:6px; line-height:1.5; }
+
+/* Amount stays tabular but in the app font (no serif here) */
+.l-phone .l-amount { font-family:var(--font-body); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+/* Info grid on detail screens */
+.l-phone .l-info { gap:16px 12px; }
+.l-phone .l-info .k { font-size:11.5px; }
+.l-phone .l-info .v { font-size:14.5px; font-weight:700; }
+
+/* ---- Bottom tab bar — glassy, active tab gets a pill behind the icon ---- */
+.pwa-app .l-tabbar { border-top:none; background:color-mix(in srgb, #fff 90%, transparent);
+  -webkit-backdrop-filter:saturate(1.5) blur(14px); backdrop-filter:saturate(1.5) blur(14px);
+  box-shadow:0 -1px 0 var(--line), 0 -10px 26px -16px rgba(20,35,60,.22); }
+.pwa-app .l-tabbar-inner { padding:8px 8px 6px; }
+.pwa-app .l-tabbar a { gap:3px; font-size:10.5px; font-weight:600; color:var(--ink-2); }
+.pwa-app .l-tabbar a .ce-tab-ic { width:46px; height:30px; border-radius:999px; display:grid; place-items:center;
+  transition:background .18s ease, transform .18s ease; }
+.pwa-app .l-tabbar a.active { color:var(--primary); }
+.pwa-app .l-tabbar a.active .ce-tab-ic { background:color-mix(in srgb, var(--primary) 14%, #fff); }
+.pwa-app .l-tabbar a:active .ce-tab-ic { transform:scale(.9); }
+.pwa-app .l-tabbar a .ce-tab-ic { position:relative; }
+
+/* Center "Trang chủ" — a raised, larger primary button */
+.pwa-app .l-tabbar a.ce-tab-home { color:var(--primary); }
+.pwa-app .l-tabbar a.ce-tab-home .ce-tab-ic { width:56px; height:56px; margin-top:-22px; border-radius:50%;
+  background:var(--primary); color:var(--on-primary);
+  box-shadow:0 10px 22px -6px color-mix(in srgb, var(--primary) 65%, transparent); }
+.pwa-app .l-tabbar a.ce-tab-home.active .ce-tab-ic,
+.pwa-app .l-tabbar a.ce-tab-home:active .ce-tab-ic { background:var(--primary); transform:none; }
+.pwa-app .l-tabbar a.ce-tab-home:active .ce-tab-ic { transform:scale(.94); }
+.pwa-app .l-tabbar a.ce-tab-home span:last-child { margin-top:1px; font-weight:700; }
+
+/* Unread badge on a tab icon */
+.pwa-app .l-tabbar .ce-tab-badge { position:absolute; top:-3px; right:2px; min-width:16px; height:16px; padding:0 4px;
+  border-radius:999px; background:#e5484d; color:#fff; font-size:9.5px; font-weight:800; line-height:16px; text-align:center;
+  box-shadow:0 0 0 2px #fff; }
+
+/* ---- Document thumbnails (tap to open the lightbox) ---- */
+.ce-doc-thumb { width:92px; height:92px; padding:0; border:1px solid var(--line); border-radius:13px; overflow:hidden;
+  background:var(--surface-2); cursor:pointer; display:block; box-shadow:var(--ce-shadow-sm); transition:transform .14s, border-color .14s; }
+.ce-doc-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.ce-doc-thumb:hover { transform:translateY(-2px); border-color:color-mix(in srgb, var(--primary) 45%, var(--line)); }
+.ce-doc-file { width:100%; height:100%; display:grid; place-items:center; color:var(--primary); }
+.ce-doc-del { width:24px; height:24px; border-radius:50%; border:none; background:#e5484d; color:#fff;
+  display:grid; place-items:center; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.28); padding:0; }
+.ce-doc-del svg { width:13px; height:13px; }
+
+/* ---- In-app document/photo lightbox ---- */
+.ce-lb { position:fixed; inset:0; z-index:4000; background:rgba(10,16,24,.93);
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; }
+.ce-lb[hidden] { display:none; }
+.ce-lb-bar { position:absolute; top:0; left:0; right:0; z-index:3; display:flex; align-items:center; gap:12px;
+  padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
+  background:linear-gradient(to bottom, rgba(0,0,0,.55), transparent); }
+.ce-lb-name { flex:1; min-width:0; color:#fff; font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ce-lb-actions { display:flex; gap:10px; flex:none; }
+.ce-lb-btn { width:44px; height:44px; border-radius:50%; border:none; background:rgba(255,255,255,.18); color:#fff;
+  display:grid; place-items:center; cursor:pointer; text-decoration:none; }
+.ce-lb-btn:hover { background:rgba(255,255,255,.30); }
+.ce-lb-btn svg { width:22px; height:22px; }
+.ce-lb-stage { max-width:100vw; max-height:100dvh; padding:72px 6px; display:flex; align-items:center; justify-content:center; }
+.ce-lb-img { max-width:95vw; max-height:80dvh; object-fit:contain; border-radius:10px; box-shadow:0 24px 64px rgba(0,0,0,.55); }
+.ce-lb-frame { width:95vw; height:82dvh; border:none; border-radius:10px; background:#fff; }
+.ce-lb-file { text-align:center; color:#fff; padding:20px; }
+.ce-lb-file-ic { font-size:66px; }
+.ce-lb-file-nm { font-size:15px; font-weight:600; margin-top:8px; word-break:break-word; }
+.ce-lb-file-hint { font-size:13px; opacity:.75; margin-top:6px; }
+.ce-lb-nav { position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:46px; height:46px; border-radius:50%;
+  border:none; background:rgba(255,255,255,.18); color:#fff; font-size:28px; line-height:1; cursor:pointer;
+  display:grid; place-items:center; }
+.ce-lb-nav:hover { background:rgba(255,255,255,.30); }
+.ce-lb-nav.prev { left:10px; } .ce-lb-nav.next { right:10px; }
+.ce-lb-nav[hidden] { display:none; }
+.ce-lb-count { position:absolute; bottom:calc(16px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+  z-index:3; color:#fff; font-size:13px; font-weight:600; background:rgba(0,0,0,.45); padding:5px 13px; border-radius:999px; }
+.ce-lb-count[hidden] { display:none; }

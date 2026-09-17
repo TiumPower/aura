@@ -1,0 +1,109 @@
+<% content_for :title, "Bảng ca làm" %>
+
+<style>
+  .sh-wrap { overflow-x:auto; background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); }
+  .sh-tbl { width:100%; border-collapse:collapse; min-width:860px; }
+  .sh-tbl th { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2);
+    font-weight:600; padding:12px 8px; text-align:left; border-bottom:1px solid var(--line); }
+  .sh-tbl th.today { color:var(--primary-ink); }
+  .sh-tbl td { padding:8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .sh-name { min-width:170px; }
+  .sh-cell { min-width:92px; }
+  .sh-chip { display:block; font-size:11.5px; font-weight:600; padding:4px 7px; border-radius:8px;
+    margin-bottom:4px; background:color-mix(in srgb, var(--primary) 12%, #fff); color:var(--primary-ink); }
+  .sh-chip.off { background:#f6eae8; color:#B4402F; }
+  .sh-chip form { display:inline; }
+  .sh-chip button { background:none; border:none; cursor:pointer; color:inherit; font-size:11px; opacity:.55; padding:0 0 0 3px; }
+  .sh-add { font-size:11px; color:var(--ink-2); text-decoration:none; }
+</style>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+  <%= link_to "‹ Tuần trước", merchant_shifts_path(week: @week_start - 7), class: "l-chip" %>
+  <strong style="font-size:14.5px;">
+    <%= l(@week_start, format: "%d/%m") %> – <%= l(@week_start + 6, format: "%d/%m/%Y") %>
+  </strong>
+  <%= link_to "Tuần sau ›", merchant_shifts_path(week: @week_start + 7), class: "l-chip" %>
+  <%= link_to "Tuần này", merchant_shifts_path, class: "l-chip l-chip-brand" %>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <% if current_membership&.can_manage? %>
+      <%= button_to "⚡ Sinh ca từ mẫu tuần", merchant_generate_shifts_path(week: @week_start), method: :post,
+            class: "l-btn l-btn-primary",
+            form: { data: { turbo_confirm: "Sinh ca cho tuần này từ mẫu tuần của từng KTV? Ca đã sửa tay sẽ được giữ nguyên." } } %>
+    <% end %>
+  </div>
+</div>
+
+<% if @staff.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">🗓️</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có nhân sự để xếp ca</p>
+    <%= link_to "Thêm nhân sự", new_merchant_staff_path, class: "l-btn l-btn-primary", style: "margin-top:12px;" %>
+  </div>
+<% else %>
+  <div class="sh-wrap">
+    <table class="sh-tbl">
+      <thead>
+        <tr>
+          <th class="sh-name">Nhân sự</th>
+          <% @days.each do |d| %>
+            <th class="sh-cell <%= 'today' if d == Date.current %>">
+              <%= Branch.weekday_label(d.wday) %><br><%= l(d, format: "%d/%m") %>
+            </th>
+          <% end %>
+          <th style="text-align:right;">Giờ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @staff.each do |s| %>
+          <tr>
+            <td class="sh-name">
+              <%= link_to merchant_staff_path(s), style: "text-decoration:none; color:inherit; display:flex; gap:8px; align-items:center;" do %>
+                <span style="width:9px; height:9px; border-radius:50%; background:<%= s.color %>; flex:none;"></span>
+                <span>
+                  <span style="font-weight:600; font-size:13.5px;"><%= s.display_name %></span><br>
+                  <span style="font-size:11.5px; color:var(--ink-2);"><%= s.role_label %></span>
+                </span>
+              <% end %>
+            </td>
+            <% @days.each do |d| %>
+              <td class="sh-cell">
+                <% (@grid.dig(s.id, d) || []).each do |sh| %>
+                  <span class="sh-chip <%= 'off' unless sh.working? %>">
+                    <%= sh.working? ? sh.range_label : sh.kind_label %>
+                    <% if current_membership&.can_manage? %>
+                      <%= button_to "✕", merchant_shift_path(sh), method: :delete, form: { data: { turbo_confirm: "Xoá ca này?" } } %>
+                    <% end %>
+                  </span>
+                <% end %>
+                <% if current_membership&.can_manage? %>
+                  <details>
+                    <summary class="sh-add" style="cursor:pointer;">+ ca</summary>
+                    <%= form_with url: merchant_shifts_path, method: :post, style: "display:grid; gap:4px; margin-top:5px;" do %>
+                      <%= hidden_field_tag :staff_member_id, s.id %>
+                      <%= hidden_field_tag :work_date, d.to_s %>
+                      <%= hidden_field_tag :week, @week_start.to_s %>
+                      <%= time_field_tag :starts_at, "09:00", class: "l-field", style: "padding:5px 7px; font-size:12px;" %>
+                      <%= time_field_tag :ends_at, "21:00", class: "l-field", style: "padding:5px 7px; font-size:12px;" %>
+                      <%= select_tag :kind, options_for_select(StaffShift::KINDS.map { |k| [StaffShift::KIND_LABELS[k], k] }),
+                            class: "l-field", style: "padding:5px 7px; font-size:12px;" %>
+                      <%= submit_tag "Lưu", class: "l-btn l-btn-primary", style: "padding:5px 8px; font-size:12px;" %>
+                    <% end %>
+                  </details>
+                <% end %>
+              </td>
+            <% end %>
+            <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:700;">
+              <%= @totals[s.id] || 0 %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:12.5px; color:var(--ink-2); margin-top:12px; max-width:700px;">
+    Ca ở bảng này là <strong>nguồn duy nhất</strong> để hệ thống biết KTV nào nhận được khách.
+    Nghỉ phép khai bằng loại “Nghỉ phép” để nó cắt đúng khoảng đó khỏi lịch, thay vì xoá ca —
+    xoá ca thì không còn dấu vết ai đã nghỉ.
+  </p>
+<% end %>

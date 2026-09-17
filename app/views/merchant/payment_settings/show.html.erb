@@ -1,0 +1,64 @@
+<% content_for :title, "Thanh toán" %>
+
+<div style="">
+  <%# ---- How it works ---- %>
+  <div class="l-panel" style="margin-bottom:16px; background:color-mix(in srgb, var(--primary) 6%, #fff); border-color:color-mix(in srgb, var(--primary) 22%, var(--line));">
+    <div style="font-weight:700; margin-bottom:4px;">ℹ️ Mã QR tạo tự động — bạn không cần tải lên</div>
+    <div style="font-size:13px; color:var(--ink-2);">Chỉ cần nhập ngân hàng + số tài khoản bên dưới. Hệ thống tự tạo <strong>mã VietQR động</strong> cho từng hoá đơn, đã nhúng sẵn <strong>số tiền + nội dung</strong> — khách quét là chuyển đúng, không phải nhập tay.</div>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-eyebrow" style="margin-bottom:6px;">Tài khoản nhận tiền (VietQR)</div>
+    <%= form_with url: merchant_payment_settings_path, method: :patch, html: { multipart: true } do %>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Ngân hàng</label>
+        <%= select_tag :bank_code,
+              options_for_select([["— Chọn ngân hàng —", ""]] + VietQrService.bank_options, @bank["code"]),
+              class: "l-field" %>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Số tài khoản</label>
+        <%= text_field_tag :account_no, @bank["account_no"], class: "l-field", placeholder: "0123456789" %>
+      </div>
+      <div style="margin-bottom:18px;">
+        <label class="l-label">Tên chủ tài khoản</label>
+        <%= text_field_tag :account_name, @bank["account_name"], class: "l-field", placeholder: "NGUYEN VAN A" %>
+      </div>
+
+      <%# ---- Optional static QR (MoMo/ZaloPay…) ---- %>
+      <div style="margin-bottom:18px; padding-top:16px; border-top:1px solid var(--line);">
+        <label class="l-label">Ảnh QR riêng (tuỳ chọn) — VD MoMo/ZaloPay</label>
+        <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">Nếu muốn dùng thêm QR của ví điện tử, tải ảnh lên. QR này hiển thị cạnh VietQR để khách chọn (không có sẵn số tiền).</div>
+        <%= render "shared/photo_upload", name: "static_qr", multiple: false, hint: "Bấm để chọn ảnh QR ví điện tử" %>
+        <% if current_workspace.static_qr.attached? %>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
+            <%= image_tag current_workspace.static_qr.variant(resize_to_limit: [90, 90]), style: "border-radius:10px; border:1px solid var(--line);" %>
+            <label style="font-size:13px; color:#a11; display:flex; align-items:center; gap:6px;"><%= check_box_tag :remove_static_qr, "1" %> Xoá QR này</label>
+          </div>
+        <% end %>
+      </div>
+
+      <%= submit_tag "Lưu", class: "l-btn l-btn-primary" %>
+    <% end %>
+
+    <% if current_workspace.bank_configured? %>
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line); text-align:center;">
+        <div class="l-eyebrow" style="margin-bottom:10px;">Xem thử mã QR (số tiền ví dụ)</div>
+        <% payload = VietQrService.new(bin: current_workspace.bank_bin, account_no: current_workspace.bank_account_no, amount: 3_500_000, description: "Vi du").payload %>
+        <div style="display:inline-block; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px;">
+          <%= qr_svg(payload, size: 180) %>
+        </div>
+        <div style="font-size:12px; color:var(--ink-2); margin-top:8px;"><%= current_workspace.bank_label %> · <%= current_workspace.bank_account_no %> · 3.500.000đ (ví dụ)</div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ---- Auto reconciliation note ---- %>
+  <div class="l-panel" style="margin-top:16px;">
+    <div style="font-weight:700; margin-bottom:4px;">⚡ Tự động xác nhận thanh toán</div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      Hiện tại: khách chuyển khoản → tải ảnh minh chứng → <strong>AI tự đọc &amp; đối soát</strong> (số tiền, người nhận). VietQR thuần không có webhook.<br>
+      Muốn tự động 100% (webhook như PayOS): cần liên kết tài khoản ngân hàng qua <strong>SePay/Casso</strong> — liên hệ để bật tính năng này.
+    </div>
+  </div>
+</div>

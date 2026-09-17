@@ -1,0 +1,17 @@
+<div style="font-family:Arial,sans-serif; color:#1B2733; max-width:520px;">
+  <h2 style="margin:0 0 6px; color:#C4321C;">Tài khoản đã tạm ngưng</h2>
+  <p style="color:#5C6B7A; margin:0 0 18px;">Xin chào <strong><%= @workspace.name %></strong>,</p>
+
+  <p>
+    Do chưa thanh toán sau <strong>10 ngày</strong> kể từ ngày hết hạn, tài khoản của bạn đã được
+    <strong>tự động tạm ngưng</strong>. Trang quản lý và app của người thuê tạm thời không dùng được.
+    Dữ liệu của bạn vẫn được giữ nguyên.
+  </p>
+  <p>Thanh toán để <strong>mở lại ngay</strong>:</p>
+
+  <p style="margin:18px 0;">
+    <a href="<%= @pay_url %>" style="background:#1F5FA6; color:#fff; text-decoration:none; padding:12px 22px; border-radius:12px; font-weight:700; display:inline-block;">Thanh toán &amp; mở lại</a>
+  </p>
+
+  <p style="color:#5C6B7A; font-size:13px;">Nếu cần hỗ trợ, vui lòng liên hệ đội ngũ Aura.</p>
+</div>

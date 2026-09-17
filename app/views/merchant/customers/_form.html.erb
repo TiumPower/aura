@@ -1,0 +1,87 @@
+<%= form_with model: member, url: url, method: method do |f| %>
+  <% if member.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <%= member.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="l-panel" style="max-width:760px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Số điện thoại <span style="color:#e5484d;">*</span></label>
+        <%= f.telephone_field :phone, class: "l-field", placeholder: "0901234567", inputmode: "numeric" %>
+        <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+          Đây là khoá hồ sơ: khách tự đăng nhập app bằng số này sẽ vào đúng hồ sơ đang xem.
+        </div>
+      </div>
+      <div>
+        <label class="l-label">Họ tên</label>
+        <%= f.text_field :name, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Email</label>
+        <%= f.email_field :email, class: "l-field" %>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Giới tính</label>
+        <%= f.select :gender, Member::GENDERS.map { |g| [Member::GENDER_LABELS[g], g] }, { include_blank: "—" }, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Ngày sinh</label>
+        <%= f.date_field :dob, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Mã khách (tuỳ chọn)</label>
+        <%= f.text_field :code, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Nguồn khách</label>
+        <%= f.select :source, Member::SOURCES.map { |s| [Member::SOURCE_LABELS[s], s] }, {}, class: "l-field" %>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Hạng thẻ</label>
+        <%= f.select :member_tier_id, @tiers.map { |t| [t.name, t.id] }, { include_blank: "Tự động theo chi tiêu" }, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Cơ sở thường đến</label>
+        <%= f.select :home_branch_id, @branches.map { |b| [b.name, b.id] }, { include_blank: "—" }, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">KTV quen</label>
+        <%= f.select :preferred_staff_id, @staff.map { |s| [s.display_name, s.id] }, { include_blank: "—" }, class: "l-field" %>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Lưu ý sức khoẻ / chống chỉ định</label>
+      <%= f.text_area :health_notes, class: "l-field", rows: 2,
+            placeholder: "VD: cao huyết áp, đang mang thai, dị ứng tinh dầu sả" %>
+      <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+        KTV đọc được ô này trước khi vào phòng — đây là phần chống rủi ro nghề nghiệp.
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Ghi chú nội bộ</label>
+      <%= f.text_area :notes, class: "l-field", rows: 2 %>
+    </div>
+
+    <div class="l-toggle-row">
+      <div>
+        <div style="font-weight:600; font-size:14px;">Nhận tin khuyến mãi</div>
+        <div style="font-size:12.5px; color:var(--ink-2);">Tắt thì khách không nằm trong nhóm gửi thông báo marketing.</div>
+      </div>
+      <label class="l-switch"><%= f.check_box :marketing_opt_in %><span class="knob"></span></label>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <%= f.submit member.persisted? ? "Lưu hồ sơ" : "Tạo hồ sơ khách", class: "l-btn l-btn-primary" %>
+      <%= link_to "Huỷ", member.persisted? ? merchant_customer_path(member) : merchant_customers_path, class: "l-btn l-btn-ghost" %>
+    </div>
+  </div>
+<% end %>

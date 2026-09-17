@@ -1,0 +1,17 @@
+<% content_for :title, t("merchant.locked.title") %>
+<div style="text-align:center;">
+  <div style="width:64px; height:64px; margin:0 auto 16px; border-radius:18px; background:var(--surface-2); display:grid; place-items:center; font-size:30px;">🔒</div>
+
+  <% if @block_reason == :unpaid %>
+    <h1><%= t("merchant.locked.unpaid_title") %></h1>
+    <p class="sub"><%= t("merchant.locked.unpaid_note", days: Workspace::GRACE_DAYS) %></p>
+    <%= link_to t("merchant.locked.pay_now"), merchant_billing_path, class: "l-btn l-btn-primary l-btn-block" %>
+    <p style="color:var(--ink-2); font-size:12.5px; margin-top:14px;"><%= t("merchant.locked.support_note") %></p>
+  <% else %>
+    <h1><%= t("merchant.locked.suspended_title") %></h1>
+    <p class="sub"><%= t("merchant.locked.suspended_note_html").html_safe %></p>
+  <% end %>
+
+  <%= button_to t("merchant.locked.logout"), merchant_logout_path, method: :delete,
+        class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:10px;" %>
+</div>

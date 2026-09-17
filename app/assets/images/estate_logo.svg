@@ -1,0 +1,35 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2E6FB7"/>
+      <stop offset="1" stop-color="#164A86"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4FB6C0"/>
+      <stop offset="1" stop-color="#3BA5B0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <!-- taller tower -->
+  <rect x="150" y="150" width="110" height="240" rx="10" fill="#FFFFFF"/>
+  <!-- shorter tower with teal roof accent -->
+  <rect x="266" y="212" width="96" height="178" rx="10" fill="#FFFFFF"/>
+  <rect x="266" y="212" width="96" height="20" rx="10" fill="url(#teal)"/>
+  <!-- windows on tall tower (3 cols x 4 rows) -->
+  <g fill="#2E6FB7">
+    <rect x="170" y="178" width="22" height="22" rx="4"/><rect x="204" y="178" width="22" height="22" rx="4"/><rect x="238" y="178" width="12" height="22" rx="4"/>
+    <rect x="170" y="216" width="22" height="22" rx="4"/><rect x="204" y="216" width="22" height="22" rx="4"/><rect x="238" y="216" width="12" height="22" rx="4"/>
+    <rect x="170" y="254" width="22" height="22" rx="4"/><rect x="204" y="254" width="22" height="22" rx="4"/><rect x="238" y="254" width="12" height="22" rx="4"/>
+    <rect x="170" y="292" width="22" height="22" rx="4"/><rect x="204" y="292" width="22" height="22" rx="4"/><rect x="238" y="292" width="12" height="22" rx="4"/>
+  </g>
+  <!-- windows on short tower (2 cols x 3 rows) -->
+  <g fill="#3BA5B0">
+    <rect x="286" y="250" width="22" height="22" rx="4"/><rect x="320" y="250" width="22" height="22" rx="4"/>
+    <rect x="286" y="288" width="22" height="22" rx="4"/><rect x="320" y="288" width="22" height="22" rx="4"/>
+    <rect x="286" y="326" width="22" height="22" rx="4"/><rect x="320" y="326" width="22" height="22" rx="4"/>
+  </g>
+  <!-- door -->
+  <rect x="192" y="344" width="40" height="46" rx="8" fill="#164A86"/>
+  <!-- ground line -->
+  <rect x="132" y="388" width="248" height="14" rx="7" fill="#FFFFFF"/>
+</svg>

@@ -1,0 +1,76 @@
+<%= form_with model: branch, url: url, method: method do |f| %>
+  <% if branch.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <strong>Vui lòng kiểm tra lại:</strong> <%= branch.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="l-panel" style="max-width:720px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Tên cơ sở <span style="color:#e5484d;">*</span></label>
+        <%= f.text_field :name, class: "l-field", placeholder: "VD: Aura Spa Phú Nhuận" %>
+      </div>
+      <div>
+        <label class="l-label">Mã nội bộ</label>
+        <%= f.text_field :code, class: "l-field", placeholder: "PN" %>
+      </div>
+      <div>
+        <label class="l-label">Điện thoại</label>
+        <%= f.telephone_field :phone, class: "l-field" %>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Địa chỉ</label>
+        <%= f.text_field :address_line, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Phường/Xã</label>
+        <%= f.text_field :ward, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Quận/Huyện</label>
+        <%= f.text_field :district, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Tỉnh/Thành</label>
+        <%= f.text_field :city, class: "l-field" %>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Giới thiệu ngắn (hiện trong app khách)</label>
+      <%= f.text_area :description, class: "l-field", rows: 3 %>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Hướng dẫn tìm đường / gửi xe</label>
+      <%= f.text_area :directions, class: "l-field", rows: 2, placeholder: "VD: Gửi xe trong hầm toà nhà, đi thang máy lên tầng 3" %>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Trạng thái</label>
+        <%= f.select :status, Branch::STATUSES.map { |s| [Branch::STATUS_LABELS[s], s] }, {}, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Thứ tự hiển thị</label>
+        <%= f.number_field :position, class: "l-field" %>
+      </div>
+    </div>
+
+    <div class="l-toggle-row">
+      <div>
+        <div style="font-weight:600; font-size:14px;">Nhận đặt lịch online</div>
+        <div style="font-size:12.5px; color:var(--ink-2);">Tắt thì cơ sở chỉ nhận khách qua lễ tân.</div>
+      </div>
+      <label class="l-switch"><%= f.check_box :online_bookable %><span class="knob"></span></label>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <%= f.submit branch.persisted? ? "Lưu cơ sở" : "Tạo cơ sở", class: "l-btn l-btn-primary" %>
+      <%= link_to "Huỷ", branch.persisted? ? merchant_branch_path(branch) : merchant_branches_path, class: "l-btn l-btn-ghost" %>
+    </div>
+  </div>
+<% end %>

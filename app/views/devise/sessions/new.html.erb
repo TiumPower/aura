@@ -1,0 +1,39 @@
+<% admin = resource_name == :admin_user %>
+<h1><%= admin ? "Super Admin" : "Merchant" %></h1>
+<p class="sub"><%= admin ? "Đăng nhập vận hành nền tảng" : "Đăng nhập để quản lý nhà cho thuê" %></p>
+
+<%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { data: { turbo: false } }) do |f| %>
+  <div class="field">
+    <%= f.label :email, "Email", class: "l-label" %>
+    <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "l-field", placeholder: "you@example.com" %>
+  </div>
+  <div class="field" data-controller="reveal">
+    <%= f.label :password, "Mật khẩu", class: "l-label" %>
+    <div style="position:relative;">
+      <%= f.password_field :password, autocomplete: "current-password", class: "l-field",
+            autocapitalize: "none", autocorrect: "off", spellcheck: "false",
+            placeholder: "••••••••", data: { reveal_target: "input" }, style: "padding-right:46px;" %>
+      <button type="button" data-action="reveal#toggle" aria-label="Hiện/ẩn mật khẩu"
+              style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--ink-2); padding:6px; display:grid; place-items:center; line-height:0;">
+        <span data-reveal-target="off"><%= ui_icon(:eye, size: 20) %></span>
+        <span data-reveal-target="on" hidden><%= ui_icon(:eye_off, size: 20) %></span>
+      </button>
+    </div>
+  </div>
+  <% if devise_mapping.rememberable? %>
+    <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2); margin:6px 0 16px;">
+      <%= f.check_box :remember_me %> Ghi nhớ đăng nhập
+    </label>
+  <% end %>
+  <%= f.submit "Đăng nhập", class: "l-btn l-btn-primary l-btn-block" %>
+<% end %>
+
+<p style="text-align:center; margin-top:14px; font-size:13px;">
+  <%= link_to "Quên mật khẩu?", new_password_path(resource_name), style: "color:var(--ink-2);" %>
+</p>
+
+<% unless admin %>
+  <p style="text-align:center; color:var(--ink-2); font-size:13px; margin-top:16px;">
+    Chưa có tài khoản? <%= link_to "Đăng ký miễn phí", merchant_signup_path, style: "color:var(--primary-ink); font-weight:600;" %>
+  </p>
+<% end %>

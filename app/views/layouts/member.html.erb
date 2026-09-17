@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>" class="pwa-app">
+  <head>
+    <%= render "layouts/head" %>
+    <% if current_workspace %>
+      <link rel="manifest" href="<%= pwa_manifest_path(host: request.host_with_port) %>">
+      <meta name="theme-color" content="<%= current_workspace.theme_value(:primary) %>">
+      <link rel="icon" href="<%= workspace_icon_url(current_workspace) %>">
+      <link rel="apple-touch-icon" href="<%= workspace_icon_url(current_workspace) %>">
+    <% end %>
+  </head>
+  <body class="pwa-app">
+    <%= render "layouts/theme_vars", ws: current_workspace %>
+
+    <% pwa = current_workspace ? {
+         controller: "pwa",
+         "pwa-vapid-value": PushSender.public_key,
+         "pwa-subscribe-url-value": member_push_subscribe_path,
+         "pwa-unsubscribe-url-value": member_push_unsubscribe_path,
+         "pwa-on-text": t("customer.pwa.push_on"),
+         "pwa-off-text": t("customer.pwa.push_off"),
+         "pwa-blocked-text": t("customer.pwa.push_blocked"),
+         "pwa-unsupported-text": t("customer.pwa.push_unsupported"),
+         "pwa-got-it-text": t("customer.pwa.got_it"),
+       } : {} %>
+    <div class="l-phone"<%= tag.attributes(data: pwa) if pwa.any? %>>
+      <%= yield %>
+      <% if current_workspace && member_signed_in? && !content_for?(:no_tabbar) %>
+        <%= render "layouts/member_tabbar" %>
+        <%= render "layouts/pwa_install" %>
+        <%= render "layouts/pwa_push" %>
+      <% end %>
+    </div>
+  </body>
+</html>

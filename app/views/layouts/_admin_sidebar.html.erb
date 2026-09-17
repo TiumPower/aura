@@ -1,0 +1,38 @@
+<% nav = defined?(nav_key) ? nav_key : nil %>
+<aside class="l-side" data-controller="activenav">
+  <div class="brand">
+    <div class="logo">ES</div>
+    <div>
+      <div class="nm">Aura</div>
+      <div class="sub">Super Admin</div>
+    </div>
+  </div>
+
+  <div class="l-navgrp">Nền tảng</div>
+  <%= link_to admin_root_path, class: "l-nav-item #{'active' if nav == :dashboard}" do %>
+    <span>▣</span><span>Tổng quan<span class="en">Overview</span></span>
+  <% end %>
+  <%= link_to admin_workspaces_path, class: "l-nav-item #{'active' if nav == :workspaces}" do %>
+    <span>▦</span><span>Workspaces<span class="en">Tenants</span></span>
+  <% end %>
+  <%= link_to admin_billing_path, class: "l-nav-item #{'active' if nav == :billing}" do %>
+    <span>◈</span><span>Doanh thu<span class="en">Billing</span></span>
+  <% end %>
+  <%= link_to admin_plans_path, class: "l-nav-item #{'active' if nav == :plans}" do %>
+    <span>◫</span><span>Quản lý gói<span class="en">Plans</span></span>
+  <% end %>
+  <%= link_to admin_account_path, class: "l-nav-item #{'active' if nav == :account}" do %>
+    <span>◐</span><span>Tài khoản<span class="en">Account</span></span>
+  <% end %>
+
+  <div class="foot">
+    <%= link_to admin_account_path, class: "av", style: "text-decoration:none; color:inherit;" do %><%= current_admin_user&.initials %><% end %>
+    <div style="min-width:0;">
+      <div style="font-size:13px; font-weight:600;"><%= current_admin_user&.name %></div>
+      <div style="font-size:11px; opacity:.6;">Operator</div>
+    </div>
+    <%= button_to "⎋", destroy_admin_user_session_path, method: :delete,
+          form: { data: { turbo_confirm: "Đăng xuất khỏi Super Admin?" } },
+          style: "margin-left:auto;background:none;border:none;color:#EDE4D8;cursor:pointer;font-size:16px;" %>
+  </div>
+</aside>

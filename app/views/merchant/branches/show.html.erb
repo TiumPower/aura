@@ -1,0 +1,174 @@
+<% content_for :title, @branch.name %>
+
+<style>
+  .br-rooms { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+  .br-room { background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow); }
+  .br-room .nm { font-weight:700; font-size:14.5px; }
+  .br-room .mt { font-size:12px; color:var(--ink-2); margin-top:3px; }
+  .br-hours { display:grid; grid-template-columns:110px 1fr 1fr 70px; gap:8px; align-items:center;
+    padding:8px 0; border-top:1px solid var(--line); }
+</style>
+
+<div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
+  <div style="flex:1; min-width:220px;">
+    <div style="font-size:13.5px; color:var(--ink-2);"><%= @branch.short_address.presence || "Chưa có địa chỉ" %></div>
+    <div style="font-size:13.5px; color:var(--ink-2);"><%= @branch.phone %></div>
+  </div>
+  <% if current_membership&.can_manage? %>
+    <div style="display:flex; gap:8px;">
+      <%= link_to "Tham số riêng", merchant_settings_path(branch_id: @branch.id), class: "l-btn l-btn-ghost" %>
+      <%= link_to "Sửa cơ sở", edit_merchant_branch_path(@branch), class: "l-btn l-btn-primary" %>
+    </div>
+  <% end %>
+</div>
+
+<div style="display:grid; grid-template-columns:1.3fr 1fr; gap:18px; align-items:start;">
+  <div>
+    <%# ---- Phòng ---- %>
+    <div class="l-panel" style="margin-bottom:18px;">
+      <div class="l-section-h" style="margin:0 0 12px;">
+        <h3>Phòng &amp; giường (<%= @rooms.size %>)</h3>
+        <span style="font-size:13px; color:var(--ink-2);"><%= @rooms.select(&:active?).sum(&:capacity) %> chỗ đồng thời</span>
+      </div>
+
+      <% if @rooms.empty? %>
+        <p style="color:var(--ink-2); font-size:13.5px;">Chưa có phòng nào. Thêm phòng bên dưới để engine xếp được lịch.</p>
+      <% else %>
+        <div class="br-rooms">
+          <% @rooms.each do |r| %>
+            <div class="br-room">
+              <div style="display:flex; align-items:flex-start; gap:6px;">
+                <div style="flex:1;">
+                  <div class="nm"><%= r.display_name %></div>
+                  <div class="mt"><%= r.type_name || "Chưa gán loại" %></div>
+                </div>
+                <span class="l-pill" style="--_c:<%= r.active? ? '#3F7A57' : (r.status == 'maintenance' ? '#B4402F' : '#6B635A') %>;"><%= r.status_label %></span>
+              </div>
+              <div class="mt"><%= r.capacity %> chỗ · dọn <%= r.turnaround %>′</div>
+              <div style="display:flex; gap:6px; margin-top:10px;">
+                <%= link_to "Sửa", edit_merchant_room_path(r), class: "l-chip" %>
+                <% if r.active? %>
+                  <%= button_to "Bảo trì", status_merchant_room_path(r, value: "maintenance"), method: :patch, class: "l-chip", form: { style: "display:inline;" } %>
+                <% else %>
+                  <%= button_to "Dùng lại", status_merchant_room_path(r, value: "active"), method: :patch, class: "l-chip l-chip-brand", form: { style: "display:inline;" } %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if current_membership&.can_manage? %>
+        <details style="margin-top:16px;">
+          <summary style="cursor:pointer; font-weight:600; font-size:13.5px; color:var(--primary-ink);">+ Thêm phòng nhanh</summary>
+          <%= form_with model: @new_room, url: merchant_branch_rooms_path(@branch), method: :post,
+                style: "display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-top:12px; align-items:end;" do |f| %>
+            <div>
+              <label class="l-label">Tên phòng</label>
+              <%= f.text_field :name, class: "l-field", placeholder: "Phòng 1" %>
+            </div>
+            <div>
+              <label class="l-label">Loại</label>
+              <%= f.select :room_type_id, @room_types.map { |t| [t.name, t.id] }, { include_blank: "—" }, class: "l-field" %>
+            </div>
+            <div>
+              <label class="l-label">Số chỗ</label>
+              <%= f.number_field :capacity, class: "l-field", min: 1, value: 1 %>
+            </div>
+            <div>
+              <%= f.submit "Thêm", class: "l-btn l-btn-primary" %>
+            </div>
+          <% end %>
+          <p style="font-size:12.5px; color:var(--ink-2); margin-top:8px;">
+            Khu nhiều ghế (foot massage) khai <strong>một phòng nhiều chỗ</strong>, đừng tạo mỗi ghế một phòng.
+          </p>
+        </details>
+      <% end %>
+    </div>
+
+    <%# ---- Nhân sự tại cơ sở ---- %>
+    <div class="l-panel">
+      <div class="l-section-h" style="margin:0 0 10px;">
+        <h3>Nhân sự tại cơ sở (<%= @staff.size %>)</h3>
+        <%= link_to "Quản lý nhân sự", merchant_staff_index_path %>
+      </div>
+      <% if @staff.empty? %>
+        <p style="color:var(--ink-2); font-size:13.5px;">Chưa có nhân sự nào ở cơ sở này.</p>
+      <% else %>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <% @staff.each do |s| %>
+            <%= link_to merchant_staff_path(s), class: "l-chip", style: "text-decoration:none;" do %>
+              <span style="width:8px; height:8px; border-radius:50%; background:<%= s.color %>; display:inline-block;"></span>
+              <%= s.display_name %> · <%= s.role_label %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div>
+    <%# ---- Giờ mở cửa ---- %>
+    <div class="l-panel" style="margin-bottom:18px;">
+      <div class="l-section-h" style="margin:0 0 6px;"><h3>Giờ mở cửa</h3></div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:6px;">
+        Nghỉ trưa thì khai hai dòng cùng thứ (ca sáng và ca chiều).
+      </p>
+      <%= form_with url: bulk_update_merchant_branch_branch_hours_path(@branch), method: :patch do %>
+        <% (0..6).each do |wd| %>
+          <% rows = @hours.select { |h| h.weekday == wd } %>
+          <% rows = [@branch.branch_hours.new(weekday: wd)] if rows.empty? %>
+          <% rows.each_with_index do |h, i| %>
+            <div class="br-hours">
+              <div style="font-weight:600; font-size:13px;"><%= i.zero? ? Branch.weekday_label(wd) : "" %></div>
+              <%= time_field_tag "hours[#{wd}][#{i}][opens_at]", h.opens_at&.strftime("%H:%M"), class: "l-field", style: "padding:8px 10px;" %>
+              <%= time_field_tag "hours[#{wd}][#{i}][closes_at]", h.closes_at&.strftime("%H:%M"), class: "l-field", style: "padding:8px 10px;" %>
+              <label style="font-size:12px; display:flex; align-items:center; gap:5px;">
+                <%= check_box_tag "hours[#{wd}][#{i}][closed]", "1", h.closed %> Nghỉ
+              </label>
+            </div>
+          <% end %>
+        <% end %>
+        <%= submit_tag "Lưu giờ mở cửa", class: "l-btn l-btn-primary", style: "margin-top:14px;" %>
+      <% end %>
+    </div>
+
+    <%# ---- Ngày nghỉ ---- %>
+    <div class="l-panel">
+      <div class="l-section-h" style="margin:0 0 8px;"><h3>Ngày nghỉ / đóng cửa</h3></div>
+      <% if @closures.any? %>
+        <% @closures.each do |c| %>
+          <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line);">
+            <div style="flex:1;">
+              <div style="font-weight:600; font-size:13.5px;"><%= c.label %></div>
+              <div style="font-size:12px; color:var(--ink-2);"><%= c.reason.presence || "Không ghi lý do" %></div>
+            </div>
+            <%= button_to "✕", merchant_branch_branch_closure_path(@branch, c), method: :delete,
+                  class: "l-chip", form: { style: "display:inline;" } %>
+          </div>
+        <% end %>
+      <% else %>
+        <p style="font-size:13px; color:var(--ink-2);">Không có ngày nghỉ nào sắp tới.</p>
+      <% end %>
+
+      <%= form_with model: @new_closure, url: merchant_branch_branch_closures_path(@branch), method: :post,
+            style: "margin-top:12px; display:grid; gap:10px;" do |f| %>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <label class="l-label">Từ ngày</label>
+            <%= f.date_field :starts_on, class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Đến ngày</label>
+            <%= f.date_field :ends_on, class: "l-field" %>
+          </div>
+        </div>
+        <div>
+          <label class="l-label">Lý do</label>
+          <%= f.text_field :reason, class: "l-field", placeholder: "VD: Nghỉ Tết, bảo trì máy" %>
+        </div>
+        <%= f.submit "Thêm ngày nghỉ", class: "l-btn l-btn-ghost" %>
+      <% end %>
+    </div>
+  </div>
+</div>

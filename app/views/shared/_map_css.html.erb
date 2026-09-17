@@ -1,0 +1,31 @@
+<%# Shared look for every Leaflet map on the public site (marketplace map, room
+    page, landlord pin picker). Leaflet's own stylesheet is injected at runtime
+    *after* the page, so its rules are overridden with the extra specificity
+    they need — `.leaflet-container a` in particular. %>
+<style>
+  .mp-pin { background:none; border:none; }
+  .mp-pill { display:inline-flex; align-items:center; gap:5px; transform:translate(-50%,-100%);
+    background:var(--brown,#8C4A2F); color:#FFF7EE; font-family:var(--fb,system-ui); font-weight:800; font-size:12.5px;
+    padding:6px 11px; border-radius:999px; white-space:nowrap; box-shadow:0 6px 16px rgba(60,30,15,.35);
+    border:1.5px solid #fff; }
+  .mp-pill i { font-style:normal; background:rgba(255,255,255,.26); border-radius:999px; padding:0 6px; font-size:11px; }
+  .mp-tip, .mp-dot { position:absolute; left:0; top:0; width:14px; height:14px; background:var(--brown,#8C4A2F);
+    border:3px solid #fff; border-radius:50%; box-shadow:0 4px 12px rgba(60,30,15,.4); transform:translate(-50%,-50%); }
+  .mp-tip { width:9px; height:9px; border-width:1.5px; transform:translate(-50%,-2px); }
+  .mp-fail { display:grid; place-items:center; height:100%; font-size:13px; color:var(--ink-2,#6E5A4B); }
+
+  .leaflet-popup-content-wrapper { border-radius:16px; box-shadow:0 22px 48px -20px rgba(60,34,20,.5); }
+  .leaflet-popup-content { margin:12px 13px; font-family:var(--fb,system-ui); line-height:1.45; }
+  .mp-pop-h { margin-bottom:9px; }
+  .mp-pop-h b { font-family:var(--fd,Georgia,serif); font-size:15px; color:var(--ink,#2A1B12); display:block; }
+  .mp-pop-h span { font-size:11.5px; color:var(--ink-2,#6E5A4B); display:block; margin-top:2px; }
+  .leaflet-popup-content .mp-room { display:flex; gap:9px; align-items:center; padding:7px; border-radius:11px;
+    text-decoration:none; color:var(--ink,#2A1B12); }
+  .leaflet-popup-content .mp-room:hover { background:var(--cream-2,#F4EADD); }
+  .mp-room img, .mp-noimg { width:52px; height:42px; border-radius:8px; object-fit:cover; flex:none; }
+  .mp-noimg { background:var(--cream-2,#F4EADD); display:grid; place-items:center; font-size:18px; }
+  .mp-room-txt b { font-size:13.5px; display:block; }
+  .mp-room-txt em { font-style:normal; font-size:12px; color:var(--ink-2,#6E5A4B); }
+  .mp-room-txt .mp-3d { color:var(--brown,#8C4A2F); font-weight:700; }
+  .mp-more, .mp-approx { font-size:11.5px; color:var(--ink-2,#6E5A4B); padding:4px 7px 0; }
+</style>

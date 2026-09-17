@@ -1,0 +1,15 @@
+<%# Reusable emoji icon field with a suggestion panel. Locals: name, value (opt),
+    placeholder (opt), emojis (opt array). %>
+<% value       = local_assigns[:value] %>
+<% placeholder = local_assigns[:placeholder].presence || "🎁" %>
+<% emojis      = local_assigns[:emojis] || %w[🎁 ☕ 🧋 🍰 🥐 🍩 🍔 🍜 🥤 🍺 🎟️ 🏷️ 🛍️ 👜 ✨ 💆 ⭐ 🔥 🎉 💎 📍 💳 🏪 🤝 🎯 🏅 🥇 🌟 ❤️ 🧧] %>
+<div data-controller="iconpick" style="position:relative;">
+  <input type="text" name="<%= name %>" value="<%= value %>" class="l-field"
+         placeholder="<%= placeholder %>" autocomplete="off"
+         data-iconpick-target="input" data-action="focus->iconpick#show click->iconpick#show">
+  <div class="l-iconpick" data-iconpick-target="panel" hidden>
+    <% emojis.each do |e| %>
+      <button type="button" class="l-iconpick-btn" data-action="iconpick#pick" data-emoji="<%= e %>"><%= e %></button>
+    <% end %>
+  </div>
+</div>

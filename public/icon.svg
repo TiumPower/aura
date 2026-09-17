@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Aura: một búp sen mở trên mặt nước. Tông jade + champagne, cùng bộ màu
+       mặc định của sản phẩm (xem Workspace::DEFAULT_THEME). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2F6F63"/>
+      <stop offset="1" stop-color="#C9A96A"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <g fill="#FFFFFF">
+    <path d="M256 112c36 46 51 91 51 129 0 44-22 78-51 101-29-23-51-57-51-101 0-38 15-83 51-129z"/>
+    <path d="M164 192c42 21 67 51 80 82 14 35 10 70-4 99-33-9-64-34-81-72-14-32-13-74 5-109z" opacity=".82"/>
+    <path d="M348 192c18 35 19 77 5 109-17 38-48 63-81 72-14-29-18-64-4-99 13-31 38-61 80-82z" opacity=".82"/>
+  </g>
+  <rect x="116" y="392" width="280" height="20" rx="10" fill="#FFFFFF" opacity=".92"/>
+</svg>

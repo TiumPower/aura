@@ -1,0 +1,23 @@
+<%
+  size  = local_assigns[:size]  || 104
+  title = local_assigns[:title] || "Mã check-in"
+  note  = local_assigns[:note]
+%>
+<div data-controller="qrzoom" style="flex:none;">
+  <button type="button" data-action="qrzoom#open"
+          style="display:block; padding:10px; background:#fff; border:1px solid var(--line); border-radius:14px; cursor:zoom-in;"
+          title="Nhấn để phóng to mã QR">
+    <%= qr_svg(url, size: size) %>
+  </button>
+
+  <div class="l-qrmodal" data-qrzoom-target="overlay" data-action="click->qrzoom#backdrop">
+    <div class="l-qrmodal-card">
+      <button type="button" class="l-qrmodal-close" data-action="qrzoom#close" aria-label="Đóng">✕</button>
+      <h3 class="l-display" style="font-size:20px; text-align:center; margin-bottom:16px;"><%= title %></h3>
+      <div class="l-qrmodal-qr"><%= qr_svg(url, size: 400) %></div>
+      <p style="text-align:center; color:var(--ink-2); font-size:13px; margin-top:16px;">
+        <%= note || "Đưa mã này cho khách quét để check-in." %>
+      </p>
+    </div>
+  </div>
+</div>

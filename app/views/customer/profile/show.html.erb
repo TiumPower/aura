@@ -1,0 +1,86 @@
+<% content_for :tab, "me" %>
+<% content_for :title, t("customer.profile.title") %>
+<% m = @member %>
+
+<div class="l-screen" style="padding-top:16px;">
+  <%= form_with model: m, url: member_profile_path, method: :patch, multipart: true do |f| %>
+    <div class="l-tile" style="margin-bottom:14px;">
+      <div class="l-eyebrow" style="margin-bottom:12px;"><%= t("customer.profile.title") %></div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label"><%= t("customer.profile.name") %></label>
+        <%= f.text_field :name, class: "l-field" %>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label"><%= t("customer.profile.phone") %></label>
+        <%= text_field_tag :phone_display, m.phone, class: "l-field", disabled: true %>
+        <div style="font-size:12px; color:var(--ink-2); margin-top:4px;"><%= t("customer.profile.phone_locked") %></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label"><%= t("customer.profile.email") %></label>
+        <%= f.email_field :email, class: "l-field" %>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label class="l-label"><%= t("customer.profile.gender") %></label>
+          <%= f.select :gender, Member::GENDERS.map { |g| [Member::GENDER_LABELS[g], g] }, { include_blank: "—" }, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label"><%= t("customer.profile.dob") %></label>
+          <%= f.date_field :dob, class: "l-field" %>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label"><%= t("customer.profile.language") %></label>
+        <%= f.select :locale, [["Tiếng Việt", "vi"], ["English", "en"]], {}, class: "l-field" %>
+      </div>
+    </div>
+
+    <div class="l-tile" style="margin-bottom:14px;">
+      <div class="l-eyebrow" style="margin-bottom:12px;"><%= t("customer.profile.preferences") %></div>
+      <% @preference_fields.each do |key, cfg| %>
+        <div style="margin-bottom:12px;">
+          <label class="l-label"><%= cfg[:label] %></label>
+          <%= select_tag "preferences[#{key}]", options_for_select(cfg[:options], m.preference(key)),
+                include_blank: "—", class: "l-field" %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="l-tile" style="margin-bottom:14px;">
+      <div class="l-eyebrow" style="margin-bottom:12px;"><%= t("customer.profile.health_notes") %></div>
+      <%= f.text_area :health_notes, class: "l-field", rows: 3 %>
+      <div style="font-size:12px; color:var(--ink-2); margin-top:6px; line-height:1.5;"><%= t("customer.profile.health_hint") %></div>
+    </div>
+
+    <div class="l-tile" style="margin-bottom:14px;">
+      <div style="margin-bottom:12px;">
+        <label class="l-label"><%= t("customer.profile.home_branch") %></label>
+        <%= f.select :home_branch_id, @branches.map { |b| [b.name, b.id] }, { include_blank: "—" }, class: "l-field" %>
+      </div>
+      <% if current_workspace.setting?("allow_staff_choice") && @staff.any? %>
+        <div style="margin-bottom:12px;">
+          <label class="l-label"><%= t("customer.profile.preferred_staff") %></label>
+          <%= f.select :preferred_staff_id, @staff.map { |s| [s.display_name, s.id] }, { include_blank: "—" }, class: "l-field" %>
+        </div>
+      <% end %>
+      <div class="l-toggle-row">
+        <div style="font-weight:600; font-size:14px;"><%= t("customer.profile.marketing") %></div>
+        <label class="l-switch"><%= f.check_box :marketing_opt_in %><span class="knob"></span></label>
+      </div>
+    </div>
+
+    <%= f.submit t("customer.common.save"), class: "l-btn l-btn-primary l-btn-block" %>
+  <% end %>
+
+  <div class="l-tile" style="margin-top:14px;">
+    <div class="l-eyebrow"><%= t("customer.profile.referral") %></div>
+    <div class="l-mono" style="font-size:24px; font-weight:700; letter-spacing:.14em; margin-top:6px;"><%= m.referral_code %></div>
+    <div style="font-size:12.5px; color:var(--ink-2); margin-top:4px;"><%= t("customer.profile.referral_hint") %></div>
+  </div>
+
+  <%= button_to t("customer.common.logout"), member_logout_path, method: :delete,
+        class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:14px;",
+        form: { data: { turbo_confirm: "#{t('customer.common.logout')}?" } } %>
+
+  <div style="height:80px;"></div>
+</div>

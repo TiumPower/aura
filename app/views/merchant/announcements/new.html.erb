@@ -1,0 +1,75 @@
+<% content_for :title, "Gửi thông báo" %>
+
+<%= form_with url: merchant_announcements_path, method: :post do %>
+  <div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:12px;">Nội dung</div>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Tiêu đề <span style="color:#e5484d;">*</span></label>
+        <%= text_field_tag :title, params[:title], class: "l-field",
+              placeholder: "VD: Ưu đãi tháng 10 — giảm 20% gói massage đá nóng" %>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Nội dung <span style="color:#e5484d;">*</span></label>
+        <%= text_area_tag :body, params[:body], class: "l-field", rows: 5,
+              placeholder: "Viết ngắn, có thời hạn rõ ràng và một lời mời hành động." %>
+      </div>
+      <%= submit_tag "Gửi thông báo", class: "l-btn l-btn-primary",
+            data: { turbo_confirm: "Gửi ngay cho nhóm khách đã chọn?" } %>
+    </div>
+
+    <div>
+      <div class="l-panel" style="margin-bottom:18px;">
+        <div class="l-eyebrow" style="margin-bottom:10px;">Gửi cho ai</div>
+        <% @segments.each do |label, key| %>
+          <label style="display:flex; align-items:flex-start; gap:9px; padding:8px 0; border-top:1px solid var(--line); font-size:13.5px;">
+            <%= radio_button_tag :segment, key, (params[:segment] || "all") == key, style: "margin-top:3px;" %>
+            <span>
+              <%= label %>
+              <% if @counts[key] %>
+                <strong style="color:var(--primary-ink);">· <%= @counts[key] %> khách</strong>
+              <% end %>
+            </span>
+          </label>
+        <% end %>
+
+        <div style="margin-top:12px;">
+          <label class="l-label">Nếu chọn “theo hạng thẻ”</label>
+          <% @tiers.each do |t| %>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0;">
+              <%= check_box_tag "tier_ids[]", t.id %> <%= t.name %>
+            </label>
+          <% end %>
+        </div>
+        <% if @branches.size > 1 %>
+          <div style="margin-top:12px;">
+            <label class="l-label">Nếu chọn “theo cơ sở”</label>
+            <% @branches.each do |b| %>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0;">
+                <%= check_box_tag "branch_ids[]", b.id %> <%= b.name %>
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+        <p style="font-size:12px; color:var(--ink-2); margin-top:12px;">
+          Khách đã tắt “nhận tin khuyến mãi” vẫn nằm trong nhóm — hãy dùng thông báo marketing
+          có chừng mực, đừng gửi mỗi ngày.
+        </p>
+      </div>
+
+      <% if @recent.any? %>
+        <div class="l-panel">
+          <div class="l-eyebrow" style="margin-bottom:8px;">Đã gửi gần đây</div>
+          <% @recent.each do |b| %>
+            <div style="padding:8px 0; border-top:1px solid var(--line); font-size:13px;">
+              <strong><%= b.title %></strong><br>
+              <span style="color:var(--ink-2); font-size:12px;">
+                <%= b.sent_count %> khách · <%= b.sent_at ? l(b.sent_at, format: "%H:%M %d/%m") : "chưa gửi" %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

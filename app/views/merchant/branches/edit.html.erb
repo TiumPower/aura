@@ -1,0 +1,16 @@
+<% content_for :title, "Sửa cơ sở" %>
+<%= render "form", branch: @branch, url: merchant_branch_path(@branch), method: :patch %>
+
+<div class="l-panel" style="max-width:720px; margin-top:18px; border-color:#f0d0cc;">
+  <div class="l-eyebrow" style="color:#B4402F;">Đóng cơ sở</div>
+  <p style="font-size:13.5px; color:var(--ink-2); margin:6px 0 12px;">
+    Cơ sở đã có lịch sử thì ĐÓNG chứ không xoá — số liệu cũ vẫn tra được, chỉ ngưng nhận khách mới.
+  </p>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <%= button_to "Đóng cơ sở", archive_merchant_branch_path(@branch), method: :patch,
+          class: "l-btn l-btn-ghost", form: { data: { turbo_confirm: "Đóng cơ sở #{@branch.name}?" } } %>
+    <%= button_to "Xoá vĩnh viễn", merchant_branch_path(@branch), method: :delete,
+          class: "l-btn l-btn-ghost", style: "color:#B4402F;",
+          form: { data: { turbo_confirm: "Xoá hẳn cơ sở này? Chỉ được phép khi chưa có phòng và nhân sự." } } %>
+  </div>
+</div>

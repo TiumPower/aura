@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "aura",
+      "runtimeExecutable": "bin/rails",
+      "runtimeArgs": [
+        "server",
+        "-p",
+        "3013"
+      ],
+      "port": 3013
+    }
+  ]
+}

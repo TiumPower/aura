@@ -1,0 +1,149 @@
+<%# locals: conversation, messages, as ("staff"|"member"), post_url %>
+<style>
+  .chat { display:flex; flex-direction:column; flex:1 1 auto; min-height:0; height:100%; background:var(--surface); }
+  .chat-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; padding:16px 14px 8px; display:flex; flex-direction:column; gap:9px; }
+  .msg { display:flex; max-width:100%; }
+  .msg-bubble { max-width:78%; padding:9px 13px 7px; border-radius:20px 20px 20px 7px; background:#fff;
+    border:1px solid var(--line); box-shadow:0 1px 2px rgba(20,35,60,.05); }
+  .msg-name { font-size:11px; font-weight:700; color:var(--primary); margin-bottom:3px; letter-spacing:.005em;
+    display:flex; align-items:center; gap:5px; }
+  /* Tin của spa là tin quan trọng nhất trong phòng chat, nhưng nó từng
+     to look identical to a housemate's. Tint theirs and badge the name. */
+  .msg--staff .msg-bubble { background:color-mix(in srgb, var(--primary) 6%, #fff);
+    border-color:color-mix(in srgb, var(--primary) 24%, var(--line)); }
+  .msg-tag { font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:2px 6px; border-radius:999px; background:color-mix(in srgb, var(--primary) 14%, #fff);
+    color:var(--primary); }
+  .msg--member:not(.msg--mine) .msg-name { color:var(--ink-2); }
+  .msg--member:not(.msg--mine) .msg-tag { background:var(--surface-2); color:var(--ink-2); }
+  /* Day separator — the date was repeating on every single message. */
+  .msg-day { align-self:center; font-size:11px; font-weight:700; color:var(--ink-2);
+    background:var(--surface-2); border:1px solid var(--line); padding:4px 12px;
+    border-radius:999px; margin:6px 0 2px; }
+  .msg-body { font-size:14.5px; line-height:1.5; word-break:break-word; color:var(--ink); }
+  .msg-body p { margin:0; }
+  .msg-time { display:flex; align-items:center; justify-content:flex-end; gap:6px; font-size:11px; color:var(--ink-2); margin-top:7px; }
+  .msg-time .t { font-weight:600; }
+  .msg-time .d { opacity:.7; }
+  .msg-time .d::before { content:"·"; margin-right:6px; opacity:.7; }
+  /* The viewer's own message: right-aligned, brand-filled bubble, no name.
+     Tin của phía còn lại nằm bên trái kèm tên người gửi. */
+  .msg--mine { justify-content:flex-end; }
+  .msg--mine .msg-bubble {
+    background:linear-gradient(160deg, color-mix(in srgb, var(--primary) 92%, #fff), var(--primary));
+    color:var(--on-primary); border-color:transparent; border-radius:20px 20px 7px 20px;
+    box-shadow:0 6px 16px -8px color-mix(in srgb, var(--primary) 60%, transparent); }
+  .msg--mine .msg-body { color:var(--on-primary); }
+  .msg--mine .msg-time { color:rgba(255,255,255,.82); }
+  .msg--mine .msg-name { display:none; }
+  /* Edit/delete controls — only on the viewer's own messages */
+  .msg-actions { display:none; gap:12px; margin-top:5px; justify-content:flex-end; }
+  .msg--mine .msg-actions { display:flex; }
+  .msg-act { background:none; border:none; padding:0; font-size:11px; font-weight:700; cursor:pointer; color:rgba(255,255,255,.82); }
+  .msg-act:hover { color:#fff; text-decoration:underline; }
+
+  /* Composer — Zalo-style: one pill holding attach + input + send */
+  .chat-form { display:flex; padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line); background:color-mix(in srgb, #fff 88%, transparent);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .chat-inbox { flex:1; display:flex; align-items:center; gap:4px; min-width:0; background:#fff;
+    border:1px solid var(--line); border-radius:24px; padding:3px 4px 3px 6px; box-shadow:0 1px 2px rgba(20,35,60,.05); }
+  .chat-inbox:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent); }
+  .chat-inbox input[type=text] { flex:1; border:none; outline:none; background:transparent; min-width:0;
+    padding:9px 6px; font-size:16px; color:var(--ink); }
+  .chat-attach { flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center;
+    cursor:pointer; color:var(--ink-2); transition:background .15s, color .15s; }
+  .chat-attach:hover { background:color-mix(in srgb, var(--primary) 12%, #fff); color:var(--primary); }
+  .chat-send { flex:none; border:none; background:var(--primary); color:var(--on-primary);
+    width:38px; height:38px; border-radius:50%; display:grid; place-items:center; cursor:pointer;
+    transition:transform .12s; }
+  .chat-send:active { transform:scale(.9); }
+  .chat-send[hidden] { display:none; }
+
+  /* Empty state */
+  .chat-empty { margin:auto; text-align:center; padding:32px 24px; }
+  .chat-empty .ce-ic { width:66px; height:66px; margin:0 auto 14px; border-radius:22px; display:grid; place-items:center;
+    background:color-mix(in srgb, var(--primary) 12%, #fff); color:var(--primary); }
+  .chat-empty .ce-ic svg { width:30px; height:30px; }
+  .chat-empty h3 { font-size:16px; font-weight:800; color:var(--ink); }
+  .chat-empty p { color:var(--ink-2); font-size:13.5px; margin-top:5px; line-height:1.5; }
+
+  /* Attachments inside a bubble */
+  .msg-atts { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  .msg-img { display:block; line-height:0; padding:0; border:none; background:none; cursor:pointer; border-radius:14px; overflow:hidden; }
+  .msg-img img { max-width:210px; max-height:210px; border-radius:14px; object-fit:cover; display:block; }
+  .msg-doc { display:inline-flex; align-items:center; gap:8px; max-width:220px; padding:9px 12px; border-radius:13px;
+    background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4); text-decoration:none; color:inherit; font-size:13px; }
+  .msg-doc svg { width:18px; height:18px; flex:none; }
+  .msg-doc-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .msg:not(.msg--mine) .msg-doc { background:var(--surface-2); border-color:var(--line); color:var(--ink); }
+
+  /* Pending-attachment preview strip */
+  .chat-atts { display:flex; gap:8px; flex-wrap:wrap; padding:10px 12px; border-top:1px solid var(--line); background:var(--surface); }
+  .chat-atts .att { position:relative; display:flex; align-items:center; gap:6px; max-width:180px; padding:6px 9px;
+    background:#fff; border:1px solid var(--line); border-radius:12px; font-size:12px; box-shadow:var(--ce-shadow-sm); }
+  .chat-atts .att img { width:34px; height:34px; border-radius:8px; object-fit:cover; }
+  .chat-atts .att span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+</style>
+
+<%= turbo_stream_from conversation %>
+<div class="chat" data-as="<%= as %>" data-viewer-member="<%= local_assigns[:viewer_member_id] %>" data-controller="chatroom lightbox"
+     data-chatroom-msg-path-value="<%= local_assigns[:msg_path_tpl] %>"
+     <%= tag.attributes("data-chatroom-updates-url-value": local_assigns[:updates_url]) if local_assigns[:updates_url].present? %>>
+  <div id="messages" class="chat-scroll" data-chatroom-target="scroll">
+    <% if messages.empty? %>
+      <div class="chat-empty">
+        <div class="ce-ic"><%= ui_icon(:chat, size: 30) %></div>
+        <h3>Bắt đầu trò chuyện</h3>
+        <p><%= as == "member" ? t("customer.chat.empty") : "Chưa có tin nhắn nào với khách này." %></p>
+      </div>
+    <% end %>
+    <%# A day separator between days, rather than stamping the full date on
+        every single bubble. Appends over Turbo carry their own date when the
+        message is not from today, so a live-arriving message still reads. %>
+    <% last_day = nil %>
+    <% messages.each do |m| %>
+      <% day = m.created_at.to_date %>
+      <% if day != last_day %>
+        <div class="msg-day">
+          <%= day == Date.current ? t("customer.chat.today") :
+                (day == Date.yesterday ? t("customer.chat.yesterday") : l(day, format: "%d/%m/%Y")) %>
+        </div>
+        <% last_day = day %>
+      <% end %>
+      <%= render "shared/message", message: m, view_as: as,
+            viewer_member_id: local_assigns[:viewer_member_id] %>
+    <% end %>
+  </div>
+  <div class="chat-atts" data-chatroom-target="atts" hidden></div>
+  <%= form_with url: post_url, method: :post, multipart: true, class: "chat-form",
+        data: { action: "turbo:submit-end->chatroom#sent submit->chatroom#guard", chatroom_target: "form" } do %>
+    <div class="chat-inbox">
+      <label class="chat-attach" title="Đính kèm ảnh / tài liệu">
+        <%= ui_icon(:paperclip, size: 20) %>
+        <input type="file" name="files[]" multiple hidden
+               accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+               data-chatroom-target="file" data-action="change->chatroom#filesPicked">
+      </label>
+      <input type="text" name="body" placeholder="Nhắn tin…" autocomplete="off"
+             data-chatroom-target="input" data-action="input->chatroom#toggleSend">
+      <button type="submit" class="chat-send" data-chatroom-target="send" aria-label="Gửi" hidden><%= ui_icon(:send, size: 20) %></button>
+    </div>
+  <% end %>
+
+  <%# Full-screen image viewer (tap a photo in a message) %>
+  <div class="ce-lb" data-lightbox-target="overlay" hidden
+       data-action="click->lightbox#backdrop touchstart->lightbox#touchStart touchend->lightbox#touchEnd">
+    <div class="ce-lb-bar">
+      <div class="ce-lb-name" data-lightbox-target="name"></div>
+      <div class="ce-lb-actions">
+        <a class="ce-lb-btn" data-lightbox-target="download" href="#" title="Tải xuống"><%= ui_icon(:download, size: 22) %></a>
+        <button type="button" class="ce-lb-btn" data-action="lightbox#close" title="Đóng"><%= ui_icon(:x, size: 22) %></button>
+      </div>
+    </div>
+    <button type="button" class="ce-lb-nav prev" data-lightbox-target="prev" data-action="lightbox#prev" aria-label="Trước">‹</button>
+    <div class="ce-lb-stage" data-lightbox-target="stage"></div>
+    <button type="button" class="ce-lb-nav next" data-lightbox-target="next" data-action="lightbox#next" aria-label="Sau">›</button>
+    <div class="ce-lb-count" data-lightbox-target="count" hidden></div>
+  </div>
+</div>

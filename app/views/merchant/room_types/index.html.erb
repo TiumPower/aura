@@ -1,0 +1,60 @@
+<% content_for :title, "Loại phòng" %>
+
+<p style="color:var(--ink-2); font-size:13.5px; max-width:640px; margin-bottom:16px;">
+  Loại phòng là cách spa tự phân nhóm chỗ phục vụ. Dịch vụ sẽ khai mình chạy được ở
+  loại nào, nhờ vậy engine không xếp gói massage đá nóng vào khu foot.
+</p>
+
+<div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
+  <div>
+    <% if @room_types.empty? %>
+      <div class="l-panel" style="text-align:center; padding:32px;">
+        <div style="font-size:38px;">🛏️</div>
+        <p style="font-weight:700; margin-top:8px;">Chưa có loại phòng nào</p>
+        <% if @presets.any? %>
+          <%= button_to "Nạp #{@presets.size} loại gợi ý", seed_presets_merchant_room_types_path,
+                class: "l-btn l-btn-primary", style: "margin-top:12px;" %>
+        <% end %>
+      </div>
+    <% else %>
+      <% @room_types.each do |t| %>
+        <div class="l-row">
+          <div class="ic"><%= t.icon.presence || "🛏️" %></div>
+          <div class="bd">
+            <div class="t"><%= t.name %></div>
+            <div class="s">
+              Mặc định <%= t.default_capacity %> chỗ · <%= @counts[t.id].to_i %> phòng đang dùng
+              <span class="l-mono" style="opacity:.6;">· <%= t.key %></span>
+            </div>
+          </div>
+          <%= link_to "Sửa", edit_merchant_room_type_path(t), class: "l-chip" %>
+        </div>
+      <% end %>
+      <% if @presets.any? %>
+        <%= button_to "Nạp thêm #{@presets.size} loại gợi ý", seed_presets_merchant_room_types_path,
+              class: "l-btn l-btn-ghost", style: "margin-top:8px;" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Thêm loại phòng</div>
+    <%= form_with model: @room_type, url: merchant_room_types_path, method: :post do |f| %>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Tên loại <span style="color:#e5484d;">*</span></label>
+        <%= f.text_field :name, class: "l-field", placeholder: "VD: Phòng đôi" %>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Icon</label>
+          <%= f.text_field :icon, class: "l-field", placeholder: "👫" %>
+        </div>
+        <div>
+          <label class="l-label">Số chỗ mặc định</label>
+          <%= f.number_field :default_capacity, class: "l-field", min: 1, value: f.object.default_capacity || 1 %>
+        </div>
+      </div>
+      <%= f.submit "Thêm loại phòng", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+  </div>
+</div>

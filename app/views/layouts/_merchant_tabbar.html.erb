@@ -1,0 +1,25 @@
+<%# Thanh điều hướng dưới cho điện thoại — chỉ hiện khi sidebar bị ẩn (≤900px).
+    "Tổng quan" nằm giữa dưới dạng nút nhô lên. %>
+<% nav = defined?(nav_key) ? nav_key : nil %>
+<nav class="l-mtab">
+  <div class="l-mtab-inner">
+    <%= link_to merchant_shifts_path, class: ("active" if nav == :shifts) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Ca làm</span>
+    <% end %>
+    <%= link_to merchant_customers_path, class: ("active" if nav == :customers) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Khách</span>
+    <% end %>
+    <%= link_to merchant_root_path, class: "ce-tab-home #{'active' if nav == :dashboard}" do %>
+      <span class="ce-tab-ic"><%= ui_icon(:home, size: 27) %></span><span>Tổng quan</span>
+    <% end %>
+    <%= link_to merchant_conversations_path, class: ("active" if nav == :chat) do %>
+      <span class="ce-tab-ic">
+        <%= ui_icon(:chat, size: 22) %>
+        <%= render "layouts/staff_chat_badge", count: chat_unread_count %>
+      </span><span>Chat</span>
+    <% end %>
+    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :payment, :settings, :billing, :audit, :branches, :staff, :rooms, :expenses].include?(nav)) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Cá nhân</span>
+    <% end %>
+  </div>
+</nav>

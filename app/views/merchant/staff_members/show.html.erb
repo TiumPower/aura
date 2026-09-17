@@ -1,0 +1,112 @@
+<% content_for :title, @staff.display_name %>
+
+<div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap;">
+  <div style="width:56px; height:56px; border-radius:16px; display:grid; place-items:center;
+              font-weight:700; font-size:20px; color:#fff; background:<%= @staff.color %>;">
+    <%= @staff.initials %>
+  </div>
+  <div style="flex:1; min-width:200px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;"><%= @staff.name %></h2>
+      <span class="l-pill" style="--_c:<%= @staff.active? ? '#3F7A57' : '#6B635A' %>;"><%= @staff.status_label %></span>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:3px;">
+      <%= @staff.role_label %><%= " · #{@staff.level_name}" if @staff.level_name %>
+      <%= " · #{@staff.branch.name}" if @staff.branch %>
+      <%= " · #{@staff.phone}" if @staff.phone.present? %>
+    </div>
+  </div>
+  <% if current_membership&.can_manage? %>
+    <div style="display:flex; gap:8px;">
+      <%= link_to "Sửa", edit_merchant_staff_path(@staff), class: "l-btn l-btn-ghost" %>
+      <% if @staff.active? %>
+        <%= button_to "Cho nghỉ việc", archive_merchant_staff_path(@staff), method: :patch, class: "l-btn l-btn-ghost",
+              form: { data: { turbo_confirm: "Cho #{@staff.name} nghỉ việc? Lịch sử vẫn được giữ." } } %>
+      <% else %>
+        <%= button_to "Nhận trở lại", reactivate_merchant_staff_path(@staff), method: :patch, class: "l-btn l-btn-primary" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px;">
+  <div class="l-kpi">
+    <div class="k">Hoa hồng áp dụng</div>
+    <div class="v" style="font-size:26px;"><%= @staff.commission_rate %>%</div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Phụ thu theo hạng</div>
+    <div class="v" style="font-size:26px;"><%= @staff.surcharge.positive? ? vnd(@staff.surcharge) : "—" %></div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Lương cứng</div>
+    <div class="v" style="font-size:26px;"><%= @staff.base_salary.positive? ? vnd(@staff.base_salary) : "—" %></div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Giờ có mặt 14 ngày tới</div>
+    <div class="v" style="font-size:26px;"><%= @upcoming_shifts.select(&:working?).sum(&:hours).round(1) %></div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;">
+  <div class="l-panel">
+    <div class="l-section-h" style="margin:0 0 6px;"><h3>Mẫu ca theo tuần</h3></div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+      Khai một lần rồi bấm “Sinh ca” ở Bảng ca làm là có lịch cho cả tuần.
+    </p>
+    <% if @shift_templates.any? %>
+      <% @shift_templates.each do |t| %>
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 0; border-top:1px solid var(--line);">
+          <div style="flex:1;">
+            <strong style="font-size:13.5px;"><%= t.weekday_label %></strong>
+            <span style="font-size:13px; color:var(--ink-2);"><%= t.range_label %></span>
+            <%= "· #{t.branch.name}" if t.branch %>
+          </div>
+          <%= button_to "✕", merchant_staff_shift_template_path(@staff, t), method: :delete,
+                class: "l-chip", form: { style: "display:inline;" } %>
+        </div>
+      <% end %>
+    <% else %>
+      <p style="font-size:13px; color:var(--ink-2);">Chưa khai mẫu ca nào.</p>
+    <% end %>
+
+    <% if current_membership&.can_manage? %>
+      <%= form_with model: @new_template, url: merchant_staff_shift_templates_path(@staff), method: :post,
+            style: "display:grid; grid-template-columns:1.1fr .8fr .8fr auto; gap:8px; align-items:end; margin-top:14px;" do |f| %>
+        <div>
+          <label class="l-label">Thứ</label>
+          <%= f.select :weekday, (0..6).map { |wd| [Branch.weekday_label(wd), wd] }, {}, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Từ</label>
+          <%= f.time_field :starts_at, class: "l-field", value: "09:00" %>
+        </div>
+        <div>
+          <label class="l-label">Đến</label>
+          <%= f.time_field :ends_at, class: "l-field", value: "21:00" %>
+        </div>
+        <%= f.submit "Thêm", class: "l-btn l-btn-primary" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-section-h" style="margin:0 0 10px;">
+      <h3>Ca 14 ngày tới</h3>
+      <%= link_to "Bảng ca làm →", merchant_shifts_path %>
+    </div>
+    <% if @upcoming_shifts.empty? %>
+      <p style="font-size:13px; color:var(--ink-2);">Chưa có ca nào được xếp.</p>
+    <% else %>
+      <% @upcoming_shifts.each do |s| %>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line);">
+          <div style="flex:1;">
+            <strong style="font-size:13.5px;"><%= l(s.work_date, format: "%a %d/%m") %></strong>
+            <span style="font-size:13px; color:var(--ink-2);"><%= s.range_label %></span>
+          </div>
+          <span class="l-pill" style="--_c:<%= s.working? ? '#3F7A57' : '#B4402F' %>;"><%= s.kind_label %></span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

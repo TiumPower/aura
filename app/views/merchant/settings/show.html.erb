@@ -1,0 +1,78 @@
+<% content_for :title, "Tham số nghiệp vụ" %>
+<% scope_obj = @branch || current_workspace %>
+
+<style>
+  .st-grp { margin-bottom:18px; }
+  .st-row { display:grid; grid-template-columns:1fr 200px; gap:14px; align-items:center;
+    padding:13px 0; border-top:1px solid var(--line); }
+  .st-row:first-of-type { border-top:none; }
+  .st-row .lb { font-weight:600; font-size:14px; }
+  .st-row .hint { font-size:12.5px; color:var(--ink-2); margin-top:3px; line-height:1.45; }
+  .st-row .ovr { font-size:11px; color:var(--primary-ink); font-weight:600; }
+  @media (max-width:640px) { .st-row { grid-template-columns:1fr; } }
+</style>
+
+<div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+  <%= link_to "Module đang dùng", merchant_settings_modules_path, class: "l-btn l-btn-ghost" %>
+  <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+    <span style="font-size:12.5px; color:var(--ink-2);">Áp dụng cho</span>
+    <%= form_with url: merchant_settings_path, method: :get do %>
+      <%= select_tag :branch_id, options_from_collection_for_select(@branches, :id, :name, @branch&.id),
+            include_blank: "Toàn thương hiệu", class: "l-field", style: "width:auto;",
+            onchange: "this.form.requestSubmit()" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @branch %>
+  <div class="l-panel" style="margin-bottom:16px; background:color-mix(in srgb, var(--primary) 6%, #fff); border-color:color-mix(in srgb, var(--primary) 30%, var(--line));">
+    Đang sửa tham số <strong>riêng của <%= @branch.name %></strong>. Ô để trống = dùng theo tham số
+    của toàn thương hiệu. Chỉ khai ở đây những thứ cơ sở này thật sự khác.
+  </div>
+<% end %>
+
+<%= form_with url: merchant_settings_path, method: :patch do %>
+  <%= hidden_field_tag :branch_id, @branch&.id %>
+  <% @groups.each do |grp| %>
+    <div class="l-panel st-grp">
+      <div class="l-section-h" style="margin:0 0 8px;">
+        <h3><%= grp[:icon] %> <%= grp[:title] %></h3>
+      </div>
+      <% grp[:keys].each do |key| %>
+        <% default = @defaults[key] %>
+        <% label, hint = @labels[key] %>
+        <% own = @branch ? @branch.settings[key] : current_workspace.settings.dig("business", key) %>
+        <% effective = scope_obj.setting(key) %>
+        <div class="st-row">
+          <div>
+            <div class="lb"><%= label || key %></div>
+            <% if hint %><div class="hint"><%= hint %></div><% end %>
+            <% if @branch && !own.nil? %>
+              <div class="ovr">Đang ghi đè (toàn thương hiệu: <%= current_workspace.setting(key) %>)</div>
+            <% end %>
+          </div>
+          <div>
+            <% if default == true || default == false %>
+              <%= hidden_field_tag "booleans[]", key, id: nil %>
+              <label class="l-switch">
+                <%= check_box_tag "business[#{key}]", "1", ActiveModel::Type::Boolean.new.cast(effective), id: "business_#{key}" %>
+                <span class="knob"></span>
+              </label>
+            <% elsif @choices[key] %>
+              <%= select_tag "business[#{key}]", options_for_select(@choices[key], effective.to_s), class: "l-field" %>
+            <% elsif default.is_a?(Array) %>
+              <%= text_field_tag "business[#{key}]", Array(effective).join(", "), class: "l-field", placeholder: "24, 3" %>
+            <% else %>
+              <%= number_field_tag "business[#{key}]", effective, class: "l-field",
+                    placeholder: (@branch ? current_workspace.setting(key) : default) %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div style="position:sticky; bottom:0; padding:14px 0; background:linear-gradient(transparent, var(--surface) 40%);">
+    <%= submit_tag "Lưu tham số", class: "l-btn l-btn-primary" %>
+  </div>
+<% end %>

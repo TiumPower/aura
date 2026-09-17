@@ -1,0 +1,20 @@
+<%# Per-workspace theme tokens. Rendered INSIDE <body> so Turbo re-swaps it on
+    navigation — keeps each shop's palette correct after theme edits/switches. %>
+<% ws = local_assigns[:ws] %>
+<% if ws %>
+  <style>
+    :root {
+      --primary:      <%= ws.theme_value(:primary) %>;
+      --primary-2:    <%= ws.theme_value(:primary_2) %>;
+      --on-primary:   <%= ws.theme_value(:on_primary) %>;
+      --surface:      <%= ws.theme_value(:surface) %>;
+      --surface-2:    <%= ws.theme_value(:surface_2) %>;
+      --ink:          <%= ws.theme_value(:ink) %>;
+      --ink-2:        <%= ws.theme_value(:ink_2) %>;
+      --line:         <%= ws.theme_value(:line) %>;
+      --radius:       <%= ws.css_radius %>;
+      --font-display: <%= ws.font_stack(:font_display).html_safe %>;
+      --font-body:    <%= ws.font_stack(:font_body).html_safe %>;
+    }
+  </style>
+<% end %>

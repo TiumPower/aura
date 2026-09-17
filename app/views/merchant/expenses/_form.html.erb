@@ -1,0 +1,48 @@
+<%= form_with model: expense, url: url, method: method do |f| %>
+  <% if expense.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <strong>Vui lòng kiểm tra lại:</strong> <%= expense.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="l-panel" style="max-width:640px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Khoản chi <span style="color:#e5484d;">*</span></label>
+        <%= f.select :category,
+              Expense::CATEGORIES.map { |c| ["#{Expense::CATEGORY_ICONS[c]} #{Expense::CATEGORY_LABELS[c]}", c] },
+              {}, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Số tiền (đ) <span style="color:#e5484d;">*</span></label>
+        <%= f.number_field :amount, class: "l-field", min: 0, step: 1000, inputmode: "numeric" %>
+      </div>
+      <div>
+        <label class="l-label">Ngày chi <span style="color:#e5484d;">*</span></label>
+        <%= f.date_field :spent_on, class: "l-field" %>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Cơ sở</label>
+      <%= f.select :branch_id, @branches.map { |b| [b.name, b.id] }, { include_blank: "Toàn thương hiệu" }, class: "l-field" %>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Diễn giải</label>
+      <%= f.text_field :note, class: "l-field", placeholder: "VD: Mua 20 lít tinh dầu sả chanh" %>
+    </div>
+    <div style="margin-bottom:18px;">
+      <label class="l-label">Bên cung cấp (tuỳ chọn)</label>
+      <%= f.text_field :vendor, class: "l-field" %>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <%= f.submit expense.persisted? ? "Lưu thay đổi" : "Ghi nhận khoản chi", class: "l-btn l-btn-primary" %>
+      <%= link_to "Huỷ", merchant_expenses_path, class: "l-btn l-btn-ghost" %>
+      <% if expense.persisted? %>
+        <%= button_to "Xoá", merchant_expense_path(expense), method: :delete, class: "l-btn l-btn-ghost",
+              style: "margin-left:auto; color:#B4402F;", form: { data: { turbo_confirm: "Xoá khoản chi này?" } } %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

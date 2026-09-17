@@ -1,0 +1,60 @@
+<% content_for :title, "Module đang dùng" %>
+
+<p style="color:var(--ink-2); font-size:13.5px; max-width:680px; margin-bottom:18px;">
+  Tắt một module là ẩn hẳn phần đó khỏi menu và khỏi app khách — dữ liệu cũ vẫn còn nguyên.
+  Đây là cách một tiệm foot massage và một thẩm mỹ viện dùng cùng một hệ thống mà không
+  phải nhìn những màn hình mình không cần.
+</p>
+
+<%= form_with url: merchant_settings_modules_path, method: :patch do %>
+  <div class="l-panel" style="max-width:720px;">
+    <% @modules.each do |key| %>
+      <% allowed = current_workspace.plan_allows?(key) %>
+      <div class="l-toggle-row">
+        <div>
+          <div style="font-weight:600; font-size:14.5px;"><%= @labels[key] %></div>
+          <div style="font-size:12.5px; color:var(--ink-2); margin-top:2px;">
+            <% case key
+               when "booking" %>Khách đặt lịch online, lễ tân xếp phòng/KTV.
+            <% when "pos" %>Mở bill, thu tiền, in phiếu tại quầy.
+            <% when "packages" %>Bán thẻ liệu trình nhiều buổi, trừ buổi mỗi lần khách đến.
+            <% when "wallet" %>Khách nạp trước một cục tiền rồi trừ dần.
+            <% when "loyalty" %>Tích điểm và hạng thẻ theo chi tiêu.
+            <% when "commissions" %>Tính hoa hồng KTV, hoa hồng tư vấn và bảng lương.
+            <% when "inventory" %>Kho tinh dầu, khăn, mỹ phẩm bán lẻ và định mức tiêu hao.
+            <% when "treatment_records" %>Hồ sơ điều trị từng buổi kèm ảnh tiến trình.
+            <% when "consent" %>Phiếu khai sức khoẻ và phiếu đồng ý có chữ ký.
+            <% when "reviews" %>Mời khách đánh giá sau buổi, chấm điểm KTV.
+            <% when "chat" %>Nhắn tin trực tiếp giữa quầy và khách trong app.
+            <% when "walk_in" %>Nhận khách vãng lai không hẹn trước, xếp vào chỗ trống.
+            <% end %>
+          </div>
+          <% unless allowed %>
+            <div style="font-size:12px; color:#B4402F; font-weight:600; margin-top:4px;">
+              Gói <%= current_workspace.plan_record.name %> chưa mở tính năng này.
+              <%= link_to "Nâng gói →", merchant_billing_path, style: "color:inherit;" %>
+            </div>
+          <% end %>
+        </div>
+        <label class="l-switch" style="<%= 'opacity:.45;' unless allowed %>">
+          <%= check_box_tag "modules[]", key, @enabled.include?(key), id: "module_#{key}", disabled: !allowed %>
+          <span class="knob"></span>
+        </label>
+      </div>
+    <% end %>
+
+    <div style="margin-top:18px;">
+      <%= submit_tag "Lưu module", class: "l-btn l-btn-primary" %>
+      <%= link_to "Về tham số nghiệp vụ", merchant_settings_path, class: "l-btn l-btn-ghost" %>
+    </div>
+  </div>
+<% end %>
+
+<div class="l-panel" style="max-width:720px; margin-top:18px;">
+  <div class="l-eyebrow">Loại hình spa</div>
+  <p style="font-size:13.5px; color:var(--ink-2); margin:6px 0 0;">
+    Hiện đang là <strong><%= current_workspace.business_type_label %></strong>.
+    Loại hình chỉ quyết định bộ module bật sẵn và danh mục gợi ý lúc mới tạo —
+    đổi module trực tiếp ở trên là đủ.
+  </p>
+</div>

@@ -1,0 +1,31 @@
+<h1><%= host_workspace&.name || "Aura" %></h1>
+<p class="sub">Tạo mật khẩu để truy cập bảng điều khiển.</p>
+
+<%= form_for(resource, as: resource_name, url: password_path(resource_name),
+      html: { method: :put, data: { turbo: false } }) do |f| %>
+  <%= f.hidden_field :reset_password_token %>
+
+  <% if resource.errors.any? %>
+    <div class="l-chip" style="display:block; background:#F7E0DA; color:#B4402F; margin-bottom:14px;">
+      <%= resource.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <label class="l-label">Mật khẩu mới</label>
+    <%= f.password_field :password, autofocus: true, autocomplete: "new-password",
+          autocapitalize: "none", autocorrect: "off", spellcheck: "false",
+          class: "l-field", placeholder: "tối thiểu 6 ký tự" %>
+  </div>
+  <div class="field">
+    <label class="l-label">Nhập lại mật khẩu</label>
+    <%= f.password_field :password_confirmation, autocomplete: "new-password",
+          autocapitalize: "none", autocorrect: "off", spellcheck: "false", class: "l-field" %>
+  </div>
+
+  <%= f.submit "Đặt mật khẩu & đăng nhập", class: "l-btn l-btn-primary", style: "width:100%; margin-top:6px;" %>
+<% end %>
+
+<p style="text-align:center; margin-top:18px; font-size:13px;">
+  <%= link_to "Quay lại đăng nhập", new_session_path(resource_name), style: "color:var(--ink-2);" %>
+</p>

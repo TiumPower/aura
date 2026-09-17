@@ -1,0 +1,32 @@
+<% content_for :title, "Nhật ký thao tác" %>
+
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <%= link_to "Tất cả", merchant_audit_logs_path, class: "l-chip #{'l-chip-brand' if params[:area].blank?}" %>
+  <% @areas.each do |a| %>
+    <%= link_to a, merchant_audit_logs_path(area: a), class: "l-chip #{'l-chip-brand' if params[:area] == a}" %>
+  <% end %>
+</div>
+
+<% if @logs.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">📜</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có thao tác nào được ghi</p>
+  </div>
+<% else %>
+  <div class="l-panel" style="padding:0; overflow:hidden;">
+    <% @logs.each do |log| %>
+      <div style="display:grid; grid-template-columns:140px 1fr 160px; gap:12px; padding:12px 18px; border-top:1px solid var(--line); font-size:13.5px;">
+        <div style="color:var(--ink-2);"><%= l(log.created_at, format: "%H:%M %d/%m/%y") %></div>
+        <div>
+          <strong><%= log.actor_name || "Hệ thống" %></strong>
+          <span class="l-mono" style="font-size:12px; color:var(--primary-ink);"><%= log.action %></span>
+          <% if log.summary.present? %><span style="color:var(--ink-2);">· <%= log.summary %></span><% end %>
+        </div>
+        <div style="color:var(--ink-2); font-size:12px; text-align:right;">
+          <%= log.target_type %><%= " ##{log.target_id}" if log.target_id %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <p style="font-size:12.5px; color:var(--ink-2); margin-top:10px;">Hiện 300 thao tác gần nhất.</p>
+<% end %>

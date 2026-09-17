@@ -1,0 +1,95 @@
+<% content_for :title, "Chi phí" %>
+
+<style>
+  .ex-row { display:grid; grid-template-columns:2fr 1.2fr 1fr 90px; gap:12px; align-items:center;
+    padding:13px 18px; border-top:1px solid var(--line); }
+  .ex-head { display:grid; grid-template-columns:2fr 1.2fr 1fr 90px; gap:12px; padding:0 18px 9px;
+    font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2); }
+  .ex-amt { font-weight:700; font-variant-numeric:tabular-nums; text-align:right; }
+  .ex-bar { display:flex; height:10px; border-radius:999px; overflow:hidden; background:var(--surface-2); margin:12px 0 10px; }
+  .ex-legend { display:flex; flex-wrap:wrap; gap:12px; font-size:12.5px; color:var(--ink-2); }
+  .ex-dot { width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:5px; }
+  @media (max-width:720px) { .ex-row, .ex-head { grid-template-columns:1fr auto; } .ex-head { display:none; } }
+</style>
+
+<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+  <%= form_with url: merchant_expenses_path, method: :get, style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" do %>
+    <label class="l-label" style="margin:0;">Tháng</label>
+    <%= month_field_tag :month, @month.strftime("%Y-%m"), class: "l-field", style: "width:auto;",
+          onchange: "this.form.requestSubmit()" %>
+  <% end %>
+  <div style="margin-left:auto;">
+    <%= link_to "+ Ghi nhận chi phí", new_merchant_expense_path, class: "l-btn l-btn-primary" %>
+  </div>
+</div>
+
+<div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi">
+    <div class="k">Đã chi tháng <%= l(@month, format: "%m/%Y") %></div>
+    <div class="v" style="font-size:26px; color:#B4402F;"><%= vnd(@total) %></div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Số khoản</div>
+    <div class="v" style="font-size:26px;"><%= @expenses.size %></div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Khoản lớn nhất</div>
+    <div class="v" style="font-size:26px;"><%= @by_category.any? ? vnd(@by_category.first.last) : "—" %></div>
+    <div style="font-size:12px; color:var(--ink-2); margin-top:2px;">
+      <%= @by_category.any? ? Expense::CATEGORY_LABELS[@by_category.first.first] : "" %>
+    </div>
+  </div>
+</div>
+
+<% if @by_category.any? %>
+  <% palette = { "rent" => "#1F6F8B", "payroll" => "#6A4C93", "supplies" => "#2F6F63",
+                 "utility" => "#B08D57", "marketing" => "#A8574F", "equipment" => "#37627E",
+                 "tax" => "#8B3A62", "training" => "#4C7A34", "other" => "#6B635A" } %>
+  <div class="l-panel" style="margin-bottom:18px;">
+    <div class="l-eyebrow">Cơ cấu chi phí</div>
+    <div class="ex-bar">
+      <% @by_category.each do |cat, amt| %>
+        <div style="width:<%= (amt * 100.0 / [@total, 1].max).round(2) %>%; background:<%= palette[cat] || '#6B635A' %>;"
+             title="<%= Expense::CATEGORY_LABELS[cat] %>"></div>
+      <% end %>
+    </div>
+    <div class="ex-legend">
+      <% @by_category.each do |cat, amt| %>
+        <span><span class="ex-dot" style="background:<%= palette[cat] || '#6B635A' %>;"></span><%= Expense::CATEGORY_LABELS[cat] %> · <strong style="color:var(--ink);"><%= vnd(amt) %></strong></span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @expenses.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">💸</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa ghi nhận chi phí nào tháng <%= l(@month, format: "%m/%Y") %></p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 14px;">
+      Ghi cả tiền mặt bằng, lương, tinh dầu, khăn — không có mẫu số chi phí thì không biết spa lãi thật bao nhiêu.
+    </p>
+    <%= link_to "Ghi khoản chi đầu tiên", new_merchant_expense_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <div class="l-panel" style="padding:18px 0;">
+    <div class="ex-head">
+      <div>Khoản chi</div><div>Cơ sở / bên cung cấp</div><div>Ngày</div><div style="text-align:right;">Số tiền</div>
+    </div>
+    <% @expenses.each do |e| %>
+      <div class="ex-row">
+        <div>
+          <div style="font-weight:600; font-size:14px;"><%= e.category_icon %> <%= e.category_label %></div>
+          <% if e.note.present? %><div style="font-size:12.5px; color:var(--ink-2);"><%= e.note %></div><% end %>
+        </div>
+        <div style="font-size:13px; color:var(--ink-2);">
+          <%= e.branch&.name || "Toàn thương hiệu" %><%= " · #{e.vendor}" if e.vendor.present? %>
+        </div>
+        <div style="font-size:13px; color:var(--ink-2);"><%= l(e.spent_on, format: "%d/%m/%Y") %></div>
+        <div class="ex-amt">
+          <%= vnd(e.amount) %>
+          <%= link_to "sửa", edit_merchant_expense_path(e), style: "font-size:11.5px; font-weight:500; color:var(--ink-2); display:block;" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title><%= content_for?(:title) ? yield(:title) : "Hợp đồng" %></title>
+    <style>
+      body { font-family: "Times New Roman", Georgia, serif; color:#111; max-width:800px;
+        margin:0 auto; padding:40px 32px; line-height:1.6; background:#fff; }
+      h1 { text-align:center; font-size:22px; margin:0 0 4px; }
+      .muted { color:#555; }
+      table { width:100%; border-collapse:collapse; margin:14px 0; }
+      td { padding:6px 8px; vertical-align:top; }
+      .k { color:#555; width:180px; }
+      .terms { white-space:pre-wrap; margin-top:16px; }
+      .sign { display:flex; justify-content:space-between; margin-top:48px; text-align:center; }
+      .sign div { width:45%; }
+      .toolbar { text-align:center; margin-bottom:20px; }
+      .btn { display:inline-block; padding:9px 18px; border:1px solid #333; border-radius:8px;
+        text-decoration:none; color:#111; font-family:system-ui,sans-serif; font-size:14px; cursor:pointer; background:#fff; }
+      @media print { .toolbar { display:none; } body { padding:0; } }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button class="btn" onclick="window.print()">🖨 In / Lưu PDF</button>
+    </div>
+    <%= yield %>
+  </body>
+</html>

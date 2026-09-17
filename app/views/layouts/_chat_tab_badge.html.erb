@@ -1,0 +1,4 @@
+<%# locals: count — số tin chưa đọc của khách. %>
+<span id="chat_tab_badge">
+  <% if count.to_i.positive? %><span class="ce-tab-badge"><%= count.to_i > 9 ? "9+" : count.to_i %></span><% end %>
+</span>

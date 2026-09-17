@@ -1,0 +1,5 @@
+<%# locals: count — tổng số tin chưa đọc của quầy. Bọc trong một id ổn định để
+    Turbo Stream thay đúng badge này khi có tin mới. %>
+<span id="staff_chat_badge">
+  <% if count.to_i.positive? %><span class="ce-tab-badge"><%= count.to_i > 9 ? "9+" : count.to_i %></span><% end %>
+</span>

@@ -1,0 +1,12 @@
+<% content_for :title, t("customer.blocked.title") %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:88vh; text-align:center;">
+  <div style="width:80px; height:80px; border-radius:24px; background:var(--surface-2); display:grid; place-items:center; font-size:40px;">🔒</div>
+  <h1 class="l-display" style="font-size:23px; margin-top:16px;"><%= t("customer.blocked.title") %></h1>
+  <p style="color:var(--ink-2); font-size:14px; margin-top:8px; max-width:320px;"><%= t("customer.blocked.body") %></p>
+  <% if current_workspace&.contact_phone.present? %>
+    <%= link_to "☎ #{current_workspace.contact_phone}", "tel:#{current_workspace.contact_phone}",
+          class: "l-btn l-btn-primary", style: "margin-top:18px;" %>
+  <% end %>
+  <%= button_to t("customer.common.logout"), member_logout_path, method: :delete, class: "l-btn l-btn-ghost", style: "margin-top:12px;" %>
+</div>

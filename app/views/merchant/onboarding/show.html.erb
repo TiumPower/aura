@@ -1,0 +1,146 @@
+<% content_for :title, "Thiết lập ban đầu" %>
+<% ws = @workspace %>
+
+<style>
+  .ob-steps { display:flex; gap:8px; margin-bottom:22px; }
+  .ob-step { flex:1; padding:10px 12px; border-radius:12px; background:#fff; border:1px solid var(--line);
+    font-size:12.5px; font-weight:600; color:var(--ink-2); }
+  .ob-step.on { border-color:var(--primary); color:var(--primary-ink); box-shadow:0 4px 14px color-mix(in srgb, var(--primary) 16%, transparent); }
+  .ob-pick { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .ob-card { display:block; padding:18px; border-radius:16px; border:1.5px solid var(--line); background:#fff;
+    cursor:pointer; text-align:left; }
+  .ob-card:hover { border-color:var(--primary); }
+  .ob-card .t { font-weight:700; font-size:15px; }
+  .ob-card .s { font-size:12.5px; color:var(--ink-2); margin-top:5px; line-height:1.45; }
+</style>
+
+<div style="max-width:760px;">
+  <div class="ob-steps">
+    <div class="ob-step <%= 'on' if @step == 'business' %>">1 · Loại hình spa</div>
+    <div class="ob-step <%= 'on' if @step == 'branch' %>">2 · Cơ sở đầu tiên</div>
+    <div class="ob-step <%= 'on' if @step == 'presets' %>">3 · Danh mục gợi ý</div>
+  </div>
+
+  <% if @step == "business" %>
+    <div class="l-panel">
+      <h2 class="l-display" style="font-size:24px; margin-bottom:6px;">Spa của bạn thuộc loại nào?</h2>
+      <p style="color:var(--ink-2); font-size:14px; margin-bottom:18px;">
+        Lựa chọn này chỉ quyết định các module được BẬT SẴN và danh mục gợi ý.
+        Bạn đổi lại bất cứ lúc nào ở phần thiết lập.
+      </p>
+      <%= form_with url: merchant_onboarding_path, method: :patch do %>
+        <%= hidden_field_tag :step, "business" %>
+        <div class="ob-pick">
+          <% Workspace::BUSINESS_TYPES.each do |type| %>
+            <label class="ob-card">
+              <%= radio_button_tag :business_type, type, ws.business_type == type, style: "margin-right:8px;" %>
+              <span class="t"><%= Workspace::BUSINESS_TYPE_LABELS[type] %></span>
+              <div class="s">
+                <% case type
+                   when "massage" %>
+                  Sơ đồ phòng/giường theo giờ, khách vãng lai, tip và hoa hồng KTV theo lượt.
+                <% when "beauty" %>
+                  Thẻ liệu trình nhiều buổi, hồ sơ điều trị kèm ảnh tiến trình, phiếu đồng ý, hoa hồng tư vấn.
+                <% else %>
+                  Bật toàn bộ: vừa vận hành phòng theo giờ, vừa quản lý liệu trình dài hạn.
+                <% end %>
+              </div>
+            </label>
+          <% end %>
+        </div>
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <%= submit_tag "Tiếp tục", class: "l-btn l-btn-primary" %>
+          <%= button_to "Bỏ qua thiết lập", merchant_skip_onboarding_path, class: "l-btn l-btn-ghost" %>
+        </div>
+      <% end %>
+    </div>
+
+  <% elsif @step == "branch" %>
+    <div class="l-panel">
+      <h2 class="l-display" style="font-size:24px; margin-bottom:6px;">Cơ sở đầu tiên</h2>
+      <p style="color:var(--ink-2); font-size:14px; margin-bottom:18px;">
+        Phòng, KTV, ca làm và lịch hẹn đều treo vào cơ sở. Có thêm cơ sở thì thêm sau.
+      </p>
+      <%= form_with model: @branch, url: merchant_onboarding_path, method: :patch do |f| %>
+        <%= hidden_field_tag :step, "branch" %>
+        <% if @branch.errors.any? %>
+          <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:14px;">
+            <%= @branch.errors.full_messages.to_sentence %>
+          </div>
+        <% end %>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;">
+          <div>
+            <label class="l-label">Tên cơ sở <span style="color:#e5484d;">*</span></label>
+            <%= f.text_field :name, class: "l-field", placeholder: "VD: Aura Spa Phú Nhuận" %>
+          </div>
+          <div>
+            <label class="l-label">Số điện thoại</label>
+            <%= f.telephone_field :phone, class: "l-field", placeholder: "0901234567" %>
+          </div>
+          <div>
+            <label class="l-label">Địa chỉ</label>
+            <%= f.text_field :address_line, class: "l-field", placeholder: "Số nhà, đường" %>
+          </div>
+          <div>
+            <label class="l-label">Phường/Xã</label>
+            <%= f.text_field :ward, class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Quận/Huyện</label>
+            <%= f.text_field :district, class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Tỉnh/Thành</label>
+            <%= f.text_field :city, class: "l-field", placeholder: "TP.HCM" %>
+          </div>
+        </div>
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <%= f.submit "Tiếp tục", class: "l-btn l-btn-primary" %>
+          <%= button_to "Bỏ qua thiết lập", merchant_skip_onboarding_path, class: "l-btn l-btn-ghost" %>
+        </div>
+      <% end %>
+    </div>
+
+  <% else %>
+    <div class="l-panel">
+      <h2 class="l-display" style="font-size:24px; margin-bottom:6px;">Nạp danh mục gợi ý?</h2>
+      <p style="color:var(--ink-2); font-size:14px; margin-bottom:16px;">
+        Aura tạo sẵn loại phòng, hạng KTV và hạng thẻ thành viên theo loại hình
+        <strong><%= ws.business_type_label %></strong>. Bạn sửa tên, giá, phụ thu tuỳ ý sau —
+        nhưng không phải bắt đầu từ màn hình trắng.
+      </p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:18px;">
+        <div class="l-tile">
+          <div class="l-eyebrow">Loại phòng</div>
+          <div style="font-size:13px; margin-top:6px; line-height:1.6;">
+            <%= RoomType.presets_for(ws.business_type).map { |p| p[:name] }.join(" · ") %>
+          </div>
+        </div>
+        <div class="l-tile">
+          <div class="l-eyebrow">Hạng KTV</div>
+          <div style="font-size:13px; margin-top:6px; line-height:1.6;">
+            <%= StaffLevel::PRESETS.map { |p| p[:name] }.join(" · ") %>
+          </div>
+        </div>
+        <div class="l-tile">
+          <div class="l-eyebrow">Hạng thẻ thành viên</div>
+          <div style="font-size:13px; margin-top:6px; line-height:1.6;">
+            <%= MemberTier::PRESETS.map { |p| p[:name] }.join(" · ") %>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <%= form_with url: merchant_onboarding_path, method: :patch, style: "display:inline;" do %>
+          <%= hidden_field_tag :step, "presets" %>
+          <%= hidden_field_tag :seed, "1" %>
+          <%= submit_tag "Nạp danh mục & hoàn tất", class: "l-btn l-btn-primary" %>
+        <% end %>
+        <%= form_with url: merchant_onboarding_path, method: :patch, style: "display:inline;" do %>
+          <%= hidden_field_tag :step, "presets" %>
+          <%= hidden_field_tag :seed, "0" %>
+          <%= submit_tag "Tôi tự khai từ đầu", class: "l-btn l-btn-ghost" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

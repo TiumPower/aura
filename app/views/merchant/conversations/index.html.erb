@@ -1,0 +1,32 @@
+<% content_for :title, "Chat với khách" %>
+
+<% if @conversations.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">💬</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có hộp thoại nào</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 14px;">
+      Mở chat từ hồ sơ khách, hoặc chờ khách nhắn trước từ app.
+    </p>
+    <%= link_to "Tới danh sách khách", merchant_customers_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <% @conversations.each do |c| %>
+    <% last = @last_messages[c.id] %>
+    <%= link_to merchant_conversation_path(c), class: "l-row" do %>
+      <div class="ic"><%= c.member.initials %></div>
+      <div class="bd">
+        <div class="t">
+          <%= c.member.display_name %>
+          <% if c.staff_unread.positive? %>
+            <span class="l-pill" style="--_c:#B4402F;"><%= c.staff_unread %> mới</span>
+          <% end %>
+        </div>
+        <div class="s">
+          <%= last ? last.preview_text.to_s.truncate(70) : "Chưa có tin nhắn" %>
+          <% if c.last_message_at %>· <%= time_ago_in_words(c.last_message_at) %> trước<% end %>
+        </div>
+      </div>
+      <div class="go">›</div>
+    <% end %>
+  <% end %>
+<% end %>

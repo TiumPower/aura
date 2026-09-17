@@ -1,0 +1,18 @@
+<% if flash[:notice] || flash[:alert] %>
+  <div class="l-toast-wrap" data-controller="toast">
+    <% if flash[:notice].present? %>
+      <div class="l-toast" data-toast-target="item">
+        <span class="ic">✓</span>
+        <div class="msg"><%= flash[:notice] %></div>
+        <button type="button" class="x" data-action="toast#close" aria-label="Đóng">✕</button>
+      </div>
+    <% end %>
+    <% if flash[:alert].present? %>
+      <div class="l-toast error" data-toast-target="item">
+        <span class="ic">!</span>
+        <div class="msg"><%= flash[:alert] %></div>
+        <button type="button" class="x" data-action="toast#close" aria-label="Đóng">✕</button>
+      </div>
+    <% end %>
+  </div>
+<% end %>

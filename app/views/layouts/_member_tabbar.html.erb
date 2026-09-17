@@ -1,0 +1,24 @@
+<% key = content_for(:tab).to_s.strip.presence %>
+<% conv = current_member&.conversation %>
+<% if conv %><%= turbo_stream_from conv, "member_badge" %><% end %>
+<nav class="l-tabbar">
+ <div class="l-tabbar-inner">
+  <%= link_to member_root_path, class: ("active" if key == "home") do %>
+    <span class="ce-tab-ic"><%= ui_icon(:home, size: 22) %></span><span><%= t("customer.nav.home") %></span>
+  <% end %>
+  <%= link_to member_notifications_path, class: ("active" if key == "alerts") do %>
+    <span class="ce-tab-ic"><%= ui_icon(:bell, size: 22) %></span><span><%= t("customer.nav.notifications") %></span>
+  <% end %>
+  <% if current_workspace&.feature?("chat") %>
+    <%= link_to member_chat_path, class: ("active" if key == "chat") do %>
+      <span class="ce-tab-ic">
+        <%= ui_icon(:chat, size: 22) %>
+        <%= render "layouts/chat_tab_badge", count: conv&.member_unread %>
+      </span><span><%= t("customer.nav.chat") %></span>
+    <% end %>
+  <% end %>
+  <%= link_to member_profile_path, class: ("active" if key == "me") do %>
+    <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span><%= t("customer.nav.me") %></span>
+  <% end %>
+ </div>
+</nav>

@@ -1,0 +1,42 @@
+<% content_for :title, "Phòng & giường" %>
+
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+  <div style="color:var(--ink-2); font-size:13.5px;">
+    <%= @rooms.size %> phòng · <%= @capacity %> chỗ phục vụ đồng thời
+  </div>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <%= link_to "Loại phòng", merchant_room_types_path, class: "l-btn l-btn-ghost" %>
+  </div>
+</div>
+
+<% if @rooms.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">🛏️</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có phòng nào</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 14px;">Thêm phòng trong trang cơ sở.</p>
+    <%= link_to "Tới danh sách cơ sở", merchant_branches_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <% @rooms.group_by(&:branch).each do |branch, rooms| %>
+    <div class="l-section-h"><h3><%= branch.name %></h3>
+      <%= link_to "Quản lý cơ sở →", merchant_branch_path(branch) %>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; margin-bottom:8px;">
+      <% rooms.each do |r| %>
+        <div class="l-tile">
+          <div style="display:flex; gap:6px; align-items:flex-start;">
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:14.5px;"><%= r.display_name %></div>
+              <div style="font-size:12px; color:var(--ink-2); margin-top:3px;"><%= r.type_name || "Chưa gán loại" %></div>
+            </div>
+            <span class="l-pill" style="--_c:<%= r.active? ? '#3F7A57' : '#B4402F' %>;"><%= r.status_label %></span>
+          </div>
+          <div style="font-size:12px; color:var(--ink-2); margin-top:8px;">
+            <%= r.capacity %> chỗ · dọn <%= r.turnaround %>′<%= " · không đặt online" unless r.online_bookable %>
+          </div>
+          <%= link_to "Sửa", edit_merchant_room_path(r), class: "l-chip", style: "margin-top:10px;" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

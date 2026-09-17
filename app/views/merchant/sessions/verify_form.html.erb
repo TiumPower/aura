@@ -1,0 +1,20 @@
+<% content_for :title, "Xác thực" %>
+<h1>Nhập mã</h1>
+<p class="sub">Chúng tôi đã gửi mã 6 số tới <strong><%= @email %></strong>.</p>
+
+<% if @dev_code.present? %>
+  <div class="l-chip l-chip-brand" style="justify-content:center; margin-bottom:16px;">
+    Mã (dev): <strong style="margin-left:6px; letter-spacing:.2em;"><%= @dev_code %></strong>
+  </div>
+<% end %>
+
+<%# turbo: false — xem ghi chú ở sessions/new: redirect sang subdomain. %>
+<%= form_with url: merchant_verify_submit_path, method: :post, data: { turbo: false } do %>
+  <input type="text" name="code" inputmode="numeric" maxlength="6" autofocus
+         class="l-field" placeholder="000000"
+         style="text-align:center; font-size:28px; letter-spacing:.35em; margin-bottom:16px;">
+  <%= submit_tag "Xác nhận", class: "l-btn l-btn-primary l-btn-block" %>
+<% end %>
+
+<%= link_to "← Đổi email", merchant_login_path,
+      style: "display:block; text-align:center; color:var(--ink-2); font-size:13px; margin-top:16px; text-decoration:none;" %>

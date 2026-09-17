@@ -1,0 +1,114 @@
+<% nav = defined?(nav_key) ? nav_key : nil %>
+<aside class="l-side" data-controller="activenav">
+  <div class="brand">
+    <div class="logo"><%= current_workspace&.logo_initials || "AU" %></div>
+    <div>
+      <div class="nm"><%= current_workspace&.name || "Aura" %></div>
+      <div class="sub"><%= current_workspace&.business_type_label || "Quản lý spa" %></div>
+    </div>
+  </div>
+
+  <% if accessible_workspaces.size > 1 %>
+    <details class="l-ws">
+      <summary style="cursor:pointer; list-style:none;">
+        <div class="k">Thương hiệu</div>
+        <div class="v"><%= current_workspace&.name %> ▾</div>
+      </summary>
+      <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+        <% accessible_workspaces.each do |ws| %>
+          <%# turbo: false — đổi workspace là redirect sang subdomain khác origin,
+              Turbo không theo được redirect chéo origin nên nút sẽ im lặng. %>
+          <%= button_to ws.name, merchant_switch_workspace_path(ws), class: "l-nav-item",
+                form: { data: { turbo: false } },
+                style: "background:none;border:none;text-align:left;width:100%;#{'font-weight:700;' if ws.id == current_workspace&.id}" %>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <%# Cơ sở đang xem. Nhân sự bị gán cứng một cơ sở thì chỉ hiện tên, không đổi. %>
+  <% if branch_options.size > 1 %>
+    <details class="l-ws">
+      <summary style="cursor:pointer; list-style:none;">
+        <div class="k">Cơ sở</div>
+        <div class="v"><%= current_branch&.name || "Tất cả cơ sở" %> ▾</div>
+      </summary>
+      <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+        <%= button_to "Tất cả cơ sở", merchant_switch_branch_path("all"), class: "l-nav-item",
+              style: "background:none;border:none;text-align:left;width:100%;#{'font-weight:700;' unless current_branch}" %>
+        <% branch_options.each do |b| %>
+          <%= button_to b.name, merchant_switch_branch_path(b), class: "l-nav-item",
+                style: "background:none;border:none;text-align:left;width:100%;#{'font-weight:700;' if b.id == current_branch&.id}" %>
+        <% end %>
+      </div>
+    </details>
+  <% elsif branch_options.any? %>
+    <div class="l-ws"><div class="k">Cơ sở</div><div class="v"><%= branch_options.first.name %></div></div>
+  <% end %>
+
+  <div class="l-navgrp">Vận hành</div>
+  <%= link_to merchant_root_path, class: "l-nav-item #{'active' if nav == :dashboard}" do %>
+    <span>▣</span><span>Tổng quan</span>
+  <% end %>
+  <%= link_to merchant_shifts_path, class: "l-nav-item #{'active' if nav == :shifts}" do %>
+    <span>🗓️</span><span>Bảng ca làm</span>
+  <% end %>
+  <%= link_to merchant_customers_path, class: "l-nav-item #{'active' if nav == :customers}" do %>
+    <span>👤</span><span>Khách hàng</span>
+  <% end %>
+  <% if module_on?("chat") %>
+    <%= link_to merchant_conversations_path, class: "l-nav-item #{'active' if nav == :chat}" do %>
+      <span>💬</span><span style="flex:1;">Chat</span>
+      <% if chat_unread_count.positive? %>
+        <span style="background:#e5484d; color:#fff; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:999px; display:inline-grid; place-items:center; padding:0 5px;"><%= chat_unread_count %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+  <%= link_to merchant_new_announcement_path, class: "l-nav-item #{'active' if nav == :announcements}" do %>
+    <span>📢</span><span>Gửi thông báo</span>
+  <% end %>
+
+  <div class="l-navgrp">Thiết lập spa</div>
+  <%= link_to merchant_branches_path, class: "l-nav-item #{'active' if nav == :branches}" do %>
+    <span>🏠</span><span>Cơ sở &amp; phòng</span>
+  <% end %>
+  <%= link_to merchant_staff_index_path, class: "l-nav-item #{'active' if nav == :staff}" do %>
+    <span>🧑‍🔧</span><span>Nhân sự &amp; KTV</span>
+  <% end %>
+  <%= link_to merchant_rooms_path, class: "l-nav-item #{'active' if nav == :rooms}" do %>
+    <span>🛏️</span><span>Phòng &amp; loại phòng</span>
+  <% end %>
+  <%= link_to merchant_expenses_path, class: "l-nav-item #{'active' if nav == :expenses}" do %>
+    <span>💸</span><span>Chi phí</span>
+  <% end %>
+
+  <div class="l-navgrp">Tài khoản</div>
+  <%= link_to merchant_settings_path, class: "l-nav-item #{'active' if nav == :settings}" do %>
+    <span>⚙️</span><span>Tham số nghiệp vụ</span>
+  <% end %>
+  <%= link_to merchant_appearance_path, class: "l-nav-item #{'active' if nav == :appearance}" do %>
+    <span>🎨</span><span>Giao diện &amp; thương hiệu</span>
+  <% end %>
+  <%= link_to merchant_payment_settings_path, class: "l-nav-item #{'active' if nav == :payment}" do %>
+    <span>🏦</span><span>Tài khoản nhận tiền</span>
+  <% end %>
+  <%= link_to merchant_audit_logs_path, class: "l-nav-item #{'active' if nav == :audit}" do %>
+    <span>📜</span><span>Nhật ký thao tác</span>
+  <% end %>
+  <%= link_to merchant_billing_path, class: "l-nav-item #{'active' if nav == :billing}" do %>
+    <span>◇</span><span>Gói &amp; thanh toán</span>
+  <% end %>
+
+  <div class="foot">
+    <%= link_to merchant_account_path, style: "display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-decoration:none; color:inherit; border-radius:10px; padding:4px 6px; #{'background:rgba(255,255,255,.1);' if nav == :account}", title: "Tài khoản" do %>
+      <div class="av"><%= current_user&.initials %></div>
+      <div style="min-width:0;">
+        <div style="font-size:13px; font-weight:600;"><%= current_user&.name %></div>
+        <div style="font-size:11px; opacity:.6;"><%= current_membership&.label %></div>
+      </div>
+    <% end %>
+    <%= button_to "⎋", merchant_logout_path, method: :delete,
+          form: { data: { turbo_confirm: "Đăng xuất khỏi hệ thống?" } },
+          style: "margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:16px;" %>
+  </div>
+</aside>

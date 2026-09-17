@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta name="turbo-cache-control" content="no-cache">
+    <%= render "layouts/head" %>
+  </head>
+  <body>
+    <%# Fixed platform theme (indigo) — admin is not per-workspace themed. %>
+    <style>
+      :root {
+        --primary:#4B4DED; --primary-2:#7C7EF5; --on-primary:#F5F6FF;
+        --surface:#F5F6FA; --surface-2:#ECEEF5; --ink:#1C1E33; --ink-2:#5A5D77;
+        --line:#E1E4EF; --radius:16px;
+        /* Buttons match the dark leftbar (same colour as .l-side background). */
+        --btn-primary: color-mix(in srgb, var(--ink) 92%, #000);
+        --btn-primary-ink: #F4F5FA;
+        --font-display:"Fraunces",Georgia,serif; --font-body:"Inter",ui-sans-serif,system-ui,sans-serif;
+      }
+    </style>
+
+    <div class="l-shell">
+      <%= render "layouts/admin_sidebar" %>
+      <main class="l-main">
+        <header class="l-topbar">
+          <div class="title">
+            <%= content_for?(:title) ? yield(:title) : "Super Admin" %>
+            <span class="en">PLATFORM OPS</span>
+          </div>
+        </header>
+        <div class="l-content"><%= yield %></div>
+      </main>
+    </div>
+  </body>
+</html>

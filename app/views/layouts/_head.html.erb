@@ -1,0 +1,21 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<% if respond_to?(:current_workspace) && current_workspace %>
+  <%# iOS "Add to Home Screen" uses this for the icon label (not the manifest).
+      Staff-scanner layouts override it via content_for(:apple_title). %>
+  <meta name="apple-mobile-web-app-title" content="<%= content_for?(:apple_title) ? yield(:apple_title) : current_workspace.name %>">
+<% end %>
+<title><%= content_for?(:title) ? yield(:title) : "Aura" %></title>
+<% if content_for?(:pwa_manifest_href) %>
+  <link rel="manifest" href="<%= yield(:pwa_manifest_href) %>">
+<% end %>
+<%= csrf_meta_tags %>
+<%= csp_meta_tag %>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+<%= javascript_importmap_tags %>

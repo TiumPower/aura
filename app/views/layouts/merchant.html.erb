@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta name="turbo-cache-control" content="no-cache">
+    <%# Turbo 8 page morphing: after an action redirects back to the same page,
+        morph only the changed DOM and keep scroll position, so routine
+        dashboard actions feel instant instead of a full page reload. %>
+    <meta name="turbo-refresh-method" content="morph">
+    <meta name="turbo-refresh-scroll" content="preserve">
+    <% if current_workspace %>
+      <% content_for :apple_title, "Quản lý · #{current_workspace.name}" %>
+      <% content_for(:title) { "Quản lý · #{current_workspace.name}" } unless content_for?(:title) %>
+    <% end %>
+    <%= render "layouts/head" %>
+    <% if current_workspace %>
+      <link rel="manifest" href="<%= merchant_manifest_path %>">
+      <link rel="icon" href="<%= workspace_icon_url(current_workspace) %>">
+      <link rel="apple-touch-icon" href="<%= workspace_icon_url(current_workspace) %>">
+      <meta name="theme-color" content="<%= current_workspace.theme_value(:primary) %>">
+      <meta name="apple-mobile-web-app-capable" content="yes">
+    <% end %>
+  </head>
+  <% pwa_data = current_workspace ? {
+       controller: "pwa",
+       "pwa-vapid-value": PushSender.public_key,
+       "pwa-subscribe-url-value": merchant_push_subscribe_path,
+       "pwa-unsubscribe-url-value": merchant_push_unsubscribe_path,
+       "pwa-on-text": t("customer.pwa.push_on"),
+       "pwa-off-text": t("customer.pwa.push_off"),
+       "pwa-blocked-text": t("customer.pwa.push_blocked"),
+       "pwa-unsupported-text": t("customer.pwa.push_unsupported"),
+       "pwa-got-it-text": t("customer.pwa.got_it"),
+     } : {} %>
+  <body <%= tag.attributes(data: pwa_data) if pwa_data.any? %>>
+    <%= render "layouts/merchant_theme_vars" %>
+
+    <% if impersonating? %>
+      <div style="background:#1B2733; color:#fff; font-size:13px; padding:8px 16px; display:flex; align-items:center; gap:12px;">
+        <span>👁 Bạn đang xem với tư cách <strong><%= current_workspace&.name %></strong> (chế độ hỗ trợ Super Admin).</span>
+        <%= button_to "Thoát", merchant_stop_impersonation_path, method: :delete, form: { data: { turbo: false }, style: "margin-left:auto;" },
+              style: "background:#fff; color:#1B2733; border:none; border-radius:999px; padding:4px 14px; font-weight:700; font-size:12px; cursor:pointer;" %>
+      </div>
+    <% end %>
+
+    <div class="l-shell">
+      <%= render "layouts/merchant_sidebar" %>
+      <main class="l-main">
+        <header class="l-topbar">
+          <% cur_nav = defined?(nav_key) ? nav_key : nil %>
+          <% if content_for?(:back) %>
+            <%= yield(:back) %>
+          <% elsif cur_nav != :dashboard %>
+            <%= link_to merchant_root_path, data: { controller: "goback", action: "click->goback#back" },
+                  style: "display:inline-flex; align-items:center; gap:5px; color:var(--ink-2); text-decoration:none; " \
+                         "font-size:13px; font-weight:600; padding:7px 13px; border:1px solid var(--line); " \
+                         "border-radius:999px; white-space:nowrap; background:#fff; margin-right:14px;" do %>
+              ← Quay lại
+            <% end %>
+          <% end %>
+          <div class="title">
+            <%= content_for?(:title) ? yield(:title) : "Tổng quan" %>
+            <span class="en"><%= content_for?(:title_en) ? yield(:title_en) : "OVERVIEW" %></span>
+          </div>
+        </header>
+        <div class="l-content"><%= yield %></div>
+      </main>
+    </div>
+    <% if current_workspace %><%= turbo_stream_from current_workspace, "staff_chat_badge" %><% end %>
+    <%= render "layouts/merchant_tabbar" %>
+    <% if current_workspace %>
+      <%= render "layouts/pwa_install" %>
+      <%= render "layouts/pwa_push" %>
+    <% end %>
+  </body>
+</html>

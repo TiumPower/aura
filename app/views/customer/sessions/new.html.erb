@@ -1,0 +1,24 @@
+<% content_for :title, t("customer.session.login_title", name: current_workspace.name) %>
+<div class="l-screen" style="display:flex; flex-direction:column; justify-content:center; min-height:100dvh;">
+  <div style="text-align:center; margin-bottom:26px;">
+    <div style="width:72px; height:72px; border-radius:22px; margin:0 auto 16px; overflow:hidden;">
+      <%= image_tag workspace_icon_url(current_workspace), alt: "", style: "width:100%;height:100%;object-fit:cover;" %>
+    </div>
+    <h1 class="l-display" style="font-size:26px;"><%= current_workspace.name %></h1>
+    <p style="color:var(--ink-2); font-size:14px;"><%= current_workspace.branding_value("tagline") %></p>
+  </div>
+
+  <%= form_with url: member_login_path, method: :post do %>
+    <label class="l-label"><%= t("customer.session.phone_label") %></label>
+    <input type="tel" name="phone" value="<%= @phone %>" autocomplete="tel" inputmode="numeric" autofocus
+           class="l-field" placeholder="<%= t('customer.session.phone_placeholder') %>">
+    <p style="font-size:12.5px; color:var(--ink-2); margin:8px 0 16px; line-height:1.5;">
+      <%= t("customer.session.phone_hint") %>
+    </p>
+    <%= submit_tag t("customer.session.get_otp"), class: "l-btn l-btn-primary l-btn-block" %>
+  <% end %>
+
+  <p style="text-align:center; color:var(--ink-2); font-size:12px; margin-top:18px;">
+    <%= t("customer.session.login_footer") %>
+  </p>
+</div>

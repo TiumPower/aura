@@ -1,0 +1,108 @@
+<% content_for :title, @member.display_name %>
+
+<div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap;">
+  <div style="width:56px; height:56px; border-radius:16px; display:grid; place-items:center; flex:none;
+              font-weight:700; font-size:20px; background:color-mix(in srgb, var(--primary) 12%, #fff); color:var(--primary-ink);">
+    <%= @member.initials %>
+  </div>
+  <div style="flex:1; min-width:200px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;"><%= @member.display_name %></h2>
+      <% if @member.member_tier %>
+        <span class="l-pill" style="--_c:<%= @member.member_tier.color.presence || '#6B635A' %>;"><%= @member.tier_name %></span>
+      <% end %>
+      <% if @member.blocked? %><span class="l-pill" style="--_c:#B4402F;">Bị chặn</span><% end %>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:3px;">
+      <%= @member.phone %><%= " · #{@member.email}" if @member.email.present? %>
+      <%= " · #{@member.gender_label}" if @member.gender.present? %>
+      · <%= @member.source_label %>
+      <%= " · mã #{@member.code}" if @member.code.present? %>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <% if module_on?("chat") %>
+      <%= link_to "💬 Chat", merchant_customer_chat_path(@member), class: "l-btn l-btn-ghost" %>
+    <% end %>
+    <%= link_to "Sửa hồ sơ", edit_merchant_customer_path(@member), class: "l-btn l-btn-primary" %>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px;">
+  <div class="l-kpi"><div class="k">Số lượt đến</div><div class="v" style="font-size:26px;"><%= @member.visits_count %></div></div>
+  <div class="l-kpi"><div class="k">Tổng chi tiêu</div><div class="v" style="font-size:26px;"><%= vnd(@member.total_spent) %></div></div>
+  <div class="l-kpi"><div class="k">Ví / thẻ tiền</div><div class="v" style="font-size:26px;"><%= vnd(@member.wallet_balance) %></div></div>
+  <div class="l-kpi"><div class="k">Điểm thưởng</div><div class="v" style="font-size:26px;"><%= @member.points_balance %></div></div>
+  <div class="l-kpi">
+    <div class="k">Bỏ hẹn / huỷ</div>
+    <div class="v" style="font-size:26px; <%= 'color:#B4402F;' if @member.no_show_count.positive? %>">
+      <%= @member.no_show_count %> / <%= @member.cancel_count %>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;">
+  <div class="l-panel">
+    <div class="l-section-h" style="margin:0 0 8px;"><h3>Sở thích khi làm dịch vụ</h3></div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+      Khách khai một lần, KTV nào cũng đọc được — khách không phải nhắc lại “nhẹ tay thôi” mỗi lần đến.
+    </p>
+    <%= form_with url: preferences_merchant_customer_path(@member), method: :patch do %>
+      <% Member::PREFERENCE_FIELDS.each do |key, cfg| %>
+        <div style="margin-bottom:12px;">
+          <label class="l-label"><%= cfg[:label] %></label>
+          <%= select_tag "preferences[#{key}]",
+                options_for_select(cfg[:options], @member.preference(key)),
+                include_blank: "Chưa khai", class: "l-field" %>
+        </div>
+      <% end %>
+      <%= submit_tag "Lưu sở thích", class: "l-btn l-btn-primary" %>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="l-panel" style="margin-bottom:18px;">
+      <div class="l-eyebrow" style="margin-bottom:8px;">Lưu ý sức khoẻ / chống chỉ định</div>
+      <% if @member.health_notes.present? %>
+        <div style="background:#fdf3e8; border:1px solid #f0dcc0; border-radius:12px; padding:12px; font-size:13.5px; line-height:1.55;">
+          ⚠️ <%= simple_format @member.health_notes %>
+        </div>
+      <% else %>
+        <p style="font-size:13px; color:var(--ink-2);">Chưa ghi nhận. Nên hỏi trước buổi đầu tiên.</p>
+      <% end %>
+      <% if @member.notes.present? %>
+        <div class="l-eyebrow" style="margin:14px 0 6px;">Ghi chú nội bộ</div>
+        <div style="font-size:13.5px; line-height:1.55;"><%= simple_format @member.notes %></div>
+      <% end %>
+    </div>
+
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Thông tin khác</div>
+      <div style="font-size:13.5px; line-height:1.9;">
+        <div><span style="color:var(--ink-2);">Cơ sở thường đến:</span> <%= @member.home_branch&.name || "—" %></div>
+        <div><span style="color:var(--ink-2);">KTV quen:</span> <%= @member.preferred_staff&.display_name || "—" %></div>
+        <div><span style="color:var(--ink-2);">Sinh nhật:</span>
+          <%= @member.dob ? l(@member.dob, format: "%d/%m/%Y") : (@member.dob_day ? "#{@member.dob_day}/#{@member.dob_month}" : "—") %>
+        </div>
+        <div><span style="color:var(--ink-2);">Mã giới thiệu:</span> <span class="l-mono"><%= @member.referral_code %></span></div>
+        <div><span style="color:var(--ink-2);">Nhận tin khuyến mãi:</span> <%= @member.marketing_opt_in ? "Có" : "Không" %></div>
+        <div><span style="color:var(--ink-2);">Tạo hồ sơ:</span> <%= l(@member.created_at, format: "%d/%m/%Y") %></div>
+      </div>
+
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line); display:flex; gap:8px; flex-wrap:wrap;">
+        <% if @member.blocked? %>
+          <%= button_to "Bỏ chặn khách", unblock_merchant_customer_path(@member), method: :patch, class: "l-btn l-btn-primary" %>
+        <% else %>
+          <%= form_with url: block_merchant_customer_path(@member), method: :patch, style: "display:flex; gap:8px; flex:1;" do %>
+            <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do chặn (tuỳ chọn)" %>
+            <%= submit_tag "Chặn", class: "l-btn l-btn-ghost", style: "color:#B4402F;",
+                  data: { turbo_confirm: "Chặn khách này khỏi đặt lịch?" } %>
+          <% end %>
+        <% end %>
+      </div>
+      <% if @member.blocked_reason.present? %>
+        <p style="font-size:12.5px; color:#B4402F; margin-top:8px;">Lý do chặn: <%= @member.blocked_reason %></p>
+      <% end %>
+    </div>
+  </div>
+</div>

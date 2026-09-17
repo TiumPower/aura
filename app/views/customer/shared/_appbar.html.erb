@@ -1,0 +1,8 @@
+<%# Reusable PWA app bar. locals: title, back (path, optional), action (html, optional) %>
+<header class="l-appbar bordered" style="display:flex; align-items:center; gap:12px;">
+  <% if local_assigns[:back].present? %>
+    <%= link_to ui_icon(:arrow_left, size: 20), back, class: "back", "aria-label": t("customer.common.back") %>
+  <% end %>
+  <div class="title" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= title %></div>
+  <%= local_assigns[:action] %>
+</header>

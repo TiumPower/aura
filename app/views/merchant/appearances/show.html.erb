@@ -1,0 +1,169 @@
+<% content_for :title, "Giao diện & thương hiệu" %>
+<% ws = @workspace %>
+
+<style>
+  .ap-presets { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .ap-preset { border:1.5px solid var(--line); border-radius:14px; padding:12px; background:#fff; cursor:pointer; text-align:left; width:100%; }
+  .ap-preset:hover { border-color:var(--primary); }
+  .ap-sw { display:flex; gap:5px; margin-bottom:8px; }
+  .ap-sw span { width:22px; height:22px; border-radius:6px; display:inline-block; border:1px solid rgba(0,0,0,.08); }
+  .ap-prev { border-radius:18px; overflow:hidden; border:1px solid var(--line); }
+</style>
+
+<div style="display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:start;">
+  <div>
+    <div class="l-panel" style="margin-bottom:18px;">
+      <div class="l-section-h" style="margin:0 0 10px;"><h3>Bộ màu sẵn</h3></div>
+      <div class="ap-presets">
+        <% @presets.each do |key, preset| %>
+          <%= form_with url: merchant_appearance_path, method: :patch do %>
+            <%= hidden_field_tag :preset, key %>
+            <button type="submit" class="ap-preset">
+              <div class="ap-sw">
+                <span style="background:<%= preset['primary'] %>;"></span>
+                <span style="background:<%= preset['primary_2'] %>;"></span>
+                <span style="background:<%= preset['surface_2'] %>;"></span>
+              </div>
+              <div style="font-weight:600; font-size:13.5px;"><%= preset["name"] %></div>
+            </button>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= form_with url: merchant_appearance_path, method: :patch, multipart: true do %>
+      <div class="l-panel" style="margin-bottom:18px;">
+        <div class="l-section-h" style="margin:0 0 10px;"><h3>Màu &amp; phông chữ</h3></div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px;">
+          <div>
+            <label class="l-label">Màu chính</label>
+            <%= color_field_tag :primary, @theme["primary"], class: "l-field", style: "height:46px; padding:5px;" %>
+          </div>
+          <div>
+            <label class="l-label">Màu nhấn</label>
+            <%= color_field_tag :primary_2, @theme["primary_2"], class: "l-field", style: "height:46px; padding:5px;" %>
+          </div>
+          <div>
+            <label class="l-label">Nền</label>
+            <%= color_field_tag :surface, @theme["surface"], class: "l-field", style: "height:46px; padding:5px;" %>
+          </div>
+          <div>
+            <label class="l-label">Nền phụ</label>
+            <%= color_field_tag :surface_2, @theme["surface_2"], class: "l-field", style: "height:46px; padding:5px;" %>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-top:14px;">
+          <div>
+            <label class="l-label">Phông tiêu đề</label>
+            <%= select_tag :font_display, options_for_select(@fonts, @theme["font_display"]), class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Phông nội dung</label>
+            <%= select_tag :font_body, options_for_select(@fonts, @theme["font_body"]), class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Độ bo góc (px)</label>
+            <%= number_field_tag :radius, @theme["radius"].to_s.delete("px"), class: "l-field", min: 0, max: 40 %>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+          Màu chữ trên nền thương hiệu được <strong>suy ra tự động</strong> theo độ tương phản —
+          chọn màu nhạt thì chữ tự chuyển sang đậm, không bao giờ ra chữ trắng trên nền vàng nhạt.
+        </p>
+      </div>
+
+      <div class="l-panel">
+        <div class="l-section-h" style="margin:0 0 10px;"><h3>Nhận diện</h3></div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">
+          <div>
+            <label class="l-label">Slogan</label>
+            <%= text_field_tag "branding[tagline]", ws.branding_value("tagline"), class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Chữ viết tắt trên logo</label>
+            <%= text_field_tag "branding[logo_text]", ws.branding_value("logo_text"), class: "l-field", placeholder: ws.logo_initials %>
+          </div>
+          <div>
+            <label class="l-label">Gọi khách là</label>
+            <%= text_field_tag "branding[customer_term]", ws.branding_value("customer_term"), class: "l-field", placeholder: "quý khách" %>
+          </div>
+          <div>
+            <label class="l-label">Gọi nhân viên kỹ thuật là</label>
+            <%= text_field_tag "branding[staff_term]", ws.branding_value("staff_term"), class: "l-field", placeholder: "KTV" %>
+          </div>
+          <div>
+            <label class="l-label">Hotline hiện trong app</label>
+            <%= text_field_tag "branding[contact_phone]", ws.branding_value("contact_phone"), class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Zalo</label>
+            <%= text_field_tag "branding[zalo]", ws.branding_value("zalo"), class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Facebook</label>
+            <%= text_field_tag "branding[facebook]", ws.branding_value("facebook"), class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Instagram</label>
+            <%= text_field_tag "branding[instagram]", ws.branding_value("instagram"), class: "l-field" %>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <label class="l-label">Lời nhắn hiện ở bước đặt lịch</label>
+          <%= text_area_tag "branding[booking_note]", ws.branding_value("booking_note"), class: "l-field", rows: 2,
+                placeholder: "VD: Vui lòng đến trước 10 phút để thay đồ và dùng trà thảo mộc." %>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px;">
+          <div>
+            <label class="l-label">Logo</label>
+            <%= file_field_tag :logo, accept: "image/*", class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Ảnh bìa app khách</label>
+            <%= file_field_tag :cover, accept: "image/*", class: "l-field" %>
+          </div>
+        </div>
+        <%= submit_tag "Lưu giao diện", class: "l-btn l-btn-primary", style: "margin-top:18px;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Khách sẽ thấy</div>
+      <div class="ap-prev">
+        <div style="background:linear-gradient(160deg, <%= @theme['primary'] %>, <%= @theme['primary_2'] %>); padding:22px 18px; color:<%= ws.theme_value(:on_primary) %>;">
+          <div style="font-size:11px; letter-spacing:.16em; text-transform:uppercase; opacity:.85;">
+            <%= ws.branding_value("tagline") %>
+          </div>
+          <div style="font-family:<%= ws.font_stack(:font_display) %>; font-size:24px; margin-top:6px;">
+            <%= ws.name %>
+          </div>
+          <div style="font-size:12.5px; opacity:.9; margin-top:4px;">
+            Xin chào <%= ws.branding_value("customer_term") %> 🌿
+          </div>
+        </div>
+        <div style="background:<%= @theme['surface'] %>; padding:16px;">
+          <div style="background:#fff; border:1px solid <%= @theme['line'] %>; border-radius:<%= ws.css_radius %>; padding:14px;">
+            <div style="font-weight:700; font-size:14px; color:<%= @theme['ink'] %>;">Đặt lịch hẹn</div>
+            <div style="font-size:12.5px; color:<%= @theme['ink_2'] %>; margin-top:4px;">
+              Chọn dịch vụ, giờ và <%= ws.branding_value("staff_term") %> quen của <%= ws.branding_value("customer_term") %>.
+            </div>
+            <div style="margin-top:12px; display:inline-block; background:<%= @theme['primary'] %>; color:<%= ws.theme_value(:on_primary) %>;
+                        padding:9px 16px; border-radius:12px; font-weight:600; font-size:13px;">
+              Bắt đầu
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+        Mỗi spa có subdomain riêng: <span class="l-mono"><%= ws.subdomain %>.aura.czin.net</span>.
+        <% if current_workspace.plan_allows?(:custom_domain) %>
+          Gói hiện tại còn cho dùng <strong>tên miền riêng</strong> của spa.
+        <% else %>
+          Tên miền riêng có ở gói <%= Plan.lowest_allowing(:custom_domain)&.name || "cao hơn" %>.
+        <% end %>
+      </p>
+    </div>
+  </div>
+</div>

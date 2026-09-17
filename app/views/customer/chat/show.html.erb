@@ -1,0 +1,27 @@
+<% content_for :title, t("customer.chat.title") %>
+<% content_for :no_tabbar, true %>
+<%# Fixed to the viewport so the composer stays pinned and the message list
+    scrolls internally (l-phone uses min-height, which would otherwise grow). %>
+<div style="position:fixed; inset:0; max-width:480px; margin:0 auto; z-index:30;
+            display:flex; flex-direction:column; background:var(--surface);">
+  <header class="l-appbar bordered" style="flex:none; align-items:center; gap:11px;">
+    <%= link_to ui_icon(:arrow_left, size: 20), member_root_path, class: "back", "aria-label": t("customer.common.back") %>
+    <div style="width:40px; height:40px; border-radius:13px; flex:none; overflow:hidden; background:color-mix(in srgb, var(--primary) 14%, #fff); display:grid; place-items:center; color:var(--primary);">
+      <% if current_workspace && workspace_icon_url(current_workspace).present? %>
+        <%= image_tag workspace_icon_url(current_workspace), alt: "", style: "width:100%; height:100%; object-fit:cover;" %>
+      <% else %>
+        <%= ui_icon(:building, size: 20) %>
+      <% end %>
+    </div>
+    <div style="flex:1; min-width:0;">
+      <div class="title" style="font-size:16.5px; line-height:1.15;"><%= current_workspace.name %></div>
+      <div style="font-size:11.5px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= t("customer.chat.title") %></div>
+    </div>
+  </header>
+  <div style="flex:1; min-height:0; display:flex; flex-direction:column;">
+    <%= render "shared/chat_room", conversation: @conversation, messages: @messages,
+          as: "member", viewer_member_id: current_member.id,
+          post_url: member_chat_messages_path, updates_url: member_chat_updates_path,
+          msg_path_tpl: member_chat_message_path("MSGID") %>
+  </div>
+</div>

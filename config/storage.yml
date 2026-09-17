@@ -1,0 +1,58 @@
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+# DigitalOcean Spaces — S3-compatible, nên dùng service S3 với endpoint riêng.
+# Cùng khối này chạy được với mọi nhà cung cấp S3-compatible khác chỉ bằng cách
+# đổi SPACES_ENDPOINT và SPACES_REGION.
+#
+# Bucket dùng CHUNG với các app khác trên cùng server, nên mỗi app ghi vào tiền
+# tố riêng (xem lib/active_storage/service/prefixed_s3_service.rb).
+spaces:
+  service: PrefixedS3
+  prefix: <%= ENV.fetch("SPACES_PREFIX", "aura") %>
+  access_key_id:     <%= ENV["SPACES_KEY"] %>
+  secret_access_key: <%= ENV["SPACES_SECRET"] %>
+  region:            <%= ENV.fetch("SPACES_REGION", "sgp1") %>
+  bucket:            <%= ENV["SPACES_BUCKET"] %>
+  endpoint:          <%= ENV.fetch("SPACES_ENDPOINT") { "https://#{ENV.fetch('SPACES_REGION', 'sgp1')}.digitaloceanspaces.com" } %>
+  # Tệp để RIÊNG TƯ; app phát đường dẫn ký tên có hạn khi cần tải.
+  public: false
+
+# Spaces là kho chính, đĩa máy chủ là bản sao — bản sao lưu hằng đêm đóng gói
+# shared/storage, nên vẫn cần tệp nằm trên đĩa để backup không rỗng.
+spaces_mirrored:
+  service: Mirror
+  primary: spaces
+  mirrors: [ local ]
+
+# Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
+# amazon:
+#   service: S3
+#   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
+#   secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
+#   region: us-east-1
+#   bucket: your_own_bucket-<%= Rails.env %>
+
+# Remember not to checkin your GCS keyfile to a repository
+# google:
+#   service: GCS
+#   project: your_project
+#   credentials: <%= Rails.root.join("path/to/gcs.keyfile") %>
+#   bucket: your_own_bucket-<%= Rails.env %>
+
+# Use bin/rails credentials:edit to set the Azure Storage secret (as azure_storage:storage_access_key)
+# microsoft:
+#   service: AzureStorage
+#   storage_account_name: your_account_name
+#   storage_access_key: <%= Rails.application.credentials.dig(:azure_storage, :storage_access_key) %>
+#   container: your_container_name-<%= Rails.env %>
+
+# mirror:
+#   service: Mirror
+#   primary: local
+#   mirrors: [ amazon, google, microsoft ]

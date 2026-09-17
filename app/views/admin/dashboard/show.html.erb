@@ -1,0 +1,95 @@
+<% content_for :title, "Tổng quan" %>
+
+<%# ---- Time filter (top) ---- %>
+<div class="l-panel" style="margin-bottom:16px;">
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <span class="l-eyebrow" style="margin-right:4px;">Khoảng thời gian</span>
+    <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden;">
+      <% [["1m", "1 tháng"], ["3m", "3 tháng"], ["6m", "6 tháng"], ["12m", "12 tháng"]].each do |key, label| %>
+        <% on = @preset == key %>
+        <%= link_to label, admin_root_path(preset: key),
+              style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+      <% end %>
+    </div>
+
+    <span style="color:var(--ink-2); font-size:12px;">hoặc</span>
+    <%= form_with url: admin_root_path, method: :get, data: { turbo: false }, style: "display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;" do %>
+      <input type="date" name="from" value="<%= @from.to_s %>" class="l-field" style="width:auto; padding:7px 10px;">
+      <span style="color:var(--ink-2);">→</span>
+      <input type="date" name="to" value="<%= @to.to_s %>" class="l-field" style="width:auto; padding:7px 10px;">
+      <%= submit_tag "Áp dụng", class: "l-btn l-btn-soft", style: "padding:7px 14px;" %>
+    <% end %>
+
+    <div style="margin-left:auto; font-size:12.5px; color:var(--ink-2);">
+      Đang xem: <strong style="color:var(--ink);"><%= l(@from, format: "%d/%m/%Y") %> – <%= l(@to, format: "%d/%m/%Y") %></strong>
+    </div>
+  </div>
+</div>
+
+<%# ---- KPIs by period ---- %>
+<div class="l-eyebrow" style="margin-bottom:10px;">Trong kỳ đã chọn</div>
+<div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi" style="outline:2px solid var(--primary); outline-offset:-1px;">
+    <div class="k">Doanh thu đã thu</div>
+    <div class="v" style="font-size:24px; color:var(--primary);"><%= number_with_delimiter(@collected_range) %>đ</div>
+    <div class="d" style="color:var(--ink-2);"><%= @invoices_range %> giao dịch</div>
+  </div>
+  <div class="l-kpi"><div class="k">Chủ hộ mới</div><div class="v"><%= @new_workspaces %></div></div>
+  <div class="l-kpi"><div class="k">Người thuê mới</div><div class="v"><%= @new_customers %></div></div>
+  <div class="l-kpi"><div class="k">Doanh thu định kỳ (MRR)</div><div class="v" style="font-size:22px;"><%= number_with_delimiter(@mrr) %>đ</div><div class="d" style="color:var(--ink-2);">hiện tại</div></div>
+</div>
+
+<%# ---- Current snapshot ---- %>
+<div class="l-eyebrow" style="margin-bottom:10px;">Hiện tại</div>
+<div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi"><div class="k">Chủ hộ</div><div class="v"><%= @workspaces_count %></div><div class="d" style="color:var(--ink-2);"><%= @active_count %> trả phí · <%= @trial_count %> dùng thử</div></div>
+  <div class="l-kpi"><div class="k">Cơ sở</div><div class="v"><%= @branches_count %></div></div>
+  <div class="l-kpi"><div class="k">Phòng</div><div class="v"><%= @rooms_count %></div><div class="d" style="color:var(--ink-2);"><%= @seats_count %> chỗ phục vụ</div></div>
+  <div class="l-kpi"><div class="k">Nhân sự</div><div class="v"><%= @staff_count %></div></div>
+  <div class="l-kpi"><div class="k">Người thuê</div><div class="v"><%= @members_count %></div></div>
+</div>
+
+<%# ---- Charts (follow the range) ---- %>
+<div class="l-eyebrow" style="margin-bottom:12px;">Biểu đồ theo tháng</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+  <div class="l-panel">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
+      <div style="font-weight:700;">Doanh thu</div>
+      <div style="font-size:12px; color:var(--ink-2);">hoá đơn thuê bao đã thanh toán</div>
+    </div>
+    <div style="color:var(--primary);"><%= bar_chart_svg(@revenue_series) %></div>
+  </div>
+  <div class="l-panel">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
+      <div style="font-weight:700;">Chủ hộ mới</div>
+      <div style="font-size:12px; color:var(--ink-2);">workspace đăng ký mỗi tháng</div>
+    </div>
+    <div style="color:var(--primary-2, #3BA5B0);"><%= bar_chart_svg(@workspace_series, color: "var(--primary-2, #3BA5B0)") %></div>
+  </div>
+</div>
+
+<div class="l-panel" style="margin-top:16px;">
+  <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
+    <div style="font-weight:700;">Người thuê mới</div>
+    <div style="font-size:12px; color:var(--ink-2);">tài khoản người thuê tạo mỗi tháng</div>
+  </div>
+  <div style="color:#8a5cf6;"><%= bar_chart_svg(@customer_series, color: "#8a5cf6") %></div>
+</div>
+
+<%# ---- Recent ---- %>
+<div style="display:flex; align-items:center; justify-content:space-between; margin:22px 0 12px;">
+  <div class="l-eyebrow">Chủ hộ mới nhất</div>
+  <%= link_to "Xem tất cả →", admin_workspaces_path, style: "font-size:13px; color:var(--primary);" %>
+</div>
+<div class="l-panel" style="padding:0; overflow:hidden;">
+  <% @recent.each do |ws| %>
+    <%= link_to admin_workspace_path(ws), style: "display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); text-decoration:none; color:inherit;" do %>
+      <div class="av" style="width:38px;height:38px;"><%= ws.logo_initials %></div>
+      <div style="flex:1;">
+        <div style="font-weight:600;"><%= ws.name %></div>
+        <div style="font-size:12px; color:var(--ink-2);"><%= ws.subdomain %>.aura.czin.net · <%= ws.branches.count %> cơ sở · <%= ws.staff_members.count %> nhân sự</div>
+      </div>
+      <span class="l-chip"><%= ws.status_label %></span>
+    <% end %>
+  <% end %>
+</div>

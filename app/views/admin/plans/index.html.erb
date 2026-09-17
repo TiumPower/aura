@@ -1,0 +1,49 @@
+<% content_for :title, "Quản lý gói dịch vụ" %>
+<p style="color:var(--ink-2); margin-bottom:16px;">Chỉnh giá và giới hạn từng gói. Thay đổi áp dụng ngay cho mọi workspace đang dùng gói đó. Tính năng AI miễn phí ở mọi gói.</p>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; align-items:start;">
+  <% @plans.each do |plan| %>
+    <div class="l-panel">
+      <div style="display:flex; align-items:baseline; justify-content:space-between;">
+        <h3 class="l-display" style="font-size:20px;"><%= plan.name %></h3>
+        <span class="l-mono" style="color:var(--ink-2); font-size:12px;"><%= plan.key %></span>
+      </div>
+      <%= form_with model: plan, url: admin_plan_path(plan), method: :patch do |f| %>
+        <label class="l-label" style="margin-top:10px;">Tên gói</label>
+        <%= f.text_field :name, class: "l-field" %>
+
+        <label class="l-label" style="margin-top:10px;">Giá (đ/tháng)</label>
+        <%= f.number_field :price, class: "l-field" %>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+          <div>
+            <label class="l-label">Tối đa cơ sở</label>
+            <%= f.number_field :max_branches, value: plan.max_branches, class: "l-field", placeholder: "∞ (trống)" %>
+          </div>
+          <div>
+            <label class="l-label">Tối đa nhân sự</label>
+            <%= f.number_field :max_staff, value: plan.max_staff, class: "l-field", placeholder: "∞ (trống)" %>
+          </div>
+          <div>
+            <label class="l-label">Tối đa phòng</label>
+            <%= f.number_field :max_rooms, value: plan.max_rooms, class: "l-field", placeholder: "∞ (trống)" %>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+          <% [[:allow_multi_branch, "Nhiều cơ sở"], [:allow_packages, "Thẻ liệu trình"], [:allow_commissions, "Hoa hồng & lương"], [:allow_inventory, "Kho & vật tư"], [:allow_custom_domain, "Tên miền riêng"], [:allow_ai, "Tính năng AI"]].each do |attr, label| %>
+            <label style="display:flex; align-items:center; justify-content:space-between; font-size:14px;">
+              <span><%= label %></span>
+              <span class="l-switch"><%= f.check_box attr %><span class="knob"></span></span>
+            </label>
+          <% end %>
+        </div>
+
+        <label class="l-label" style="margin-top:12px;">Tính năng hiển thị (mỗi dòng 1 mục)</label>
+        <%= text_area_tag "plan[features_text]", (plan.features || []).join("\n"), class: "l-field", rows: 4 %>
+
+        <%= f.submit "Lưu gói", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:12px;" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

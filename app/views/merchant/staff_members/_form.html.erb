@@ -1,0 +1,128 @@
+<%= form_with model: staff, url: url, method: method do |f| %>
+  <% if staff.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <%= staff.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div style="display:grid; grid-template-columns:1.2fr .8fr; gap:18px; align-items:start;">
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:12px;">Thông tin</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:14px;">
+        <div>
+          <label class="l-label">Họ tên <span style="color:#e5484d;">*</span></label>
+          <%= f.text_field :name, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Tên gọi / nickname</label>
+          <%= f.text_field :nickname, class: "l-field", placeholder: "Lan" %>
+        </div>
+        <div>
+          <label class="l-label">Mã KTV</label>
+          <%= f.text_field :code, class: "l-field", placeholder: "07" %>
+          <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">Số khách hay gọi: “KTV số 7”.</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:14px;">
+        <div>
+          <label class="l-label">Điện thoại</label>
+          <%= f.telephone_field :phone, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Email</label>
+          <%= f.email_field :email, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Giới tính</label>
+          <%= f.select :gender, StaffMember::GENDERS.map { |g| [StaffMember::GENDER_LABELS[g], g] },
+                { include_blank: "—" }, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Ngày sinh</label>
+          <%= f.date_field :dob, class: "l-field" %>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px;">
+        <div>
+          <label class="l-label">Vai trò</label>
+          <%= f.select :role, StaffMember::ROLES.map { |r| [StaffMember::ROLE_LABELS[r], r] }, {}, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Hình thức làm việc</label>
+          <%= f.select :employment_type,
+                StaffMember::EMPLOYMENT_TYPES.map { |e| [StaffMember::EMPLOYMENT_LABELS[e], e] }, {}, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Ngày vào làm</label>
+          <%= f.date_field :hired_at, class: "l-field" %>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label class="l-label">Giới thiệu (hiện cho khách khi chọn KTV)</label>
+        <%= f.text_area :bio, class: "l-field", rows: 2, placeholder: "VD: 5 năm kinh nghiệm massage trị liệu vai cổ" %>
+      </div>
+    </div>
+
+    <div>
+      <div class="l-panel" style="margin-bottom:18px;">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Cơ sở làm việc</div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Cơ sở chính</label>
+          <%= f.select :branch_id, @branches.map { |b| [b.name, b.id] }, { include_blank: "—" }, class: "l-field" %>
+        </div>
+        <% if @branches.size > 1 %>
+          <label class="l-label">Cơ sở phụ (chạy thêm)</label>
+          <% extra = staff.persisted? ? staff.staff_branches.pluck(:branch_id) : [] %>
+          <% @branches.each do |b| %>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; padding:5px 0;">
+              <%= check_box_tag "extra_branch_ids[]", b.id, extra.include?(b.id) %>
+              <%= b.name %>
+            </label>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="l-panel">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Lương &amp; hoa hồng</div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Hạng KTV</label>
+          <%= f.select :staff_level_id, @levels.map { |l| ["#{l.name} (#{l.surcharge_label})", l.id] },
+                { include_blank: "Không xếp hạng" }, class: "l-field" %>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Lương cứng / tháng (đ)</label>
+          <%= f.number_field :base_salary, class: "l-field", step: 100_000, min: 0 %>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Hoa hồng riêng (%)</label>
+          <%= f.number_field :commission_percent, class: "l-field", min: 0, max: 100,
+                placeholder: "Theo hạng / tham số chung (#{current_workspace.setting('commission_default_percent')}%)" %>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Giới hạn giờ làm / ngày (phút)</label>
+          <%= f.number_field :max_daily_minutes, class: "l-field", step: 30, placeholder: "Không giới hạn" %>
+        </div>
+        <div class="l-toggle-row">
+          <div>
+            <div style="font-weight:600; font-size:14px;">Khách chọn được KTV này</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Tắt với lễ tân, quản lý, KTV mới.</div>
+          </div>
+          <label class="l-switch"><%= f.check_box :online_bookable %><span class="knob"></span></label>
+        </div>
+        <div style="margin-top:12px;">
+          <label class="l-label">Tài khoản đăng nhập (tuỳ chọn)</label>
+          <%= f.select :user_id, @users.map { |u| ["#{u.name} · #{u.email}", u.id] },
+                { include_blank: "Không có tài khoản" }, class: "l-field" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin-top:18px;">
+    <%= f.submit staff.persisted? ? "Lưu nhân sự" : "Thêm nhân sự", class: "l-btn l-btn-primary" %>
+    <%= link_to "Huỷ", staff.persisted? ? merchant_staff_path(staff) : merchant_staff_index_path, class: "l-btn l-btn-ghost" %>
+  </div>
+<% end %>

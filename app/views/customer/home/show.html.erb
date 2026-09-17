@@ -1,0 +1,149 @@
+<% content_for :tab, "home" %>
+<% content_for :title, current_workspace.name %>
+<% ws = current_workspace %>
+<% m = @member %>
+
+<style>
+  .ho-hero { background:linear-gradient(160deg, var(--primary), color-mix(in srgb, var(--primary) 62%, var(--primary-2)));
+    color:var(--on-primary); padding:22px 18px 26px; border-radius:0 0 26px 26px; }
+  .ho-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:18px; }
+  .ho-stat { background:rgba(255,255,255,.16); border-radius:14px; padding:10px 8px; text-align:center; }
+  .ho-stat .v { font-family:var(--font-display); font-size:18px; line-height:1.1; }
+  .ho-stat .k { font-size:10.5px; opacity:.85; margin-top:3px; }
+  .ho-prefs { display:flex; flex-wrap:wrap; gap:7px; }
+</style>
+
+<div class="ho-hero">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div style="flex:1; min-width:0;">
+      <div style="font-size:11px; letter-spacing:.16em; text-transform:uppercase; opacity:.85;">
+        <%= ws.branding_value("tagline") %>
+      </div>
+      <div class="l-display" style="font-size:22px; margin-top:4px;">
+        <%= t("customer.home.hello") %>, <%= m.display_name %>
+      </div>
+      <div style="font-size:12.5px; opacity:.9; margin-top:3px;">
+        <%= @tier ? @tier.name : t("customer.profile.tier") %>
+        · <%= t("customer.home.member_since", date: l(m.created_at.to_date, format: "%m/%Y")) %>
+      </div>
+    </div>
+    <% if @unread.positive? %>
+      <%= link_to member_notifications_path, style: "color:inherit; text-decoration:none; font-size:22px; position:relative;" do %>
+        🔔<span style="position:absolute; top:-2px; right:-6px; background:#fff; color:var(--primary); font-size:10px; font-weight:800; border-radius:999px; padding:1px 5px;"><%= @unread %></span>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="ho-stats">
+    <div class="ho-stat"><div class="v"><%= m.visits_count %></div><div class="k"><%= t("customer.home.visits") %></div></div>
+    <div class="ho-stat"><div class="v"><%= number_to_human(m.total_spent, units: { thousand: "k", million: "tr" }, precision: 2) %></div><div class="k"><%= t("customer.home.spent") %></div></div>
+    <div class="ho-stat"><div class="v"><%= m.points_balance %></div><div class="k"><%= t("customer.home.points") %></div></div>
+    <div class="ho-stat"><div class="v"><%= number_to_human(m.wallet_balance, units: { thousand: "k", million: "tr" }, precision: 2) %></div><div class="k"><%= t("customer.home.wallet") %></div></div>
+  </div>
+
+  <% if @next_tier %>
+    <div style="margin-top:14px; font-size:12.5px; opacity:.95;">
+      <%= t("customer.home.tier_progress", amount: vnd(@next_tier.min_spent - m.total_spent), tier: @next_tier.name) %>
+      <div style="height:6px; border-radius:999px; background:rgba(255,255,255,.25); margin-top:6px; overflow:hidden;">
+        <div style="height:100%; width:<%= [(m.total_spent * 100.0 / [@next_tier.min_spent, 1].max).round, 100].min %>%; background:#fff;"></div>
+      </div>
+    </div>
+  <% elsif @tier %>
+    <div style="margin-top:14px; font-size:12.5px; opacity:.95;"><%= t("customer.home.tier_top") %></div>
+  <% end %>
+</div>
+
+<div class="l-screen" style="padding-top:16px;">
+  <%# ---- Đặt lịch (mở khi module booking bật ở phase sau) ---- %>
+  <% if ws.feature?("booking") %>
+    <div class="l-tile" style="margin-bottom:14px;">
+      <div style="font-weight:700; font-size:15px;"><%= t("customer.home.booking_soon_title") %></div>
+      <div style="font-size:13px; color:var(--ink-2); margin-top:5px; line-height:1.5;">
+        <%= t("customer.home.booking_soon_body") %>
+      </div>
+      <% if ws.contact_phone.present? %>
+        <%= link_to t("customer.home.call"), "tel:#{ws.contact_phone}", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:12px;" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# ---- Sở thích ---- %>
+  <div class="l-tile" style="margin-bottom:14px;">
+    <div style="font-weight:700; font-size:15px;"><%= t("customer.home.preferences_title") %></div>
+    <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;"><%= t("customer.home.preferences_sub") %></div>
+    <% prefs = Member::PREFERENCE_FIELDS.keys.filter_map { |k| [Member::PREFERENCE_FIELDS[k][:label], m.preference(k)] if m.preference(k) } %>
+    <% if prefs.any? %>
+      <div class="ho-prefs" style="margin-top:12px;">
+        <% prefs.each do |label, value| %>
+          <span class="l-chip"><%= label %>: <strong><%= value %></strong></span>
+        <% end %>
+      </div>
+    <% else %>
+      <p style="font-size:13px; color:var(--ink-2); margin-top:10px;"><%= t("customer.home.preferences_empty") %></p>
+    <% end %>
+    <%= link_to t("customer.home.preferences_edit"), member_profile_path,
+          style: "display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--primary-ink); text-decoration:none;" %>
+  </div>
+
+  <% if m.health_notes.present? %>
+    <div class="l-tile" style="margin-bottom:14px; background:#fdf3e8; border-color:#f0dcc0;">
+      <div style="font-weight:700; font-size:14px;">⚠️ <%= t("customer.home.health_title") %></div>
+      <div style="font-size:13px; margin-top:6px; line-height:1.55;"><%= m.health_notes %></div>
+    </div>
+  <% end %>
+
+  <% if @preferred_staff %>
+    <div class="l-tile" style="margin-bottom:14px;">
+      <div style="font-weight:700; font-size:15px;"><%= t("customer.home.staff_title") %></div>
+      <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+        <div style="width:42px; height:42px; border-radius:12px; display:grid; place-items:center; color:#fff; font-weight:700; background:<%= @preferred_staff.color %>;">
+          <%= @preferred_staff.initials %>
+        </div>
+        <div>
+          <div style="font-weight:600; font-size:14px;"><%= @preferred_staff.display_name %></div>
+          <% if @preferred_staff.bio.present? %>
+            <div style="font-size:12.5px; color:var(--ink-2);"><%= @preferred_staff.bio %></div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ---- Cơ sở ---- %>
+  <% if @branches.any? %>
+    <div class="l-section-h"><h3><%= t("customer.home.branch_title") %></h3></div>
+    <% @branches.each do |b| %>
+      <div class="l-tile" style="margin-bottom:12px;">
+        <div style="font-weight:700; font-size:15px;"><%= b.name %></div>
+        <div style="font-size:13px; color:var(--ink-2); margin-top:4px;"><%= b.short_address %></div>
+        <% wins = b.open_windows(Date.current) %>
+        <div style="font-size:12.5px; margin-top:8px;">
+          <% if wins.any? %>
+            <span class="l-pill" style="--_c:#3F7A57;">
+              <%= t("customer.home.branch_open_today", hours: wins.map { |(f, t2)| "#{f.strftime('%H:%M')}–#{t2.strftime('%H:%M')}" }.join(", ")) %>
+            </span>
+          <% else %>
+            <span class="l-pill" style="--_c:#B4402F;"><%= t("customer.home.branch_closed_today") %></span>
+          <% end %>
+        </div>
+        <% if b.directions.present? %>
+          <details style="margin-top:10px;">
+            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--primary-ink);"><%= t("customer.home.directions") %></summary>
+            <p style="font-size:13px; color:var(--ink-2); margin-top:6px; line-height:1.55;"><%= b.directions %></p>
+          </details>
+        <% end %>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <% if b.phone.present? %>
+            <%= link_to "☎ #{b.phone}", "tel:#{b.phone}", class: "l-chip l-chip-brand", style: "text-decoration:none;" %>
+          <% end %>
+          <% if b.mapped? %>
+            <%= link_to "📍 Bản đồ", "https://www.google.com/maps/search/?api=1&query=#{b.lat},#{b.lng}",
+                  class: "l-chip", target: "_blank", rel: "noopener", style: "text-decoration:none;" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <div style="height:80px;"></div>
+</div>

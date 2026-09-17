@@ -1,0 +1,2 @@
+<% content_for :title, "Thêm phòng · #{@branch.name}" %>
+<%= render "form", room: @room, url: merchant_branch_rooms_path(@branch), method: :post %>

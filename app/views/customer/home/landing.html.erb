@@ -1,0 +1,179 @@
+<% content_for :title, "Aura — Phần mềm quản lý spa & massage đa cơ sở" %>
+
+<%# ---- Hero ---------------------------------------------------------------- %>
+<section class="m-hero"><div class="m-in grid">
+  <div>
+    <div class="eyebrow"><%= t("landing.hero_eyebrow") %></div>
+    <h1><%= t("landing.hero_title") %></h1>
+    <p class="lead"><%= t("landing.hero_sub") %></p>
+    <div class="m-cta">
+      <a class="m-btn solid lg" href="/merchant/signup"><%= t("landing.hero_cta") %></a>
+      <a class="m-btn ghost lg" href="#features"><%= t("landing.hero_cta_2") %></a>
+    </div>
+    <div class="m-trust">Không cần thẻ tín dụng · Mở tài khoản trong 1 phút · Dùng thử <%= Workspace::TRIAL_DAYS %> ngày</div>
+  </div>
+
+  <div class="m-visual">
+    <div class="m-phone">
+      <div class="m-mem">
+        <span class="bdg">● Hạng Vàng</span>
+        <div class="k">Lịch hẹn tiếp theo</div>
+        <div class="pts">14:30<span style="font-size:18px"> hôm nay</span></div>
+        <div class="per">Massage trị liệu 90′ · KTV 01 Lan</div>
+        <div class="nm">Aura Spa · Phú Nhuận</div>
+      </div>
+      <div class="m-chips">
+        <span>Phòng đôi</span><span>Còn 6 buổi</span><span>Đã cọc</span>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<%# ---- Vấn đề -------------------------------------------------------------- %>
+<section class="m-sec alt"><div class="m-in">
+  <div class="m-head">
+    <div class="eyebrow">Vấn đề thật của một spa</div>
+    <h2>Không phải thiếu khách — mà là mất khách vì vận hành</h2>
+  </div>
+  <div class="m-stats">
+    <div class="m-stat"><div class="v">60–75%</div><div class="l">tỷ lệ lấp phòng của spa vận hành tốt.<br>Dưới 50% là lỗi xếp lịch hoặc giá.</div></div>
+    <div class="m-stat"><div class="v">50–60%</div><div class="l">tỷ lệ sử dụng KTV trung bình ngành —<br>nâng lên 75% là tăng doanh thu mà không thêm người.</div></div>
+    <div class="m-stat"><div class="v">15–30%</div><div class="l">doanh thu bán lẻ nên chiếm<br>so với doanh thu dịch vụ.</div></div>
+    <div class="m-stat"><div class="v">1 cuốn sổ</div><div class="l">là nơi phần lớn spa Việt Nam<br>đang giữ lịch hẹn và thẻ liệu trình.</div></div>
+  </div>
+  <p style="text-align:center; color:var(--ink-2); font-size:14px; margin-top:26px; max-width:70ch; margin-inline:auto;">
+    Sổ giấy không cho biết phòng nào đang trống lúc 15h, KTV nào đủ giờ để nhận thêm khách,
+    khách nào còn mấy buổi trong thẻ, hay tháng này hoa hồng của ai bao nhiêu.
+    Aura trả lời cả bốn câu đó theo thời gian thực.
+  </p>
+</div></section>
+
+<%# ---- Tính năng ----------------------------------------------------------- %>
+<section class="m-sec" id="features"><div class="m-in">
+  <div class="m-head">
+    <div class="eyebrow">Tính năng</div>
+    <h2><%= t("landing.features_title") %></h2>
+  </div>
+  <div class="m-features">
+    <% [
+      ["🗓️", t("landing.f1_title"), t("landing.f1_body")],
+      ["📱", t("landing.f2_title"), t("landing.f2_body")],
+      ["🎟️", t("landing.f3_title"), t("landing.f3_body")],
+      ["🧮", t("landing.f4_title"), t("landing.f4_body")],
+      ["🏠", t("landing.f5_title"), t("landing.f5_body")],
+      ["💬", t("landing.f6_title"), t("landing.f6_body")]
+    ].each do |icon, title, body| %>
+      <div class="m-feat">
+        <div class="ic" style="font-size:22px;"><%= icon %></div>
+        <h3><%= title %></h3>
+        <p><%= body %></p>
+      </div>
+    <% end %>
+  </div>
+</div></section>
+
+<%# ---- Cho ai --------------------------------------------------------------- %>
+<section class="m-sec alt" id="how"><div class="m-in">
+  <div class="m-head">
+    <div class="eyebrow">Phù hợp với</div>
+    <h2>Một hệ thống, bật đúng phần mình cần</h2>
+    <p>Mỗi spa bật/tắt module riêng, nên tiệm foot massage không phải nhìn màn hình hồ sơ da,
+       và thẩm mỹ viện không phải nhìn sơ đồ ghế.</p>
+  </div>
+  <div class="m-inds">
+    <div class="m-ind">
+      <h3>Massage &amp; foot massage</h3>
+      <p>Khu nhiều ghế khai một phòng nhiều chỗ, khách vãng lai xếp vào chỗ trống,
+         tip và hoa hồng theo từng lượt, KTV gọi theo số.</p>
+    </div>
+    <div class="m-ind">
+      <h3>Spa thẩm mỹ &amp; chăm sóc da</h3>
+      <p>Thẻ liệu trình nhiều buổi, hồ sơ điều trị kèm ảnh tiến trình,
+         phiếu khai sức khoẻ và phiếu đồng ý, hoa hồng cho người tư vấn chốt thẻ.</p>
+    </div>
+    <div class="m-ind">
+      <h3>Chuỗi nhiều cơ sở</h3>
+      <p>Mỗi cơ sở có giờ mở cửa, phòng, KTV và tham số riêng; chủ chuỗi vẫn xem được
+         một bảng số chung và tách được số liệu từng nơi.</p>
+    </div>
+  </div>
+</div></section>
+
+<%# ---- Giá ----------------------------------------------------------------- %>
+<section class="m-sec" id="pricing"><div class="m-in">
+  <div class="m-head">
+    <div class="eyebrow">Bảng giá</div>
+    <h2><%= t("landing.pricing_title") %></h2>
+    <p><%= t("landing.pricing_sub") %></p>
+  </div>
+  <div class="m-price">
+    <% @plans.each_with_index do |plan, i| %>
+      <div class="m-plan <%= 'pop' if i == 1 %>">
+        <% if i == 1 %><span class="tag">Phổ biến nhất</span><% end %>
+        <div class="pn"><%= plan.name %></div>
+        <div class="pp"><%= number_with_delimiter(plan.price) %>đ<small> / tháng</small></div>
+        <ul>
+          <% plan.features.each do |feat| %>
+            <li>
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span><%= feat %></span>
+            </li>
+          <% end %>
+        </ul>
+        <a class="m-btn <%= i == 1 ? 'solid' : 'ghost' %>" href="/merchant/signup"><%= t("landing.pricing_cta") %></a>
+      </div>
+    <% end %>
+  </div>
+</div></section>
+
+<%# ---- Hỏi đáp ------------------------------------------------------------- %>
+<section class="m-sec alt" id="faq"><div class="m-in">
+  <div class="m-head">
+    <div class="eyebrow">Hỏi đáp</div>
+    <h2>Những câu hay được hỏi nhất</h2>
+  </div>
+  <div class="m-faq">
+    <details open>
+      <summary>Khách của tôi có phải tải app không?</summary>
+      <p>Không bắt buộc. App khách là <strong>web app (PWA)</strong> mở bằng link trên tên miền của spa —
+         khách dùng ngay trên trình duyệt, muốn thì thêm vào màn hình chính để nhận nhắc lịch.
+         Khách không dùng điện thoại thì lễ tân vẫn đặt hộ như bình thường.</p>
+    </details>
+    <details>
+      <summary>Spa tôi chỉ có một cơ sở, dùng có nặng không?</summary>
+      <p>Không. Khi tạo tài khoản bạn chọn loại hình, Aura chỉ bật những module tương ứng và
+         nạp sẵn loại phòng, hạng KTV, hạng thẻ để bạn bắt đầu bằng cách <strong>sửa lại</strong>
+         thay vì khai từ màn hình trắng.</p>
+    </details>
+    <details>
+      <summary>KTV có cần tài khoản đăng nhập không?</summary>
+      <p>Không. Phần lớn KTV không có tài khoản nhưng vẫn được xếp ca, gán khách và tính hoa hồng.
+         Ai cần xem lịch của mình thì gắn thêm tài khoản sau.</p>
+    </details>
+    <details>
+      <summary>Dữ liệu của tôi có lẫn với spa khác không?</summary>
+      <p>Không. Mỗi spa là một workspace riêng, mọi bản ghi đều mang mã workspace và
+         được lọc ở tầng cơ sở dữ liệu. Mỗi spa có subdomain riêng, gói cao có
+         <strong>tên miền riêng</strong>.</p>
+    </details>
+    <details>
+      <summary>Tôi đang dùng sổ giấy, chuyển sang có mất dữ liệu cũ?</summary>
+      <p>Hồ sơ khách nhập được theo file. Thẻ liệu trình đang dở khai số buổi còn lại là tiếp tục trừ dần.
+         Bạn không cần dừng hoạt động một ngày nào.</p>
+    </details>
+  </div>
+</div></section>
+
+<%# ---- CTA cuối ------------------------------------------------------------ %>
+<section style="padding:20px 0 76px;">
+  <div class="m-band">
+    <h2>Thử bằng chính dữ liệu spa của bạn</h2>
+    <p>Tạo tài khoản, khai một cơ sở và vài KTV — trong 10 phút bạn sẽ thấy lịch,
+       sức chứa và hoa hồng của spa mình nằm gọn trên một màn hình.</p>
+    <div class="m-cta">
+      <a class="m-btn solid lg" href="/merchant/signup"><%= t("landing.hero_cta") %></a>
+      <a class="m-btn ghost lg" href="/merchant/login" style="color:#fff;"><%= t("landing.nav_login") %></a>
+    </div>
+  </div>
+</section>

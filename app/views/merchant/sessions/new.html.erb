@@ -1,0 +1,27 @@
+<% content_for :title, "Đăng nhập chủ hộ" %>
+<h1>Đăng nhập</h1>
+<p class="sub">Dùng mật khẩu, hoặc nhận mã đăng nhập (OTP) qua email.</p>
+
+<%# turbo: false — đăng nhập xong là redirect sang subdomain của chủ hộ, và
+    Turbo không theo được redirect chéo origin: nó gửi OPTIONS rồi im lặng bỏ,
+    người dùng ngồi lại đúng trang đăng nhập mà không có lỗi nào hiện ra. %>
+<%= form_with url: merchant_login_path, method: :post, data: { turbo: false } do %>
+  <div class="field">
+    <label class="l-label">Email</label>
+    <input type="email" name="email" value="<%= @email %>" autocomplete="email" autofocus
+           class="l-field" placeholder="you@example.com" required>
+  </div>
+  <div class="field">
+    <label class="l-label">Mật khẩu</label>
+    <input type="password" name="password" autocomplete="current-password"
+           class="l-field" placeholder="••••••••">
+  </div>
+  <button type="submit" name="mode" value="password" class="l-btn l-btn-primary l-btn-block">Đăng nhập</button>
+  <button type="submit" name="mode" value="otp" class="l-btn l-btn-ghost l-btn-block" style="margin-top:8px;">
+    Gửi mã đăng nhập qua email (OTP)
+  </button>
+<% end %>
+
+<p style="text-align:center; color:var(--ink-2); font-size:13px; margin-top:18px;">
+  Chưa có tài khoản? <%= link_to "Đăng ký", merchant_signup_path, style: "color:var(--primary); font-weight:600;" %>
+</p>

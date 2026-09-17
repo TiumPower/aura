@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <%= render "layouts/head" %>
+    <style>
+      :root { --font-body:"Inter",ui-sans-serif,system-ui,sans-serif; }
+      .l-auth { min-height:100dvh; display:grid; place-items:center; padding:24px;
+        background: radial-gradient(120% 90% at 50% -10%, var(--surface-2), var(--surface)); }
+      .l-auth-card { width:100%; max-width:400px; background:#fff; border:1px solid var(--line);
+        border-radius:24px; padding:34px 30px; box-shadow: var(--shadow-lg); }
+      .l-auth-card h1 { font-family:var(--font-display); font-size:26px; margin-bottom:4px; }
+      .l-auth-card p.sub { color:var(--ink-2); font-size:14px; margin-bottom:22px; }
+      .l-auth-card .field { margin-bottom:14px; }
+    </style>
+  </head>
+  <body>
+    <div class="l-auth">
+      <div class="l-auth-card">
+        <% if flash[:notice] || flash[:alert] %>
+          <div class="l-chip l-chip-brand" style="margin-bottom:16px;"><%= flash[:notice] || flash[:alert] %></div>
+        <% end %>
+        <%= yield %>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<%# Repeatable label + amount rows (phí dịch vụ, khoản khấu trừ…).
+    locals:
+      fees       current list ([{ "label" =>, "amount" => }, …])
+      field      param name (default "fees") — e.g. "deductions"
+      add_label  text on the add button (optional)
+      label_ph / amount_ph  placeholders (optional)
+      inherited  what would apply if this level declared nothing (optional)
+      source     :own | :inherited | :default (optional, drives the hint)
+%>
+<% field = local_assigns.fetch(:field, "fees") %>
+<div data-controller="feerows" data-feerows-field-value="<%= field %>">
+  <div data-feerows-target="rows">
+    <% Array(fees).each_with_index do |fee, i| %>
+      <div class="fee-row" data-feerows-target="row">
+        <input type="text" name="<%= field %>[<%= i %>][label]" value="<%= fee["label"] %>"
+               class="l-field" placeholder="<%= local_assigns[:label_ph] || "VD: Phí rác" %>">
+        <input type="number" name="<%= field %>[<%= i %>][amount]" value="<%= fee["amount"] %>"
+               class="l-field" min="0" step="1000" inputmode="numeric"
+               placeholder="<%= local_assigns[:amount_ph] || "50000" %>">
+        <button type="button" class="fee-del" data-action="feerows#remove" aria-label="Xoá dòng">×</button>
+      </div>
+    <% end %>
+  </div>
+
+  <template data-feerows-target="template">
+    <div class="fee-row" data-feerows-target="row">
+      <input type="text" name="<%= field %>[IDX][label]" class="l-field" placeholder="<%= local_assigns[:label_ph] || "VD: Phí rác" %>">
+      <input type="number" name="<%= field %>[IDX][amount]" class="l-field" min="0" step="1000" inputmode="numeric"
+             placeholder="<%= local_assigns[:amount_ph] || "50000" %>">
+      <button type="button" class="fee-del" data-action="feerows#remove" aria-label="Xoá dòng">×</button>
+    </div>
+  </template>
+
+  <%# Guarantees the key is posted even with zero rows, so an emptied list is
+      saved as "nothing here" rather than read as "no override". %>
+  <input type="hidden" name="<%= field %>[_present]" value="1">
+
+  <button type="button" class="l-btn l-btn-soft" data-action="feerows#add" style="margin-top:10px;">
+    <%= local_assigns[:add_label] || "+ Thêm khoản phí" %>
+  </button>
+
+  <% if local_assigns[:source] && source != :own && Array(inherited).any? %>
+    <div class="fee-hint">
+      Đang kế thừa <%= source == :inherited ? "từ cấp trên" : "mặc định" %>:
+      <%= Array(inherited).map { |f| "#{f['label']} #{ActiveSupport::NumberHelper.number_to_delimited(f['amount'])}đ" }.join(" · ") %>.
+      Thêm dòng ở đây để ghi đè riêng.
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .fee-row { display:grid; grid-template-columns:1fr 160px 36px; gap:8px; align-items:center; margin-bottom:8px; }
+  .fee-del { border:1px solid var(--line); background:#fff; color:var(--ink-2); width:36px; height:36px;
+    border-radius:10px; cursor:pointer; font-size:18px; line-height:1; }
+  .fee-del:hover { border-color:#e5484d; color:#e5484d; }
+  .fee-hint { font-size:12.5px; color:var(--ink-2); margin-top:10px; padding:10px 12px; border-radius:10px;
+    background:color-mix(in srgb, var(--primary) 6%, #fff); border:1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); }
+  @media (max-width:560px) { .fee-row { grid-template-columns:1fr 110px 36px; } }
+</style>

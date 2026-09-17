@@ -1,0 +1,34 @@
+<% content_for :title, "Sửa loại phòng" %>
+<%= form_with model: @room_type, url: merchant_room_type_path(@room_type), method: :patch do |f| %>
+  <% if @room_type.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <%= @room_type.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+  <div class="l-panel" style="max-width:520px;">
+    <div style="margin-bottom:12px;">
+      <label class="l-label">Tên loại</label>
+      <%= f.text_field :name, class: "l-field" %>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
+      <div>
+        <label class="l-label">Icon</label>
+        <%= f.text_field :icon, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">Số chỗ mặc định</label>
+        <%= f.number_field :default_capacity, class: "l-field", min: 1 %>
+      </div>
+      <div>
+        <label class="l-label">Thứ tự</label>
+        <%= f.number_field :position, class: "l-field" %>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <%= f.submit "Lưu", class: "l-btn l-btn-primary" %>
+      <%= link_to "Huỷ", merchant_room_types_path, class: "l-btn l-btn-ghost" %>
+      <%= button_to "Xoá", merchant_room_type_path(@room_type), method: :delete, class: "l-btn l-btn-ghost",
+            style: "margin-left:auto; color:#B4402F;", form: { data: { turbo_confirm: "Xoá loại phòng này?" } } %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,56 @@
+<%
+  # "mine" = tin của chính người đang xem. Phía khách so đúng sender_member_id,
+  # nên tin của người khác vẫn nằm bên trái kèm tên. Với tin phát qua broadcast
+  # không có ngữ cảnh người xem — client tự đánh dấu.
+  view_as = local_assigns[:view_as]
+  vm = local_assigns[:viewer_member_id]
+  mine = if view_as == "staff"
+    message.from_staff?
+  elsif view_as == "member"
+    message.sender_kind == "member" && vm.present? && message.sender_member_id.to_s == vm.to_s
+  else
+    false
+  end
+%>
+<div class="msg msg--<%= message.sender_kind %><%= ' msg--mine' if mine %>"
+     data-sk="<%= message.sender_kind %>" data-sm="<%= message.sender_member_id %>"
+     id="message_<%= message.id %>">
+  <div class="msg-bubble">
+    <div class="msg-name">
+      <%= message.display_name %>
+      <span class="msg-tag"><%= message.from_staff? ? t("customer.chat.tag_staff") : t("customer.chat.tag_guest") %></span>
+    </div>
+    <% if message.body.present? %>
+      <div class="msg-body"><%= simple_format(message.body, {}, sanitize: true) %></div>
+    <% end %>
+    <% if message.files.attached? %>
+      <div class="msg-atts">
+        <% message.image_files.each do |img| %>
+          <button type="button" class="msg-img" data-lightbox-target="item" data-action="lightbox#open"
+                  data-lb-url="<%= rails_blob_path(img, only_path: true) %>"
+                  data-lb-download="<%= rails_blob_path(img, disposition: 'attachment', only_path: true) %>"
+                  data-lb-name="<%= img.filename %>" data-lb-type="image">
+            <img src="<%= rails_representation_path(img.variant(resize_to_limit: [400, 400]), only_path: true) %>"
+                 onerror="this.onerror=null;this.src='<%= rails_blob_path(img, only_path: true) %>'" loading="lazy" alt="">
+          </button>
+        <% end %>
+        <% message.doc_files.each do |doc| %>
+          <a class="msg-doc" href="<%= rails_blob_path(doc, only_path: true) %>" target="_blank" rel="noopener">
+            <%= ui_icon(:doc, size: 18) %>
+            <span class="msg-doc-name"><%= doc.filename %></span>
+          </a>
+        <% end %>
+      </div>
+    <% end %>
+    <div class="msg-time">
+      <span class="t"><%= l(message.created_at, format: "%H:%M") %></span>
+      <% unless message.created_at.to_date == Date.current %>
+        <span class="d"><%= l(message.created_at, format: "%d/%m/%Y") %></span>
+      <% end %>
+    </div>
+    <div class="msg-actions">
+      <button type="button" class="msg-act" data-action="chatroom#editMsg">Sửa</button>
+      <button type="button" class="msg-act" data-action="chatroom#deleteMsg">Xoá</button>
+    </div>
+  </div>
+</div>

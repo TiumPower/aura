@@ -1,0 +1,107 @@
+<% content_for :title, "Tài khoản" %>
+
+<div style="">
+  <%# Who am I, and which workspace am I in — the page opened straight into a
+      form with no identity at all. %>
+  <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin:4px 0 18px;">
+    <div style="width:72px; height:72px; border-radius:22px; background:linear-gradient(150deg, var(--primary), color-mix(in srgb, var(--primary) 60%, #000)); color:var(--on-primary); display:grid; place-items:center; font-family:var(--font-display); font-weight:700; font-size:27px;"><%= @user.initials %></div>
+    <div style="font-family:var(--font-display); font-weight:700; font-size:19px; margin-top:11px;"><%= @user.name %></div>
+    <div style="font-size:13px; color:var(--ink-2);"><%= @user.email %></div>
+    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center;">
+      <span class="l-chip l-chip-brand"><%= current_workspace.name %></span>
+      <% if current_membership %><span class="l-chip"><%= current_membership.label %></span><% end %>
+    </div>
+  </div>
+
+  <%# Plan and billing state belong on the account tab; on mobile the sidebar
+      that used to carry them is hidden entirely. %>
+  <div class="l-panel" style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:180px;">
+        <div class="l-eyebrow" style="margin-bottom:4px;">Gói đang dùng</div>
+        <div style="font-weight:700; font-size:16px;">
+          <%= current_workspace.plan_record&.name || current_workspace.plan.to_s.capitalize %>
+          <% if current_workspace.status == "trial" %>
+            <span class="l-chip" style="color:#b8860b; margin-left:4px;">Dùng thử</span>
+          <% end %>
+        </div>
+        <% if current_workspace.paid_until %>
+          <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;">
+            <% d = (current_workspace.paid_until.to_date - Date.current).to_i %>
+            <%= current_workspace.status == "trial" ? "Dùng thử đến" : "Gia hạn đến" %>
+            <%= l(current_workspace.paid_until.to_date, format: "%d/%m/%Y") %>
+            <% if d >= 0 %><strong style="color:<%= d <= 7 ? "#e5484d" : "var(--ink)" %>;">· còn <%= d %> ngày</strong><% end %>
+          </div>
+        <% end %>
+      </div>
+      <%= link_to "Gói & thanh toán", merchant_billing_path, class: "l-btn l-btn-soft", style: "flex:none;" %>
+    </div>
+  </div>
+
+  <div class="l-panel">
+    <%= form_with model: @user, url: merchant_account_path, method: :patch do |f| %>
+      <% if @user.errors.any? %>
+        <div class="l-chip" style="background:#fde8e8; color:#a11; margin-bottom:14px; display:block;">
+          <%= @user.errors.full_messages.to_sentence %>
+        </div>
+      <% end %>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Họ tên</label>
+        <%= f.text_field :name, class: "l-field" %>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Số điện thoại</label>
+        <%= f.telephone_field :phone, class: "l-field" %>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Email đăng nhập</label>
+        <input class="l-field" value="<%= @user.email %>" disabled style="opacity:.6;">
+        <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">Đăng nhập bằng email + mã OTP.</div>
+      </div>
+      <%= f.submit "Lưu thay đổi", class: "l-btn l-btn-primary" %>
+    <% end %>
+  </div>
+
+  <div class="l-panel" style="margin-top:16px;">
+    <div class="l-toggle-row" style="border:none; padding:6px 0;">
+      <div style="flex:1;">
+        <div style="font-weight:600;">🔔 Thông báo đẩy</div>
+        <div style="font-size:12.5px; color:var(--ink-2);" data-pwa-target="pushLabel">Nhận thông báo khi khách thanh toán, nhắn tin…</div>
+      </div>
+      <span class="l-switch" data-pwa-target="pushToggle" data-action="click->pwa#togglePush"><span class="knob"></span></span>
+    </div>
+  </div>
+
+  <div class="l-panel l-hide-mobile" style="margin-top:16px; text-align:center;">
+    <div class="l-eyebrow" style="margin-bottom:6px;">📱 Đăng nhập app trên điện thoại</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin:0 auto 14px; max-width:440px;">Mở trang này trên máy tính rồi dùng <strong>camera điện thoại quét mã QR</strong> để đăng nhập app quản lý trên di động (PWA). Phiên đăng nhập được giữ lâu dài, không cần nhập lại.</p>
+    <% qr_url = merchant_qr_login_url(token: @user.signed_id(purpose: :merchant_qr_login, expires_in: 15.minutes), host: request.host_with_port) %>
+    <div style="display:inline-block; padding:14px; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);">
+      <%= qr_svg(qr_url, size: 190) %>
+    </div>
+    <div style="font-size:11.5px; color:var(--ink-2); margin-top:10px;">Mã có hiệu lực 15 phút · tải lại trang để tạo mã mới. Không chia sẻ mã này cho người khác.</div>
+  </div>
+
+  <div class="l-panel" style="margin-top:16px;">
+    <div class="l-eyebrow" style="margin-bottom:12px;">Đổi mật khẩu</div>
+    <%= form_with model: @user, url: merchant_account_path, method: :patch do |f| %>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Mật khẩu mới (tối thiểu 6 ký tự)</label>
+        <%= f.password_field :password, class: "l-field", autocomplete: "new-password" %>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="l-label">Nhập lại mật khẩu</label>
+        <%= f.password_field :password_confirmation, class: "l-field", autocomplete: "new-password" %>
+      </div>
+      <%= f.submit "Đổi mật khẩu", class: "l-btn l-btn-soft" %>
+    <% end %>
+  </div>
+
+  <%# The sole logout used to live in the sidebar, which is display:none on
+      phones — so a landlord on the PWA could not sign out at all. %>
+  <div class="l-panel" style="margin-top:16px;">
+    <%= button_to "Đăng xuất", merchant_logout_path, method: :delete,
+          class: "l-btn l-btn-ghost l-btn-block", style: "color:#a11;",
+          form: { data: { turbo_confirm: "Đăng xuất khỏi hệ thống?" } } %>
+  </div>
+</div>

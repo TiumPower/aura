@@ -1,0 +1,85 @@
+<% content_for :title, "Workspaces" %>
+
+<div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+  <%= link_to "＋ Tạo workspace", new_admin_workspace_path, class: "l-btn l-btn-primary" %>
+</div>
+
+<div style="margin-bottom:8px; font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em;">Thanh toán</div>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+  <%= link_to "Tất cả · #{@pay_counts.values.sum}", admin_workspaces_path,
+        class: "l-chip #{'l-chip-brand' if @payment.nil? && @status.nil?}" %>
+  <% Workspace::PAYMENT_STATES.each do |ps| %>
+    <% next unless (@pay_counts[ps] || 0).positive? || @payment == ps %>
+    <%= link_to "#{Workspace::PAYMENT_LABELS[ps]} · #{@pay_counts[ps] || 0}", admin_workspaces_path(payment: ps),
+          class: "l-chip #{'l-chip-brand' if @payment == ps}" %>
+  <% end %>
+</div>
+
+<div style="margin-bottom:8px; font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em;">Trạng thái workspace</div>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <% Workspace::STATUSES.each do |s| %>
+    <%= link_to "#{Workspace::STATUS_LABELS[s]} · #{@counts[s] || 0}", admin_workspaces_path(status: s),
+          class: "l-chip #{'l-chip-brand' if @status == s}" %>
+  <% end %>
+</div>
+
+<div class="l-panel">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead><tr style="text-align:left; color:var(--ink-2); font-size:12px; text-transform:uppercase; letter-spacing:.08em;">
+      <th style="padding:10px 8px;">Chủ hộ</th><th>Gói</th><th>Trạng thái</th><th>Thanh toán</th><th>Tạo</th><th></th>
+    </tr></thead>
+    <tbody>
+      <% @workspaces.each do |ws| %>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="padding:12px 8px; display:flex; align-items:center; gap:10px;">
+            <span style="width:26px; height:26px; border-radius:8px; background:<%= ws.theme_value(:primary) %>;"></span>
+            <div><strong><%= ws.name %></strong><div style="font-size:11px; color:var(--ink-2);" class="l-mono"><%= ws.subdomain %></div></div>
+          </td>
+          <td><%= ws.plan %></td>
+          <td>
+            <% color = { "active" => "var(--good)", "pending" => "var(--primary-2)", "past_due" => "var(--warn)", "suspended" => "var(--ink-2)", "trial" => "var(--primary)" }[ws.status] %>
+            <span class="l-chip" style="background:<%= color %>22; color:<%= color %>;"><%= ws.status_label %></span>
+          </td>
+          <td style="font-size:12.5px;">
+            <% ps = ws.payment_state %>
+            <% pc = { paid: "var(--good)", trial: "var(--primary)", owing: "var(--warn)", suspended: "var(--ink-2)", new: "var(--ink-2)" }[ps] %>
+            <span class="l-chip" style="background:<%= pc %>22; color:<%= pc %>; font-weight:600;"><%= ws.payment_label %></span>
+            <div style="color:var(--ink-2); margin-top:4px;">
+              <% if ps == :owing %>
+                <span style="color:var(--warn);">Quá hạn <%= ws.subscription_overdue_days.to_i %> ngày</span>
+              <% elsif ws.subscription_active? %>
+                đến <%= l(ws.paid_until.to_date, format: :short) %> · còn <%= ws.subscription_days_left.to_i %> ngày
+              <% end %>
+            </div>
+          </td>
+          <td style="color:var(--ink-2);"><%= l(ws.created_at.to_date, format: :short) %></td>
+          <td>
+            <div style="display:flex; gap:8px; justify-content:flex-end; align-items:center;">
+              <% if ws.pending? || ws.status == "suspended" %>
+                <%= button_to approve_admin_workspace_path(ws), method: :patch, class: "l-btn l-btn-primary",
+                      style: "padding:7px 12px; font-size:12px;", form: { style: "display:inline;" } do %>
+                  <%= ui_icon(:check, size: 15) %> Duyệt
+                <% end %>
+              <% elsif ws.active? %>
+                <%= button_to suspend_admin_workspace_path(ws), method: :patch, class: "l-btn l-btn-ghost",
+                      style: "padding:7px 12px; font-size:12px;",
+                      form: { style: "display:inline;", data: { turbo_confirm: "Tạm ngưng workspace này?" } } do %>
+                  <%= ui_icon(:pause, size: 15) %> Tạm ngưng
+                <% end %>
+              <% end %>
+              <%= link_to admin_workspace_path(ws), class: "l-btn l-btn-ghost", style: "padding:7px 12px; font-size:12px;" do %>
+                <%= ui_icon(:eye, size: 15) %> Xem
+              <% end %>
+              <%= button_to admin_workspace_path(ws), method: :delete, class: "l-btn l-btn-ghost",
+                    style: "padding:7px 12px; font-size:12px; color:var(--warn);",
+                    form: { style: "display:inline;", data: { turbo_confirm: "XOÁ VĨNH VIỄN “#{ws.name}” và toàn bộ dữ liệu (khách, điểm, ưu đãi, hoá đơn…)? Không thể hoàn tác." } } do %>
+                <%= ui_icon(:trash, size: 15) %> Xoá
+              <% end %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @workspaces.empty? %><tr><td colspan="6" style="padding:20px; text-align:center; color:var(--ink-2);">Không có workspace.</td></tr><% end %>
+    </tbody>
+  </table>
+</div>
