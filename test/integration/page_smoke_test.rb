@@ -11,7 +11,10 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     @branch = create(:branch, workspace: @ws)
     @branch.ensure_hours!
     @room   = create(:room, workspace: @ws, branch: @branch, room_type: @type)
-    @level  = create(:staff_level, workspace: @ws)
+    # Hạng CÓ phụ thu: nhánh "phụ thu ...đ" trên trang nhân sự chỉ render khi
+    # surcharge > 0, và chính nhánh đó từng 500 trên production trong khi test
+    # vẫn xanh vì hạng mẫu không có phụ thu.
+    @level  = create(:staff_level, workspace: @ws, surcharge: 50_000)
     @staff  = create(:staff_member, workspace: @ws, branch: @branch, staff_level: @level)
     @tier   = create(:member_tier, workspace: @ws)
     @member = create(:member, workspace: @ws, member_tier: @tier)

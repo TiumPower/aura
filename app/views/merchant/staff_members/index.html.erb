@@ -53,7 +53,7 @@
         </div>
         <div style="font-size:12px; color:var(--ink-2); margin-top:10px; line-height:1.6;">
           <%= s.branch&.name || "Chưa gán cơ sở" %><br>
-          Hoa hồng <%= s.commission_rate %>%<%= " · phụ thu #{number_to_delimited(s.surcharge)}đ" if s.surcharge.positive? %>
+          Hoa hồng <%= s.commission_rate %>%<%= " · phụ thu #{number_with_delimiter(s.surcharge)}đ" if s.surcharge.positive? %>
           <%= " · khách không chọn được" unless s.online_bookable %>
         </div>
       <% end %>
