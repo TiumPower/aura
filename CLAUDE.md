@@ -83,6 +83,30 @@
 - **Máy chủ chật RAM (5 app Rails / 3.7GB).** Aura chạy `WEB_CONCURRENCY=0`
   (single mode) và sidekiq concurrency 3. Đừng nâng lên 2 worker mà không thêm RAM.
 
+## Bẫy "test xanh mà màn hình nói sai"
+
+Bốn lỗi dưới đây cùng lọt qua 131 test và cùng trả HTTP 200. Không lỗi nào làm
+mã nổ — chúng chỉ làm màn hình nói sai, nên **mọi kiểm tra dựa vào mã 200 đều
+mù với chúng**. Sửa xong rồi, nhưng dạng lỗi thì còn.
+
+- **`LIVE_STATUSES` gồm cả `completed`** vì buổi đã xong VẪN chiếm phòng
+  (`SlotFinder` phải đếm nó). Đừng dùng `live?` để hỏi "còn huỷ/đổi được không"
+  — hỏi `cancel_window_closed?`. Trước khi sửa, buổi xong từ tháng trước hiện
+  "Đã sát giờ hẹn nên không tự huỷ được".
+- **`Order#subtotal` đã trừ giảm giá** (nó cộng từ `order_items.total`, mà
+  `total` từng dòng = `unit_price × qty − discount_amount`). In nó cạnh dòng
+  "Giảm giá" là ra dãy "Tạm tính 360.000 − giảm 40.000 = khách trả 360.000".
+  Hiển thị dùng `subtotal_before_discount` và `OrderItem#gross_total`.
+- **Nhánh rỗng phải nói đúng phạm vi của nó.** `/lich-hen` in "Bạn chưa có lịch
+  hẹn nào" ngay trên danh sách 7 buổi đã qua, vì nhánh đó chỉ xét `@upcoming`.
+- **Tàn dư của bản fork.** `public/404|422|500.html` và `layouts/print.html.erb`
+  còn tên "Estate"/"Hợp đồng". Sau khi fork phải `grep -rn "\bEstate\b" app/ public/`.
+
+Cách review đúng: crawler đi theo href thật (nhớ `html.unescape` — `&amp;` làm
+mọi URL nhiều tham số bị gửi sai), soi nội dung tìm `translation missing`,
+`>nil<`, `#<Model`, `\bEstate\b`; rồi **đọc bằng mắt** các trang cốt lõi —
+dãy số phải cộng ra được, câu chữ phải khớp dữ liệu ngay bên dưới nó.
+
 ## Quy ước phải giữ
 
 - **Một sự thật một nguồn.** `SlotFinder` là nơi DUY NHẤT trả lời "còn chỗ không";
