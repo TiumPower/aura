@@ -137,14 +137,14 @@
           <% if @revenue_baseline.positive? %>
             <% pct = (@revenue_today * 100.0 / @revenue_baseline).round %>
             <span style="font-size:13px; font-weight:600; color:<%= pct >= 90 ? 'var(--good)' : '#B4402F' %>;">
-              <%= pct %>% của một <%= @weekday_name %> thường
+              <%= pct %>% của một <%= @weekday_name %> thường<%= " tính đến giờ này" if @baseline_partial %>
             </span>
           <% end %>
         </div>
         <div class="db-sub">
           <%= @bills_today %> bill · trung bình <%= vnd(@atv_today) %>
           <% if @revenue_baseline.positive? %>
-            · mốc so sánh <%= vnd(@revenue_baseline) %> (TB <%= @baseline_days %> ngày cùng thứ gần nhất)
+            · mốc so sánh <%= vnd(@revenue_baseline) %> — trung bình <%= @baseline_days %> ngày cùng thứ gần nhất<%= ", chỉ tính đến #{Time.current.strftime('%H:%M')}" if @baseline_partial %>
           <% end %>
         </div>
       </div>

@@ -374,3 +374,41 @@ class BillArithmeticTest < ActiveSupport::TestCase
     assert_equal 250_000, o.reload.subtotal_before_discount
   end
 end
+
+# Mốc so sánh "doanh thu hôm nay so với một ngày cùng thứ bình thường" phải cắt
+# các ngày cũ ở CÙNG MỐC GIỜ. Nếu lấy tổng cả ngày làm mốc thì 9 giờ sáng nào
+# trang tổng quan cũng báo "12% của một thứ năm thường" — đúng số học, vô dụng.
+class TodayBaselineTest < ActiveSupport::TestCase
+  def setup
+    @ws = create(:workspace)
+    ActsAsTenant.current_tenant = @ws
+    @branch = create(:branch, workspace: @ws)
+    @member = create(:member, workspace: @ws)
+  end
+
+  def bill(at, amount)
+    o = Order.create!(workspace: @ws, branch: @branch, member: @member, status: "paid",
+                      total: amount, closed_at: at)
+    o.update_columns(created_at: at)
+    o
+  end
+
+  test "mốc so sánh chỉ cộng doanh thu đến cùng giờ của ngày cùng thứ" do
+    today = Date.current
+    week_ago = today - 7
+    bill(week_ago.beginning_of_day + 10.hours, 1_000_000)  # trước mốc giờ
+    bill(week_ago.beginning_of_day + 20.hours, 9_000_000)  # sau mốc giờ
+
+    elapsed = 12.hours
+    cut = @ws.orders.paid
+             .closed_between(week_ago.beginning_of_day, week_ago.beginning_of_day + elapsed)
+             .sum(:total)
+    full = @ws.orders.paid
+              .closed_between(week_ago.beginning_of_day, week_ago.end_of_day)
+              .sum(:total)
+
+    assert_equal 1_000_000, cut, "mốc tính đến 12:00 phải bỏ bill lúc 20:00"
+    assert_equal 10_000_000, full
+    refute_equal cut, full, "nếu hai số bằng nhau thì việc cắt theo giờ vô nghĩa"
+  end
+end

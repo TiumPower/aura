@@ -55,12 +55,19 @@ module Merchant
       @bills_today   = paid_today.count
       @atv_today     = @bills_today.positive? ? (@revenue_today / @bills_today) : 0
       @open_orders   = orders.open.includes(:member).recent.to_a
-      # So với TRUNG BÌNH 4 ngày cùng thứ gần nhất, không phải với đúng ngày này
-      # tuần trước. Một mẫu duy nhất cho ra những con số như "-55%" chỉ vì tuần
-      # trước tình cờ có một ngày đông — đó là nhiễu, không phải tín hiệu.
-      same_weekdays = (1..4).map { |n| today - 7 * n }
-      sums = same_weekdays.map do |d|
-        orders.paid.closed_between(d.beginning_of_day, d.end_of_day).sum(:total)
+      # Mốc so sánh cho doanh thu hôm nay. Hai điều phải đúng cùng lúc:
+      #
+      # 1. TRUNG BÌNH 4 ngày cùng thứ gần nhất, không phải đúng ngày này tuần
+      #    trước. Một mẫu duy nhất cho ra những con số như "-55%" chỉ vì tuần
+      #    trước tình cờ có một ngày đông — đó là nhiễu, không phải tín hiệu.
+      # 2. Chỉ cộng phần doanh thu ĐẾN CÙNG GIỜ NÀY của những ngày đó. So doanh
+      #    thu tính đến 9 giờ sáng với tổng cả ngày thì sáng nào trang cũng báo
+      #    "12% của một thứ năm thường" — đúng về số học, vô dụng khi dùng.
+      elapsed = Time.current - today.beginning_of_day
+      @baseline_partial = elapsed < 23.hours
+      sums = (1..4).map do |n|
+        d = today - 7 * n
+        orders.paid.closed_between(d.beginning_of_day, d.beginning_of_day + elapsed).sum(:total)
       end.reject(&:zero?)
       @baseline_days = sums.size
       @revenue_baseline = sums.any? ? (sums.sum / sums.size) : 0
