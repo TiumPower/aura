@@ -49,6 +49,40 @@
   `staff_shifts` phủ đúng khoảng giờ, nếu không engine từ chối đúng như thiết kế
   và test đỏ vì lý do không liên quan.
 
+## Bẫy khi deploy (đã vấp thật trên production)
+
+- **`app/assets/builds/.keep` PHẢI được theo dõi trong git.** Sprockets nạp danh
+  sách đường dẫn asset lúc KHỞI ĐỘNG; thư mục chưa tồn tại thì tailwind.css do
+  `tailwindcss:build` sinh ra ngay sau đó không được biên dịch → **mọi trang
+  500** trong khi `/up` vẫn 200 (giám sát không thấy gì).
+- **Hot restart USR2 phải có `directory` + `prune_bundler` trong puma.rb.**
+  systemd giải symlink `current` lúc start nên cwd của Puma là thư mục RELEASE
+  CŨ; USR2 re-exec từ chính cwd đó → deploy "thành công" nhưng **Puma vẫn chạy
+  code cũ**. Lỗi này tệ hơn downtime vì nó im lặng. Kiểm chứng bằng
+  `readlink -f /proc/$(systemctl --user show aura_puma_production -p MainPID --value)/cwd`
+  — phải bằng `readlink -f /var/www/aura/current`.
+- **Đường dẫn trong puma.rb đọc từ `APP_ROOT`, đừng suy từ `__FILE__`** —
+  `__FILE__` chính là đường dẫn release đã giải symlink.
+- **`ExecReload` phải là USR2, không phải USR1.** USR1 là phased restart, chỉ có
+  tác dụng ở cluster mode; Aura chạy single mode nên USR1 không làm gì.
+- **Phải ghi đè chính `puma:restart`, không thêm task mới.** Plugin systemd của
+  capistrano3-puma có hook riêng gọi `puma:restart` sau deploy, nên thêm
+  `hot_restart` riêng thì vẫn bị nó restart cứng ngay sau đó.
+- **`cap puma:install` sinh unit HỎNG** (đặt env ngay trong ExecStart). Bản đúng
+  nằm ở `config/systemd/`; chạy `puma:install` xong phải chép lại và
+  `systemctl --user daemon-reload`.
+- **`ed25519` + `bcrypt_pbkdf` phải có trong Gemfile.** Khoá SSH định dạng
+  OPENSSH mới (kể cả RSA) cần hai gem này, thiếu thì `cap deploy` chết ở
+  `rbenv:validate`.
+- **`number_to_delimited` KHÔNG phải helper của view** (nó là method của
+  `ActiveSupport::NumberHelper`); helper là `number_with_delimiter`. Trang
+  `/merchant/staff` đã 500 trên production trong khi 108 test vẫn xanh, vì nhánh
+  đó chỉ render khi KTV có phụ thu > 0.
+- **Giá trị có dấu cách trong `shared/.env` phải bọc ngoặc kép.** systemd
+  `EnvironmentFile` chịu được, nhưng mọi script `. .env` sẽ vỡ.
+- **Máy chủ chật RAM (5 app Rails / 3.7GB).** Aura chạy `WEB_CONCURRENCY=0`
+  (single mode) và sidekiq concurrency 3. Đừng nâng lên 2 worker mà không thêm RAM.
+
 ## Quy ước phải giữ
 
 - **Một sự thật một nguồn.** `SlotFinder` là nơi DUY NHẤT trả lời "còn chỗ không";
@@ -89,7 +123,17 @@ bin/rails test                              # toàn bộ
 bin/rails test test/services/slot_finder_test.rb
 bin/rails test test/services/checkout_test.rb
 bundle exec brakeman -q --no-pager
+
+# deploy (repo bare trên server, không qua GitHub)
+git push production main && bundle exec cap production deploy
+bundle exec cap production deploy:seed        # chỉ lần đầu
 ```
+
+## Deploy
+
+Live tại **https://aura.czin.net** + `*.aura.czin.net`, cùng máy với
+loyalty/estate/boidat/xstudio (`103.116.38.152`). Chi tiết hạ tầng: xem
+`docs/DEPLOY.md`.
 
 Tài khoản seed (chỉ dev): chủ spa `chu@aura.local` / `aura1234`, lễ tân
 `letan@aura.local`, super admin `quocvietlee@gmail.com`, khách demo đăng nhập
