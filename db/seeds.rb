@@ -217,8 +217,8 @@ ActsAsTenant.with_tenant(ws) do
 
   ws.memberships.find_or_create_by!(user: reception) { |m| m.role = "receptionist"; m.branch = main }
 
-  # Sinh ca thật cho 3 tuần trước (để bill lịch sử có KTV) và 2 tuần tới.
-  StaffShift.generate_from_templates!(ws, from: Date.current - 21,
+  # Sinh ca thật cho 40 ngày trước (để bill lịch sử có KTV) và 2 tuần tới.
+  StaffShift.generate_from_templates!(ws, from: Date.current - 40,
                                           to: Date.current.beginning_of_week + 13)
 
   # Một KTV xin nghỉ phép để thấy engine cắt đúng khoảng đó.
@@ -408,12 +408,16 @@ ActsAsTenant.with_tenant(ws) do
     sellable = ws.services.main.active.where(requires_staff: true).to_a
     therapists = ws.staff_members.active.therapists.to_a
     customers = ws.members.to_a
-    (1..21).each do |days_ago|
+    # Phủ TRỌN 35 ngày: mọi khoảng xem (7/30/90 ngày) phải có dữ liệu suốt kỳ,
+    # nếu không doanh thu của 21 ngày bị đem so với chi phí của cả tháng và lãi
+    # thô ra số âm vô lý.
+    #
+    # 32–44 lượt/ngày trên 7 KTV × ~11 giờ ca → tỷ lệ dùng KTV ~45–55%, đúng
+    # vùng trung bình ngành (50–60%). Ít hơn nữa thì mọi chỉ số hiệu suất trong
+    # demo đều gần 0 và người xem tưởng hệ thống tính sai.
+    (1..35).each do |days_ago|
       day = Date.current - days_ago
-      # 14–22 lượt mỗi ngày trên 23 chỗ / 7 KTV → tỷ lệ dùng KTV ~20–30%, mức
-      # thật của nhiều spa VN ngày thường. Ít hơn nữa thì mọi chỉ số hiệu suất
-      # trong demo đều ra gần 0 và người xem tưởng hệ thống tính sai.
-      rand(14..22).times do |n|
+      rand(32..44).times do |n|
         svc = sellable.sample
         st  = therapists.sample
         cust = rand < 0.8 ? customers.sample : nil
@@ -458,17 +462,18 @@ ActsAsTenant.with_tenant(ws) do
   # ---- Chi phí vận hành: không có nó thì "lãi thô" trong demo là 86%, con số
   # không spa nào có thật và làm người xem mất tin.
   if ws.expenses.count.zero?
-    (0..2).each do |month_ago|
+    (0..3).each do |month_ago|
       month = Date.current.beginning_of_month - month_ago.months
       branches.each_with_index do |br, bi|
-        # Quy mô chi phí bám theo doanh thu mẫu (~250–350tr/tháng cho hai cơ sở),
-        # để lãi thô ra khoảng 20–30% — mức thật của một spa vận hành ổn.
-        [["rent", "Thuê mặt bằng", 45_000_000 - bi * 12_000_000],
-         ["payroll", "Lương cứng nhân sự", 60_000_000 - bi * 15_000_000],
-         ["supplies", "Tinh dầu, khăn, mặt nạ", 14_000_000 - bi * 3_000_000],
-         ["utility", "Điện nước internet", 7_000_000 - bi * 1_500_000],
-         ["marketing", "Quảng cáo Facebook", 8_000_000 - bi * 2_000_000],
-         ["equipment", "Bảo trì giường & máy", 3_000_000]].each do |cat, note, amount|
+        # Cơ cấu chi phí của một spa hai cơ sở doanh thu ~800tr/tháng: mặt bằng
+        # và lương chiếm phần lớn. Để lãi thô ra khoảng 10–20% — mức thật, không
+        # phải con số đẹp.
+        [["rent", "Thuê mặt bằng", 90_000_000 - bi * 30_000_000],
+         ["payroll", "Lương cứng nhân sự", 180_000_000 - bi * 60_000_000],
+         ["supplies", "Tinh dầu, khăn, mặt nạ", 45_000_000 - bi * 15_000_000],
+         ["utility", "Điện nước internet", 18_000_000 - bi * 6_000_000],
+         ["marketing", "Quảng cáo Facebook", 25_000_000 - bi * 10_000_000],
+         ["equipment", "Bảo trì giường & máy", 8_000_000 - bi * 2_000_000]].each do |cat, note, amount|
           ws.expenses.create!(branch: br, category: cat, note: note, amount: amount,
                               spent_on: month + rand(0..25))
         end
