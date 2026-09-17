@@ -92,14 +92,32 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     assert_equal "/merchant", URI.parse(response.location).path
   end
 
-  # Trang tổng quan phải có CẢ hai tầng: hôm nay và theo kỳ.
-  test "tổng quan có cả số hôm nay và số theo kỳ, và đổi được khoảng thời gian" do
+  # Trang tổng quan gộp từ hai trang cũ. Yêu cầu bố cục: MỖI KHÁI NIỆM MỘT KHỐI,
+  # hai mốc thời gian nằm trong cùng khối. Bản gộp đầu tiên vi phạm đúng chỗ này
+  # (hai thẻ "Tỷ lệ dùng KTV" rời nhau, một cho hôm nay một cho kỳ) nên test
+  # dưới đây đếm số lần xuất hiện, không chỉ kiểm tra có mặt.
+  test "tổng quan đủ sáu khối và không có chỉ số nào bị lặp thành hai thẻ" do
     get "/merchant"
     assert_response :success
-    assert_match "Hôm nay", response.body
-    assert_match "Theo kỳ", response.body
-    assert_match "Lãi thô", response.body
-    assert_match "RevPATH", response.body
+    body = response.body
+
+    ["Hôm nay", "Theo kỳ", "Tiền", "Khai thác", "Khách", "Xếp hạng trong kỳ"].each do |block|
+      assert_match block, body, "thiếu khối #{block}"
+    end
+
+    # Chuỗi P&L phải đọc được thành một hàng, không phải ba thẻ rời.
+    ["Doanh thu", "Chi phí vận hành", "Hoa hồng KTV", "Lãi thô"].each do |step|
+      assert_match step, body, "chuỗi tiền thiếu bước #{step}"
+    end
+
+    # Chỉ MỘT nhãn "Tỷ lệ dùng KTV": hôm nay và cả kỳ nằm chung một thanh.
+    assert_equal 1, body.scan("Tỷ lệ dùng KTV").size,
+                 "chỉ số dùng KTV bị lặp thành hai thẻ rời như bản gộp cũ"
+    refute_match "Tỷ lệ dùng KTV hôm nay", body
+
+    # Con số phải mang theo mốc so sánh và vùng chuẩn ngành, không đứng trần.
+    assert_match "chuẩn ngành 50–60%", body
+    assert_match "RevPATH", body
 
     get "/merchant", params: { days: "7" }
     assert_response :success

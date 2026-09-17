@@ -1,14 +1,19 @@
 module Merchant
-  # MỘT trang duy nhất cho chủ spa, hai tầng thông tin:
+  # MỘT trang cho chủ spa. Nguyên tắc bố cục: **một khái niệm là MỘT khối, hai
+  # mốc thời gian (hôm nay / theo kỳ) nằm TRONG cùng khối đó.**
   #
-  #   1. HÔM NAY — cái mở buổi sáng cần biết: bao nhiêu khách, đã thu bao nhiêu,
-  #      lấp chỗ bao nhiêu, và có gì phải xử lý ngay.
-  #   2. THEO KỲ — cái cuối tuần/cuối tháng cần biết: doanh thu, lãi thô, hiệu
-  #      suất khai thác (RevPATH, tỷ lệ lấp chỗ), khách quay lại, xếp hạng dịch
-  #      vụ và KTV.
+  # Bản gộp đầu tiên làm sai chính chỗ này: nó dán hai dashboard cạnh nhau, nên
+  # "tỷ lệ dùng KTV" có hai thẻ rời (26% hôm nay ở trên, 28% theo kỳ ở dưới) và
+  # người đọc phải tự nối hai số lại. Tiền cũng bị xé thành ba thẻ không liên hệ
+  # (doanh thu / chi phí / lãi) thay vì đọc như một chuỗi P&L.
   #
-  # Trước đây hai tầng này là hai trang (Tổng quan và Báo cáo) và chúng lặp nhau
-  # một nửa số liệu — gộp lại để chủ spa không phải nhớ số nào nằm ở trang nào.
+  # Thứ tự khối theo việc chủ spa thật sự làm khi mở trang:
+  #   1. việc phải xử lý ngay (chỉ hiện khi có việc)
+  #   2. nhịp hôm nay — tiến độ ngày, đã thu so với một ngày thứ N bình thường
+  #   3. tiền theo kỳ — chuỗi doanh thu → chi phí → hoa hồng → lãi thô
+  #   4. khai thác — dùng KTV (kèm vùng chuẩn ngành), lấp chỗ, RevPATH
+  #   5. khách — quay lại/mới/bỏ hẹn/đặt online + danh sách nên gọi
+  #   6. xếp hạng dịch vụ và KTV
   class DashboardController < BaseController
     PERIODS = { "7" => "7 ngày", "30" => "30 ngày", "90" => "90 ngày" }.freeze
 
@@ -39,6 +44,10 @@ module Merchant
       @late           = bookings.select { |b| %w[pending confirmed].include?(b.status) && b.late? }
       @unassigned     = @today_bookings.select(&:unassigned_staff?)
       @today_no_shows = bookings.count(&:no_show?)
+      # Tiến độ ngày: ba con số này cộng lại bằng tổng lịch hẹn hôm nay, nên vẽ
+      # được thành một thanh liền — dễ đọc hơn bốn thẻ số rời.
+      @today_done     = @today_bookings.count { |b| b.status == "completed" }
+      @today_ahead    = @today_bookings.count { |b| %w[pending confirmed].include?(b.status) }
 
       orders = by_branch(ws.orders)
       paid_today = orders.paid.closed_between(today.beginning_of_day, today.end_of_day)
@@ -46,10 +55,16 @@ module Merchant
       @bills_today   = paid_today.count
       @atv_today     = @bills_today.positive? ? (@revenue_today / @bills_today) : 0
       @open_orders   = orders.open.includes(:member).recent.to_a
-      last_week = today - 7
-      @revenue_last_week = orders.paid
-                                 .closed_between(last_week.beginning_of_day, last_week.end_of_day)
-                                 .sum(:total)
+      # So với TRUNG BÌNH 4 ngày cùng thứ gần nhất, không phải với đúng ngày này
+      # tuần trước. Một mẫu duy nhất cho ra những con số như "-55%" chỉ vì tuần
+      # trước tình cờ có một ngày đông — đó là nhiễu, không phải tín hiệu.
+      same_weekdays = (1..4).map { |n| today - 7 * n }
+      sums = same_weekdays.map do |d|
+        orders.paid.closed_between(d.beginning_of_day, d.end_of_day).sum(:total)
+      end.reject(&:zero?)
+      @baseline_days = sums.size
+      @revenue_baseline = sums.any? ? (sums.sum / sums.size) : 0
+      @weekday_name = I18n.l(today, format: "%A").downcase
 
       rooms = by_branch(ws.rooms)
       @rooms_count       = rooms.count
