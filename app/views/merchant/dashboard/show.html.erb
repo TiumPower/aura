@@ -280,55 +280,54 @@
     <div class="go"><%= link_to "Bảng ca làm", merchant_shifts_path, class: "l-chip" %></div>
   </header>
 
-  <div class="db-split">
-    <div>
-      <div class="db-lab">Tỷ lệ dùng KTV</div>
-      <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
-        <span class="db-big"><%= @staff_utilization %>%</span>
-        <span style="font-size:13px; color:var(--ink-2);">cả kỳ</span>
-        <span class="db-mid" style="font-size:17px;"><%= @today_staff_utilization %>%</span>
-        <span style="font-size:13px; color:var(--ink-2);">hôm nay</span>
-      </div>
-      <%# Vùng 50–60% được VẼ lên thanh, để con số tự mang theo lời đánh giá.
-          Vạch đen là hôm nay, phần tô là cả kỳ. %>
-      <div class="db-gauge">
-        <span class="band" style="left:50%; width:10%;"></span>
-        <span class="fill" style="width:<%= [@staff_utilization, 100].min %>%;"></span>
-        <span class="mark" style="left:<%= [@today_staff_utilization, 100].min %>%;"></span>
-      </div>
-      <div class="db-sub">
-        <%= @treated_hours %> giờ trị liệu trên <%= @staff_hours %> giờ KTV có mặt ·
-        vùng xanh là chuẩn ngành 50–60%, trên 75% là tốt.
-        <br>
-        <strong>
-          <% if @staff_utilization >= 75 %>Đang rất cao — cân nhắc tăng ca hoặc tăng giá.
-          <% elsif @staff_utilization >= 50 %>Quanh mức trung bình ngành.
-          <% else %>Thấp — phần lớn giờ KTV có mặt chưa có khách.<% end %>
-        </strong>
-      </div>
-    </div>
+  <%# Thanh đo chiếm cả chiều rộng, bốn số phụ xếp MỘT HÀNG bên dưới. Nhồi chúng
+      vào một cột hẹp bên phải làm nhãn "Doanh thu / giờ trị liệu" vỡ ba dòng và
+      số thứ tư lẻ một mình xuống hàng dưới. %>
+  <div class="db-lab">Tỷ lệ dùng KTV</div>
+  <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+    <span class="db-big"><%= @staff_utilization %>%</span>
+    <span style="font-size:13px; color:var(--ink-2);">cả kỳ</span>
+    <span class="db-mid" style="font-size:17px;"><%= @today_staff_utilization %>%</span>
+    <span style="font-size:13px; color:var(--ink-2);">hôm nay</span>
+  </div>
+  <%# Vùng 50–60% được VẼ lên thanh, để con số tự mang theo lời đánh giá.
+      Vạch đen là hôm nay, phần tô là cả kỳ. %>
+  <div class="db-gauge">
+    <span class="band" style="left:50%; width:10%;"></span>
+    <span class="fill" style="width:<%= [@staff_utilization, 100].min %>%;"></span>
+    <span class="mark" style="left:<%= [@today_staff_utilization, 100].min %>%;"></span>
+  </div>
+  <div class="db-sub">
+    <%= @treated_hours %> giờ trị liệu trên <%= @staff_hours %> giờ KTV có mặt ·
+    vùng xanh là chuẩn ngành 50–60%, trên 75% là tốt.
+    <strong>
+      <% if @staff_utilization >= 75 %>Đang rất cao — cân nhắc tăng ca hoặc tăng giá.
+      <% elsif @staff_utilization >= 50 %>Quanh mức trung bình ngành.
+      <% else %>Thấp — phần lớn giờ KTV có mặt chưa có khách.<% end %>
+    </strong>
+  </div>
 
-    <div class="db-facts" style="border-left:1px solid var(--line); padding-left:18px;">
-      <div>
-        <div class="db-lab">Doanh thu / giờ trị liệu</div>
-        <div class="db-mid"><%= vnd(@revpath) %></div>
-        <div class="db-sub">RevPATH, chỉ tính dịch vụ</div>
-      </div>
-      <div>
-        <div class="db-lab">Lấp chỗ</div>
-        <div class="db-mid"><%= @room_utilization %>%</div>
-        <div class="db-sub"><%= @treated_hours %>/<%= @seat_hours %> giờ-chỗ</div>
-      </div>
-      <div>
-        <div class="db-lab">Buổi đã làm</div>
-        <div class="db-mid"><%= @completed %></div>
-        <div class="db-sub"><%= @treated_hours %> giờ</div>
-      </div>
-      <div>
-        <div class="db-lab">Giảm giá đã cho</div>
-        <div class="db-mid"><%= vnd(@discounts) %></div>
-        <div class="db-sub"><%= @revenue.positive? ? "#{(@discounts * 100.0 / @revenue).round(1)}% doanh thu" : "—" %></div>
-      </div>
+  <div class="db-facts" style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);
+       grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+    <div>
+      <div class="db-lab">Doanh thu / giờ</div>
+      <div class="db-mid"><%= vnd(@revpath) %></div>
+      <div class="db-sub">RevPATH — mỗi giờ trị liệu, chỉ tính dịch vụ</div>
+    </div>
+    <div>
+      <div class="db-lab">Lấp chỗ</div>
+      <div class="db-mid"><%= @room_utilization %>%</div>
+      <div class="db-sub"><%= @treated_hours %>/<%= @seat_hours %> giờ-chỗ mở cửa</div>
+    </div>
+    <div>
+      <div class="db-lab">Buổi đã làm</div>
+      <div class="db-mid"><%= @completed %></div>
+      <div class="db-sub"><%= @treated_hours %> giờ trị liệu</div>
+    </div>
+    <div>
+      <div class="db-lab">Giảm giá đã cho</div>
+      <div class="db-mid"><%= vnd(@discounts) %></div>
+      <div class="db-sub"><%= @revenue.positive? ? "#{(@discounts * 100.0 / @revenue).round(1)}% doanh thu" : "—" %></div>
     </div>
   </div>
 </div>
