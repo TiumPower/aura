@@ -102,7 +102,10 @@ module Merchant
 
     # Chi nhánh phụ. Chi nhánh chính nằm ở branch_id.
     def sync_branches
-      ids = Array(params[:extra_branch_ids]).map(&:to_i).reject { |i| i.zero? || i == @staff.branch_id }
+      allowed = current_workspace.branches.pluck(:id)
+      ids = Array(params[:extra_branch_ids]).map(&:to_i)
+                                            .select { |i| allowed.include?(i) }
+                                            .reject { |i| i == @staff.branch_id }
       @staff.staff_branches.where.not(branch_id: ids).destroy_all
       (ids - @staff.staff_branches.pluck(:branch_id)).each do |bid|
         @staff.staff_branches.create!(workspace: current_workspace, branch_id: bid)
@@ -110,10 +113,20 @@ module Merchant
     end
 
     def staff_params
-      params.require(:staff_member).permit(:branch_id, :user_id, :staff_level_id, :code, :name, :nickname,
-                                           :phone, :email, :gender, :dob, :role, :employment_type,
-                                           :hired_at, :status, :base_salary, :commission_percent,
-                                           :online_bookable, :max_daily_minutes, :calendar_color, :bio, :avatar)
+      permitted = params.require(:staff_member).permit(
+        :branch_id, :user_id, :staff_level_id, :code, :name, :nickname,
+        :phone, :email, :gender, :dob, :role, :employment_type,
+        :hired_at, :status, :base_salary, :commission_percent,
+        :online_bookable, :max_daily_minutes, :calendar_color, :bio, :avatar
+      )
+      # `user_id` và `branch_id` đến từ form nên phải kiểm tra lại là của CHÍNH
+      # workspace này. Không kiểm thì một quản lý sửa được id trong request và
+      # gắn bản ghi nhân sự vào tài khoản của spa khác.
+      permitted[:user_id] = nil unless current_workspace.users.exists?(id: permitted[:user_id])
+      unless permitted[:branch_id].blank? || current_workspace.branches.exists?(id: permitted[:branch_id])
+        permitted[:branch_id] = nil
+      end
+      permitted
     end
 
     def nav_key = :staff

@@ -240,3 +240,54 @@ class CheckoutTest < ActiveSupport::TestCase
     assert_equal 540_000, order.total
   end
 end
+
+# Mọi id đến từ form đều phải được kiểm tra thuộc đúng workspace. Đây là lớp
+# chặn rò rỉ dữ liệu giữa các spa dùng chung một hệ thống.
+class TenantIsolationTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
+  setup do
+    @a = create(:workspace, subdomain: "spa-a")
+    @b = create(:workspace, subdomain: "spa-b")
+    @owner_a = create(:user)
+    @owner_b = create(:user)
+    Membership.create!(user: @owner_a, workspace: @a, role: "owner")
+    Membership.create!(user: @owner_b, workspace: @b, role: "owner")
+    @branch_b = ActsAsTenant.with_tenant(@b) { create(:branch, workspace: @b) }
+    @staff_a  = ActsAsTenant.with_tenant(@a) { create(:staff_member, workspace: @a, branch: nil) }
+    sign_in @owner_a
+  end
+
+  test "a manager cannot attach their staff record to another spa's login account" do
+    patch "/merchant/staff/#{@staff_a.id}", params: {
+      staff_member: { name: @staff_a.name, role: "therapist", status: "active",
+                      employment_type: "fulltime", user_id: @owner_b.id }
+    }
+    assert_nil @staff_a.reload.user_id, "id tài khoản của spa khác phải bị bỏ qua"
+  end
+
+  test "a manager cannot move their staff to another spa's branch" do
+    patch "/merchant/staff/#{@staff_a.id}", params: {
+      staff_member: { name: @staff_a.name, role: "therapist", status: "active",
+                      employment_type: "fulltime", branch_id: @branch_b.id }
+    }
+    assert_nil @staff_a.reload.branch_id, "id cơ sở của spa khác phải bị bỏ qua"
+  end
+
+  test "a manager cannot add their staff to another spa's branch as a second site" do
+    patch "/merchant/staff/#{@staff_a.id}", params: {
+      staff_member: { name: @staff_a.name, role: "therapist", status: "active",
+                      employment_type: "fulltime" },
+      extra_branch_ids: [@branch_b.id]
+    }
+    assert_empty @staff_a.reload.staff_branches
+  end
+
+  test "one spa cannot open another spa's booking, bill or customer" do
+    other = ActsAsTenant.with_tenant(@b) do
+      create(:member, workspace: @b)
+    end
+    get "/merchant/customers/#{other.id}"
+    assert_includes [404, 302], response.status
+  end
+end
