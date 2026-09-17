@@ -134,3 +134,47 @@ class AnnouncementConsentTest < ActionDispatch::IntegrationTest
     assert_match "1 khách", response.body, "mặc định phải trừ khách đã tắt nhận tin"
   end
 end
+
+
+# Toàn bộ chat ở cổng quản lý từng 500: view còn gọi `Conversation#unit` (quan
+# hệ của Estate, đã bỏ). Smoke test cũ chỉ mở danh sách /merchant/chat nên
+# không bao giờ chạm tới một hộp thoại cụ thể.
+class MerchantChatTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
+  setup do
+    @ws = create(:workspace, subdomain: "chatspa")
+    @ws.update!(settings: @ws.settings.merge("onboarded" => true))
+    @user = create(:user)
+    Membership.create!(user: @user, workspace: @ws, role: "owner")
+    ActsAsTenant.current_tenant = @ws
+    @member = create(:member, workspace: @ws, name: "Khách Chat")
+    @conv = Conversation.for_member(@member)
+    @conv.post!(sender_kind: "member", body: "Cho em đổi giờ hẹn ạ", member: @member)
+    ActsAsTenant.current_tenant = nil
+    sign_in @user
+  end
+
+  test "mở một hộp thoại chat cụ thể" do
+    get "/merchant/chat/#{@conv.id}"
+    assert_response :success
+    assert_match "Khách Chat", response.body
+    assert_match "Cho em đổi giờ hẹn", response.body
+  end
+
+  test "mở chat từ hồ sơ khách" do
+    get "/merchant/customers/#{@member.id}/chat"
+    assert_response :redirect
+    follow_redirect!
+    assert_response :success
+    assert_match "Khách Chat", response.body
+  end
+
+  test "quầy trả lời được và tin nhắn hiện ra" do
+    post "/merchant/chat/#{@conv.id}/messages", params: { body: "Dạ được ạ, em đổi sang 15h nhé" }
+    assert_includes [200, 204, 302, 303], response.status
+    get "/merchant/chat/#{@conv.id}"
+    assert_match "em đổi sang 15h", response.body
+    assert_equal "staff", @conv.messages.order(:created_at).last.sender_kind
+  end
+end
