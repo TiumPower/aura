@@ -207,9 +207,13 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     assert_equal "cancelled", far.reload.status
     assert_equal 1, @member.reload.cancel_count, "khách tự huỷ thì phải cộng vào số lần huỷ"
 
-    soon = BookingScheduler.create(branch: @branch, starts_at: 1.hour.from_now,
-                                   lines: [{ service: @service }], member: @member,
-                                   source: "app").booking
+    # Dựng thẳng bản ghi thay vì qua engine: test này nói về HẠN TỰ HUỶ, không
+    # về xếp lịch. Qua engine thì kết quả phụ thuộc giờ chạy test — "1 giờ nữa"
+    # có thể rơi ra ngoài ca làm 09:00–21:00 và engine từ chối, làm test đỏ vì
+    # một lý do không liên quan.
+    soon = @ws.bookings.create!(branch: @branch, member: @member, status: "confirmed",
+                                source: "app", starts_at: 1.hour.from_now,
+                                ends_at: 2.hours.from_now, party_size: 1)
     patch "/w/#{slug}/lich-hen/#{soon.id}/huy"
     assert_equal "confirmed", soon.reload.status, "sát giờ thì khách không tự huỷ được"
   end

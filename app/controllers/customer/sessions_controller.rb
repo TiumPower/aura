@@ -28,6 +28,7 @@ module Customer
       @phone = session[:otp_phone]
       redirect_to(member_login_path) and return if @phone.blank?
       @dev_code = latest_code(@phone) if show_otp_onscreen?
+      @emailed  = otp_emailed?
     end
 
     def verify
@@ -45,6 +46,7 @@ module Customer
                     notice: "Chào mừng quý khách đến với #{current_workspace.name} 🌿"
       else
         @dev_code = latest_code(@phone) if show_otp_onscreen?
+        @emailed  = otp_emailed?
         flash.now[:alert] = otp_error_message(result)
         render :verify_form, status: :unprocessable_entity
       end
@@ -65,9 +67,24 @@ module Customer
                                         locale: current_workspace.locale_default)
     end
 
+    # Hiện mã ngay trên màn hình. Ở production đây là CHẾ ĐỘ TẠM: chưa nối cổng
+    # SMS/Zalo nên không có đường nào gửi mã cho khách chưa khai email.
+    #
+    # Cờ riêng `SHOW_CUSTOMER_OTP`, KHÔNG dùng chung `SHOW_OTP` với cổng nhân
+    # sự: bật chung là ai biết email một nhân viên cũng vào được toàn bộ dữ
+    # liệu spa. Khách chỉ thấy dữ liệu của chính họ nên phạm vi rủi ro hẹp hơn
+    # nhiều — nhưng vẫn phải TẮT trước khi có khách thật.
     def show_otp_onscreen?
-      ENV["SHOW_OTP"] == "true" || !Rails.env.production?
+      return true unless Rails.env.production?
+      ENV["SHOW_CUSTOMER_OTP"] == "true"
     end
+
+    # Mã gửi được qua email khi hồ sơ khách đã có email.
+    def otp_emailed?
+      challenge = OtpChallenge.latest_for(identifier: @phone, scope: "customer", workspace: current_workspace)
+      challenge&.channel == "email" && EmailOtp.configured?
+    end
+    helper_method :otp_emailed?
 
     def latest_code(phone)
       OtpChallenge.latest_for(identifier: phone, scope: "customer", workspace: current_workspace)&.code

@@ -17,9 +17,20 @@ class OtpChallenge < ApplicationRecord
   scope :active, -> { where(consumed_at: nil).where("expires_at > ?", Time.current) }
 
   # Phát (hoặc phát lại) mã đăng nhập.
+  #
+  # Khách định danh bằng SĐT, nhưng nếu hồ sơ của họ ĐÃ CÓ email thì gửi mã qua
+  # email — kênh duy nhất hiện đã nối thật. Chưa có email thì rơi về SMS/Zalo
+  # (chưa nối) và mã phải hiện trên màn hình, xem `show_on_screen?`.
   def self.issue!(identifier:, scope: "merchant", workspace: nil, purpose: "login", channel: nil)
     ident = normalize(identifier, scope)
-    channel ||= scope == "customer" ? "sms" : "email"
+    channel ||= if scope == "customer"
+      member_email = workspace && Member.unscoped
+                                        .where(workspace_id: workspace.id, phone: ident)
+                                        .where.not(email: nil).pick(:email)
+      member_email.present? ? "email" : "sms"
+    else
+      "email"
+    end
     code = format("%06d", SecureRandom.random_number(1_000_000))
     challenge = create!(identifier: ident, scope: scope, channel: channel,
                         workspace: workspace, purpose: purpose,
@@ -39,10 +50,18 @@ class OtpChallenge < ApplicationRecord
 
   # Gửi mã. Email đi qua mailer khi đã cấu hình; SMS/Zalo chưa nối cổng gửi nên
   # mã hiện trên màn hình (dev) và ghi log — KHÔNG im lặng làm như đã gửi.
+  # Địa chỉ email nhận mã. Với khách, `identifier` là SĐT nên phải tra email
+  # trong hồ sơ.
+  def delivery_email
+    return identifier if scope != "customer"
+    return nil if workspace_id.blank?
+    Member.unscoped.where(workspace_id: workspace_id, phone: identifier).pick(:email)
+  end
+
   def deliver!
     case channel
     when "email"
-      if EmailOtp.configured?
+      if EmailOtp.configured? && delivery_email.present?
         OtpMailer.login_code(self).deliver_later
         Rails.logger.info("[OTP] scope=#{scope} #{identifier} (đã gửi email)")
       else

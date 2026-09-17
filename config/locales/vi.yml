@@ -918,6 +918,7 @@ vi:
       login_footer: "Chỉ cần số điện thoại — không cần đặt mật khẩu."
       verify_title: "Nhập mã xác thực"
       verify_sent: "Chúng tôi đã gửi mã 6 số tới %{phone}."
+      verify_sent_email: "Chúng tôi đã gửi mã 6 số tới email trong hồ sơ của bạn."
       code_label: "Mã xác thực"
       verify_submit: "Xác nhận"
       resend: "Gửi lại mã"

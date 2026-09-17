@@ -875,6 +875,7 @@ en:
       login_footer: "Just your phone number — no password to remember."
       verify_title: "Enter your code"
       verify_sent: "We sent a 6-digit code to %{phone}."
+      verify_sent_email: "We sent a 6-digit code to the email on your profile."
       code_label: "Verification code"
       verify_submit: "Confirm"
       resend: "Resend code"
