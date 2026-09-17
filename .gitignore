@@ -5,6 +5,10 @@
 !/tmp/.keep
 /storage/*
 !/storage/.keep
+# `app/assets/builds/.keep` PHẢI được theo dõi: Sprockets nạp danh sách đường
+# dẫn asset lúc khởi động, nếu thư mục chưa tồn tại thì tệp tailwind.css do
+# `tailwindcss:build` sinh ra ngay sau đó KHÔNG được biên dịch → production
+# 500 với "The asset tailwind.css is not present in the asset pipeline".
 /public/assets
 /app/assets/builds/*
 !/app/assets/builds/.keep

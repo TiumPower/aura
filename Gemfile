@@ -94,6 +94,12 @@ group :development, :test do
   gem "capistrano-rbenv",   "~> 2.2",  require: false
   gem "capistrano3-puma",   "~> 6.0",  require: false
   gem "capistrano-sidekiq", "~> 2.3",  require: false
+  # net-ssh cần hai gem này để đọc khoá SSH định dạng OPENSSH mới
+  # (`-----BEGIN OPENSSH PRIVATE KEY-----`) — kể cả khoá RSA. Thiếu chúng thì
+  # `cap production deploy` chết ngay ở bước rbenv:validate với
+  # "OpenSSH keys only supported if ED25519 is available".
+  gem "ed25519",      ">= 1.2", "< 2.0", require: false
+  gem "bcrypt_pbkdf", ">= 1.0", "< 2.0", require: false
 end
 
 group :development do
