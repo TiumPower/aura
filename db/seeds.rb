@@ -450,12 +450,17 @@ ActsAsTenant.with_tenant(ws) do
           blank.reload
           Checkout.pay(order: blank, method: "transfer", amount: blank.total, actor: cashier)
           Checkout.close!(order: blank, actor: cashier)
+          # Bill bán thẻ không gắn lịch hẹn nên vòng lùi ngày phía dưới bỏ qua nó
+          # → tất cả dồn về HÔM NAY và ngày hôm nay hiện 72 bill trong khi chỉ có
+          # 22 lịch hẹn. Lùi ngay tại đây.
+          blank.update_columns(closed_at: at + 90.minutes, created_at: at)
+          blank.commission_entries.update_all(earned_on: day)
         end
       end
     end
     # Lùi ngày đóng bill về đúng ngày phát sinh để báo cáo theo kỳ đúng.
     ws.orders.paid.each do |o|
-      next if o.booking.nil?
+      next if o.booking.nil? # bill bán thẻ đã được lùi ngay lúc tạo
       o.update_columns(closed_at: o.booking.starts_at + 1.hour, created_at: o.booking.starts_at)
       o.commission_entries.update_all(earned_on: o.booking.starts_at.to_date)
     end
