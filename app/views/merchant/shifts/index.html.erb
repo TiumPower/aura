@@ -69,7 +69,9 @@
               <td class="sh-cell">
                 <% (@grid.dig(s.id, d) || []).each do |sh| %>
                   <span class="sh-chip <%= 'off' unless sh.working? %>">
-                    <%= sh.working? ? sh.range_label : sh.kind_label %>
+                    <%# Nghỉ phép cũng phải hiện GIỜ: nghỉ nửa ngày và nghỉ cả
+                        ngày khác nhau hoàn toàn với người xếp lịch. %>
+                    <%= sh.working? ? sh.range_label : "#{sh.kind_label} #{sh.range_label}" %>
                     <% if current_membership&.can_manage? %>
                       <%= button_to "✕", merchant_shift_path(sh), method: :delete, form: { data: { turbo_confirm: "Xoá ca này?" } } %>
                     <% end %>

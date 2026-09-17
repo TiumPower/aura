@@ -134,7 +134,9 @@ Rails.application.routes.draw do
     # ---- Hoa hồng & báo cáo -----------------------------------------------
     get "commissions", to: "commissions#index", as: :commissions
     patch "commissions/approve", to: "commissions#approve", as: :approve_commissions
-    get "reports", to: "reports#index", as: :reports
+    # Báo cáo đã GỘP vào trang tổng quan (một trang, hai tầng: hôm nay và theo
+    # kỳ). Giữ route để link/bookmark cũ không chết.
+    get "reports", to: redirect("/merchant"), as: :reports
 
     # ---- Nhân sự ----------------------------------------------------------
     resources :staff, controller: "staff_members", except: [:destroy] do

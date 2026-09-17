@@ -35,8 +35,13 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     ws.reload
     assert_equal "beauty", ws.business_type
-    assert_includes ws.enabled_modules, "treatment_records"
-    assert_not_includes ws.enabled_modules, "walk_in"
+    # Preset của thẩm mỹ viện có bật "treatment_records", nhưng module đó chưa có
+    # màn hình nào nên `enabled_modules` lọc ra — thà không bật còn hơn bật rồi
+    # không có gì xảy ra. Xem BusinessSettings::COMING_SOON_MODULES.
+    assert_includes Workspace::BUSINESS_TYPES, ws.business_type
+    assert_includes ws.enabled_modules, "packages", "TMV phải có thẻ liệu trình"
+    assert_not_includes ws.enabled_modules, "walk_in", "TMV không nhận khách vãng lai"
+    assert_not_includes ws.enabled_modules, "treatment_records", "module chưa làm thì không được bật"
   end
 
   test "step 2 creates the first branch with a full week of opening hours" do

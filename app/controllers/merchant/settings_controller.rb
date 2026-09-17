@@ -33,6 +33,22 @@ module Merchant
         keys: %w[review_request_hours review_min_publish] }
     ].freeze
 
+    # Tham số CHƯA có mã nào đọc tới: phần lớn thuộc các tính năng còn trong lộ
+    # trình (đặt cọc, nhắc lịch tự động, phiếu đồng ý, đánh giá, bảng lương chốt
+    # kỳ, chuyển nhượng thẻ). Vẫn hiện ra để chủ spa thấy lộ trình và cấu hình
+    # trước, nhưng PHẢI gắn nhãn — để người trả tiền sửa một con số rồi không có
+    # gì xảy ra là thứ tệ nhất một trang thiết lập có thể làm.
+    #
+    # Khi làm xong tính năng nào, xoá khoá tương ứng khỏi đây. Có thể kiểm lại
+    # danh sách bằng cách grep khoá đó trong app/.
+    INACTIVE = %w[
+      allow_room_choice checkin_early_minutes auto_no_show_minutes reminder_hours
+      require_deposit deposit_percent deposit_min_amount no_show_fee currency
+      package_transferable package_family_share payroll_cycle payroll_close_day
+      consent_required health_form_required staff_can_see_customer_phone
+      review_request_hours review_min_publish
+    ].freeze
+
     LABELS = {
       "slot_step_minutes" => ["Bước giờ khách chọn (phút)", "Lưới giờ hiện cho khách: 15 phút là phổ biến nhất."],
       "booking_lead_minutes" => ["Đặt trước tối thiểu (phút)", "Sát giờ hơn mức này thì khách phải gọi điện."],
@@ -93,6 +109,7 @@ module Merchant
     def show
       @groups = GROUPS
       @labels = LABELS
+      @inactive = INACTIVE
       @choices = CHOICES
       @defaults = BusinessSettings::DEFAULTS
       @branch = current_workspace.branches.find_by(id: params[:branch_id])

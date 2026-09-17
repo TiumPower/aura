@@ -28,6 +28,25 @@
   </div>
 </div>
 
+<%# Khách vượt ngưỡng bỏ hẹn thì KHÔNG đặt online được nữa, nhưng trước đây
+    màn hình này không nói gì — lễ tân không hiểu vì sao khách bảo "app không
+    cho tôi đặt". %>
+<% if @member.booking_blocked? && !@member.blocked? %>
+  <div class="l-panel" style="margin-bottom:16px; background:#fdecec; border-color:#f5c6c6;">
+    <div style="font-weight:700; font-size:14px; color:#a11;">
+      ⛔ Khách này hiện KHÔNG đặt lịch online được
+    </div>
+    <div style="font-size:13px; color:var(--ink-2); margin-top:6px; line-height:1.55;">
+      Đã bỏ hẹn <strong><%= @member.no_show_count %></strong> lần, bằng hoặc vượt ngưỡng
+      <strong><%= current_workspace.setting_i("block_after_no_shows") %></strong> lần mà spa đặt
+      (sửa ở Tham số nghiệp vụ → Đặt cọc & khách bỏ hẹn). Quầy vẫn xếp lịch hộ khách bình thường.
+    </div>
+    <%= button_to "Xoá lịch sử bỏ hẹn để mở lại", unblock_merchant_customer_path(@member), method: :patch,
+          class: "l-btn l-btn-ghost", style: "margin-top:10px;",
+          form: { data: { turbo_confirm: "Đặt lại số lần bỏ hẹn về 0 để khách đặt online lại?" } } %>
+  </div>
+<% end %>
+
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px;">
   <div class="l-kpi"><div class="k">Số lượt đến</div><div class="v" style="font-size:26px;"><%= @member.visits_count %></div></div>
   <div class="l-kpi"><div class="k">Tổng chi tiêu</div><div class="v" style="font-size:26px;"><%= vnd(@member.total_spent) %></div></div>

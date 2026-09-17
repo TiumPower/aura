@@ -87,9 +87,6 @@
     <span>📢</span><span>Gửi thông báo</span>
   <% end %>
 
-  <%= link_to merchant_reports_path, class: "l-nav-item #{'active' if nav == :reports}" do %>
-    <span>📊</span><span>Báo cáo</span>
-  <% end %>
   <% if module_on?("commissions") %>
     <%= link_to merchant_commissions_path, class: "l-nav-item #{'active' if nav == :commissions}" do %>
       <span>🧮</span><span>Hoa hồng &amp; lương</span>

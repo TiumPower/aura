@@ -19,7 +19,7 @@
       </span><span>Chat</span>
     <% end %>
     <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :payment, :settings, :billing, :audit, :branches, :staff, :rooms, :expenses, :services,
-                 :shifts, :packages, :reports, :commissions].include?(nav)) do %>
+                 :shifts, :packages, :commissions].include?(nav)) do %>
       <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Cá nhân</span>
     <% end %>
   </div>

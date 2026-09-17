@@ -24,6 +24,15 @@
   </div>
 </div>
 
+<div class="l-panel" style="margin-bottom:16px; background:#fdf3e8; border-color:#f0dcc0;">
+  <div style="font-size:13px; line-height:1.6;">
+    Tham số gắn nhãn <strong>chưa có tác dụng</strong> thuộc những phần còn trong lộ trình
+    (đặt cọc online, nhắc lịch tự động, phiếu đồng ý, đánh giá sau buổi, chốt bảng lương,
+    chuyển nhượng thẻ). Bạn đặt trước được, nhưng hiện chưa có mã nào đọc tới —
+    ghi rõ ở đây để bạn không sửa một con số rồi chờ một thay đổi không xảy ra.
+  </div>
+</div>
+
 <% if @branch %>
   <div class="l-panel" style="margin-bottom:16px; background:color-mix(in srgb, var(--primary) 6%, #fff); border-color:color-mix(in srgb, var(--primary) 30%, var(--line));">
     Đang sửa tham số <strong>riêng của <%= @branch.name %></strong>. Ô để trống = dùng theo tham số
@@ -35,17 +44,29 @@
   <%= hidden_field_tag :branch_id, @branch&.id %>
   <% @groups.each do |grp| %>
     <div class="l-panel st-grp">
+      <% all_inactive = grp[:keys].all? { |k| @inactive.include?(k) } %>
       <div class="l-section-h" style="margin:0 0 8px;">
-        <h3><%= grp[:icon] %> <%= grp[:title] %></h3>
+        <h3>
+          <%= grp[:icon] %> <%= grp[:title] %>
+          <% if all_inactive %>
+            <span class="l-pill" style="--_c:#B08D57;">cả nhóm chưa có tác dụng</span>
+          <% end %>
+        </h3>
       </div>
       <% grp[:keys].each do |key| %>
         <% default = @defaults[key] %>
         <% label, hint = @labels[key] %>
         <% own = @branch ? @branch.settings[key] : current_workspace.settings.dig("business", key) %>
         <% effective = scope_obj.setting(key) %>
-        <div class="st-row">
+        <% inactive = @inactive.include?(key) %>
+        <div class="st-row" style="<%= 'opacity:.7;' if inactive %>">
           <div>
-            <div class="lb"><%= label || key %></div>
+            <div class="lb">
+              <%= label || key %>
+              <% if inactive %>
+                <span class="l-pill" style="--_c:#B08D57;">chưa có tác dụng</span>
+              <% end %>
+            </div>
             <% if hint %><div class="hint"><%= hint %></div><% end %>
             <% if @branch && !own.nil? %>
               <div class="ovr">Đang ghi đè (toàn thương hiệu: <%= current_workspace.setting(key) %>)</div>

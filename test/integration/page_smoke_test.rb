@@ -73,7 +73,7 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     /merchant/services /merchant/services/new /merchant/categories
     /merchant/calendar /merchant/bookings/new /merchant/bookings/new?walk_in=1 /merchant/bookings/queue
     /merchant/bills /merchant/packages /merchant/packages/new /merchant/cards
-    /merchant/reports /merchant/commissions
+    /merchant/commissions
     /merchant/settings /merchant/settings/modules
     /merchant/appearance /merchant/payment /merchant/audit /merchant/billing
   ].freeze
@@ -83,6 +83,28 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
       get path
       assert_includes [200, 302], response.status, "#{path} trả về #{response.status}"
     end
+  end
+
+  # Báo cáo đã gộp vào tổng quan; link cũ phải chuyển hướng chứ không 404.
+  test "/merchant/reports chuyển về tổng quan" do
+    get "/merchant/reports"
+    assert_response :moved_permanently
+    assert_equal "/merchant", URI.parse(response.location).path
+  end
+
+  # Trang tổng quan phải có CẢ hai tầng: hôm nay và theo kỳ.
+  test "tổng quan có cả số hôm nay và số theo kỳ, và đổi được khoảng thời gian" do
+    get "/merchant"
+    assert_response :success
+    assert_match "Hôm nay", response.body
+    assert_match "Theo kỳ", response.body
+    assert_match "Lãi thô", response.body
+    assert_match "RevPATH", response.body
+
+    get "/merchant", params: { days: "7" }
+    assert_response :success
+    get "/merchant", params: { from: (Date.current - 3).to_s, to: Date.current.to_s }
+    assert_response :success
   end
 
   test "record pages render" do

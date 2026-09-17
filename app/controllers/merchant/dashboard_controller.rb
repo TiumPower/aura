@@ -1,17 +1,33 @@
 module Merchant
-  # Tổng quan. Màn hình chủ spa mở mỗi sáng, nên nó phải trả lời đúng bốn câu
-  # theo thứ tự: hôm nay có bao nhiêu khách, đã thu bao nhiêu, có gì cần xử lý
-  # ngay, và sức chứa còn dư không.
+  # MỘT trang duy nhất cho chủ spa, hai tầng thông tin:
+  #
+  #   1. HÔM NAY — cái mở buổi sáng cần biết: bao nhiêu khách, đã thu bao nhiêu,
+  #      lấp chỗ bao nhiêu, và có gì phải xử lý ngay.
+  #   2. THEO KỲ — cái cuối tuần/cuối tháng cần biết: doanh thu, lãi thô, hiệu
+  #      suất khai thác (RevPATH, tỷ lệ lấp chỗ), khách quay lại, xếp hạng dịch
+  #      vụ và KTV.
+  #
+  # Trước đây hai tầng này là hai trang (Tổng quan và Báo cáo) và chúng lặp nhau
+  # một nửa số liệu — gộp lại để chủ spa không phải nhớ số nào nằm ở trang nào.
   class DashboardController < BaseController
+    PERIODS = { "7" => "7 ngày", "30" => "30 ngày", "90" => "90 ngày" }.freeze
+
     def show
       return redirect_to merchant_onboarding_path if current_workspace && !current_workspace.onboarded?
 
       ws = current_workspace
       @branches = ws.branches.where.not(status: "archived").ordered.to_a
       @branch   = current_branch
-      today = Date.current
+      load_today(ws)
+      load_period(ws)
+      @setup_todos = setup_todos
+    end
 
-      # ---- Hôm nay: lịch hẹn ----
+    private
+
+    # ---- TẦNG 1: hôm nay ---------------------------------------------------
+    def load_today(ws)
+      today = Date.current
       bookings = by_branch(ws.bookings).on_date(today)
                                        .includes(:member, booking_items: [:service, :staff_member, :room])
                                        .order(:starts_at).to_a
@@ -24,43 +40,35 @@ module Merchant
       @unassigned     = @today_bookings.select(&:unassigned_staff?)
       @today_no_shows = bookings.count(&:no_show?)
 
-      # ---- Hôm nay: tiền ----
       orders = by_branch(ws.orders)
       paid_today = orders.paid.closed_between(today.beginning_of_day, today.end_of_day)
       @revenue_today = paid_today.sum(:total)
       @bills_today   = paid_today.count
       @atv_today     = @bills_today.positive? ? (@revenue_today / @bills_today) : 0
       @open_orders   = orders.open.includes(:member).recent.to_a
-      # So với cùng kỳ tuần trước để con số hôm nay có ngữ cảnh.
       last_week = today - 7
       @revenue_last_week = orders.paid
                                  .closed_between(last_week.beginning_of_day, last_week.end_of_day)
                                  .sum(:total)
 
-      # ---- Sức chứa hôm nay ----
       rooms = by_branch(ws.rooms)
       @rooms_count       = rooms.count
       @rooms_active      = rooms.active.count
       @seat_capacity     = rooms.active.sum(:capacity)
       @rooms_maintenance = rooms.where(status: "maintenance").count
+      @therapist_count   = ws.staff_members.active.at_branch(@branch&.id).therapists.count
 
-      staff = ws.staff_members.active.at_branch(@branch&.id)
-      @therapist_count = staff.therapists.count
-      @today_open_hours = open_hours_today
+      @today_open_hours = open_hours(today, today)
       @today_capacity_hours = (@today_open_hours * @seat_capacity).round(1)
-      sold_minutes = BookingItem.where(booking_id: @today_bookings.map(&:id)).live.sum(:duration_minutes)
-      @today_sold_hours = (sold_minutes / 60.0).round(1)
-      @utilization = @today_capacity_hours.positive? ?
+      sold = BookingItem.where(booking_id: @today_bookings.map(&:id)).live.sum(:duration_minutes)
+      @today_sold_hours = (sold / 60.0).round(1)
+      @utilization_today = @today_capacity_hours.positive? ?
         (@today_sold_hours * 100.0 / @today_capacity_hours).round : 0
 
       shifts = ws.staff_shifts.working.on_date(today)
       shifts = shifts.where(branch_id: @branch.id) if @branch
       @on_duty_now = shifts.select { |s| s.starts_at <= Time.current && s.ends_at >= Time.current }.size
 
-      # ---- Khách & thẻ cần chăm ----
-      @members_count = ws.members.count
-      @new_members_month = ws.members.where("created_at >= ?", today.beginning_of_month).count
-      @birthday_members = ws.members.birthday_in(today.month).order(:dob_day).limit(6).to_a
       if ws.feature?("packages")
         @cards_low = ws.member_packages.usable.includes(:member, :package_credits).select(&:low_on_sessions?).first(6)
         @cards_expiring = ws.member_packages
@@ -70,21 +78,88 @@ module Merchant
         @cards_low = []
         @cards_expiring = []
       end
-
-      @setup_todos = setup_todos
+      @birthday_members = ws.members.birthday_in(today.month).order(:dob_day).limit(6).to_a
     end
 
-    private
+    # ---- TẦNG 2: theo kỳ ---------------------------------------------------
+    def load_period(ws)
+      @from, @to = period_range
+      @period_days = params[:days].presence || "30"
+      range = @from.beginning_of_day..@to.end_of_day
 
-    def open_hours_today
+      orders = by_branch(ws.orders).paid.closed_between(range.first, range.last)
+      @revenue   = orders.sum(:total)
+      @bills     = orders.count
+      @atv       = @bills.positive? ? (@revenue / @bills) : 0
+      @tips      = orders.sum(:tip_total)
+      @discounts = orders.sum(:discount_total)
+
+      items = OrderItem.joins(:order).where(orders: { id: orders.select(:id) })
+      @by_kind = items.group(:kind).sum("order_items.total")
+      @service_revenue = @by_kind.values_at("service", "addon").compact.sum
+      @package_revenue = @by_kind.values_at("package", "topup").compact.sum
+      @retail_revenue  = @by_kind["product"].to_i
+      @retail_ratio = @service_revenue.positive? ? (@retail_revenue * 100.0 / @service_revenue).round(1) : 0
+
+      done = by_branch(ws.bookings).where(status: "completed", starts_at: range)
+      @completed = done.count
+      minutes = BookingItem.where(booking_id: done.select(:id)).live.sum(:duration_minutes)
+      @treated_hours = (minutes / 60.0).round(1)
+      # RevPATH chỉ tính doanh thu DỊCH VỤ — tiền bán thẻ là thu trước cho các
+      # buổi sau, cộng vào sẽ làm tháng bán được thẻ trông như tháng vận hành giỏi.
+      @revpath = @treated_hours.positive? ? (@service_revenue / @treated_hours).round : 0
+      @seat_hours = (open_hours(@from, @to) * @seat_capacity).round(1)
+      @utilization = @seat_hours.positive? ? (@treated_hours * 100.0 / @seat_hours).round(1) : 0
+
+      all_bk = by_branch(ws.bookings).where(starts_at: range)
+      slots = all_bk.count
+      @no_shows  = all_bk.where(status: "no_show").count
+      @cancelled = all_bk.where(status: "cancelled").count
+      @no_show_rate = slots.positive? ? (@no_shows * 100.0 / slots).round(1) : 0
+      @online_share = slots.positive? ?
+        (all_bk.where(source: %w[app web]).count * 100.0 / slots).round : 0
+
+      member_ids = orders.where.not(member_id: nil).distinct.pluck(:member_id)
+      @guests = member_ids.size
+      @returning = Member.where(id: member_ids).where("visits_count > 1").count
+      @return_rate = @guests.positive? ? (@returning * 100.0 / @guests).round : 0
+      @new_members = ws.members.where(created_at: range).count
+      @members_count = ws.members.count
+
+      @top_services = items.where(kind: %w[service addon]).group(:name)
+                           .order(Arel.sql("SUM(order_items.total) DESC")).limit(8)
+                           .sum("order_items.total")
+      @top_staff = items.where.not(staff_member_id: nil).group(:staff_member_id)
+                        .order(Arel.sql("SUM(order_items.total) DESC")).limit(8)
+                        .sum("order_items.total")
+      @staff_index = ws.staff_members.where(id: @top_staff.keys).index_by(&:id)
+
+      @expenses    = by_branch(ws.expenses).in_range(@from, @to).sum(:amount)
+      @commissions = ws.commission_entries.in_range(@from, @to).sum(:amount)
+      @profit = @revenue - @expenses - @commissions
+    end
+
+    # Tổng (giờ mở cửa × ngày) của các cơ sở trong khoảng — mẫu số của tỷ lệ lấp chỗ.
+    def open_hours(from, to)
       list = (@branch ? [@branch] : @branches)
       list.sum do |b|
-        b.open_windows(Date.current).sum { |(from, to)| (to - from) / 3600.0 }
+        (from..to).sum { |d| b.open_windows(d).sum { |(f, t)| (t - f) / 3600.0 } }
       end.round(1)
     end
 
-    # Việc còn thiếu để spa chạy được thật — hiện thẳng trên tổng quan thay vì
-    # để chủ spa tự phát hiện lúc khách đã tới.
+    def period_range
+      if params[:from].present? && params[:to].present?
+        begin
+          return [Date.parse(params[:from]), Date.parse(params[:to])].minmax
+        rescue ArgumentError
+          nil
+        end
+      end
+      days = params[:days].presence&.to_i
+      days = 30 unless [7, 30, 90].include?(days)
+      [Date.current - (days - 1), Date.current]
+    end
+
     def setup_todos
       ws = current_workspace
       todos = []

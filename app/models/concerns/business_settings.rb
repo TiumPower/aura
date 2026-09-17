@@ -13,6 +13,12 @@ module BusinessSettings
     treatment_records consent reviews chat walk_in
   ].freeze
 
+  # Module CHƯA có màn hình nào. Chúng vẫn nằm trong danh sách để lộ rõ lộ trình,
+  # nhưng KHÔNG được bật: bật lên mà không có gì xảy ra là hứa suông với người
+  # đang trả tiền. `enabled_modules` lọc chúng ra nên không phần nào của app tin
+  # rằng chúng đang chạy.
+  COMING_SOON_MODULES = %w[inventory treatment_records consent reviews].freeze
+
   MODULE_LABELS = {
     "booking" => "Đặt lịch", "pos" => "Thu ngân / bán hàng",
     "packages" => "Thẻ liệu trình & gói", "wallet" => "Ví / thẻ tiền",
@@ -139,13 +145,17 @@ module BusinessSettings
   # ---- Module bật/tắt ---------------------------------------------------
   def enabled_modules
     stored = settings["modules"]
-    return Array(stored) & MODULES if stored.is_a?(Array)
-    MODULE_PRESETS[business_type] || MODULE_PRESETS["mixed"]
+    keys = stored.is_a?(Array) ? Array(stored) & MODULES :
+             (MODULE_PRESETS[business_type] || MODULE_PRESETS["mixed"])
+    keys - COMING_SOON_MODULES
   end
+
+  def module_coming_soon?(key) = COMING_SOON_MODULES.include?(key.to_s)
 
   def module?(key) = enabled_modules.include?(key.to_s)
 
   def update_modules!(keys)
-    update!(settings: settings.merge("modules" => Array(keys).map(&:to_s) & MODULES))
+    allowed = MODULES - COMING_SOON_MODULES
+    update!(settings: settings.merge("modules" => Array(keys).map(&:to_s) & allowed))
   end
 end

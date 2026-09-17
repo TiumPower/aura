@@ -1,18 +1,27 @@
 <% content_for :title, "Module đang dùng" %>
 
-<p style="color:var(--ink-2); font-size:13.5px; max-width:680px; margin-bottom:18px;">
+<p style="color:var(--ink-2); font-size:13.5px; max-width:680px; margin-bottom:12px;">
   Tắt một module là ẩn hẳn phần đó khỏi menu và khỏi app khách — dữ liệu cũ vẫn còn nguyên.
   Đây là cách một tiệm foot massage và một thẩm mỹ viện dùng cùng một hệ thống mà không
   phải nhìn những màn hình mình không cần.
+</p>
+<p style="color:var(--ink-2); font-size:13px; max-width:680px; margin-bottom:18px;
+          background:#fdf3e8; border:1px solid #f0dcc0; border-radius:12px; padding:11px 13px;">
+  Mục gắn nhãn <strong>Sắp có</strong> chưa có màn hình nào nên chưa bật được. Chúng vẫn
+  hiện ở đây để bạn thấy lộ trình, chứ không phải để bật rồi không có gì xảy ra.
 </p>
 
 <%= form_with url: merchant_settings_modules_path, method: :patch do %>
   <div class="l-panel" style="max-width:720px;">
     <% @modules.each do |key| %>
-      <% allowed = current_workspace.plan_allows?(key) %>
-      <div class="l-toggle-row">
+      <% coming = current_workspace.module_coming_soon?(key) %>
+      <% allowed = current_workspace.plan_allows?(key) && !coming %>
+      <div class="l-toggle-row" style="<%= 'opacity:.72;' if coming %>">
         <div>
-          <div style="font-weight:600; font-size:14.5px;"><%= @labels[key] %></div>
+          <div style="font-weight:600; font-size:14.5px;">
+            <%= @labels[key] %>
+            <% if coming %><span class="l-pill" style="--_c:#B08D57;">Sắp có</span><% end %>
+          </div>
           <div style="font-size:12.5px; color:var(--ink-2); margin-top:2px;">
             <% case key
                when "booking" %>Khách đặt lịch online, lễ tân xếp phòng/KTV.
@@ -29,7 +38,11 @@
             <% when "walk_in" %>Nhận khách vãng lai không hẹn trước, xếp vào chỗ trống.
             <% end %>
           </div>
-          <% unless allowed %>
+          <% if coming %>
+            <div style="font-size:12px; color:#B08D57; font-weight:600; margin-top:4px;">
+              Phần này chưa có màn hình nào — đang trong lộ trình, chưa bật được.
+            </div>
+          <% elsif !allowed %>
             <div style="font-size:12px; color:#B4402F; font-weight:600; margin-top:4px;">
               Gói <%= current_workspace.plan_record.name %> chưa mở tính năng này.
               <%= link_to "Nâng gói →", merchant_billing_path, style: "color:inherit;" %>
@@ -37,7 +50,8 @@
           <% end %>
         </div>
         <label class="l-switch" style="<%= 'opacity:.45;' unless allowed %>">
-          <%= check_box_tag "modules[]", key, @enabled.include?(key), id: "module_#{key}", disabled: !allowed %>
+          <%= check_box_tag "modules[]", key, allowed && @enabled.include?(key),
+                id: "module_#{key}", disabled: !allowed %>
           <span class="knob"></span>
         </label>
       </div>
