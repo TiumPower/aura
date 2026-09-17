@@ -257,7 +257,10 @@ ActsAsTenant.with_tenant(ws) do
       visits_count: spec[:visits], total_spent: spec[:spent],
       preferences: spec[:prefs], health_notes: spec[:health],
       source: i.zero? ? "walk_in" : %w[self_signup online referral walk_in][i % 4],
-      points_balance: (spec[:spent] / 1000 * ws.setting_i("points_per_1000_spent")),
+      # Khách thật hầu như luôn đổi điểm dần, nên số dư điểm chỉ là một phần nhỏ
+      # của tổng tích luỹ. Để nguyên spent/1000 sẽ ra số dư vài chục nghìn điểm
+      # — trông như lỗi và khiến màn thu ngân đề nghị trả gần hết bill bằng điểm.
+      points_balance: (spec[:spent] / 1000 * ws.setting_i("points_per_1000_spent") * 0.08).round,
       wallet_balance: i == 2 ? 2_000_000 : 0,
       first_visit_at: spec[:visits].positive? ? rand(60..500).days.ago : nil,
       last_visit_at: spec[:visits].positive? ? rand(1..40).days.ago : nil,

@@ -59,7 +59,12 @@
           <% end %>
           <div class="title">
             <%= content_for?(:title) ? yield(:title) : "Tổng quan" %>
-            <span class="en"><%= content_for?(:title_en) ? yield(:title_en) : "OVERVIEW" %></span>
+            <%# Phụ đề tiếng Anh chỉ hiện khi trang tự khai. Trước đây mặc định
+                là "OVERVIEW" nên MỌI trang đều mang phụ đề đó, kể cả trang
+                Hàng chờ hay Bill — sai và gây rối mắt. %>
+            <% if content_for?(:title_en) %>
+              <span class="en"><%= yield(:title_en) %></span>
+            <% end %>
           </div>
         </header>
         <div class="l-content"><%= yield %></div>
