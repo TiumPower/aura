@@ -50,6 +50,14 @@
   <%= link_to merchant_root_path, class: "l-nav-item #{'active' if nav == :dashboard}" do %>
     <span>▣</span><span>Tổng quan</span>
   <% end %>
+  <% if module_on?("booking") %>
+    <%= link_to merchant_calendar_path, class: "l-nav-item #{'active' if nav == :calendar}" do %>
+      <span>📅</span><span>Lịch hẹn</span>
+    <% end %>
+    <%= link_to queue_merchant_bookings_path, class: "l-nav-item #{'active' if nav == :queue}" do %>
+      <span>🔔</span><span>Hàng chờ quầy</span>
+    <% end %>
+  <% end %>
   <%= link_to merchant_shifts_path, class: "l-nav-item #{'active' if nav == :shifts}" do %>
     <span>🗓️</span><span>Bảng ca làm</span>
   <% end %>
@@ -69,6 +77,9 @@
   <% end %>
 
   <div class="l-navgrp">Thiết lập spa</div>
+  <%= link_to merchant_services_path, class: "l-nav-item #{'active' if nav == :services}" do %>
+    <span>💆</span><span>Dịch vụ &amp; bảng giá</span>
+  <% end %>
   <%= link_to merchant_branches_path, class: "l-nav-item #{'active' if nav == :branches}" do %>
     <span>🏠</span><span>Cơ sở &amp; phòng</span>
   <% end %>

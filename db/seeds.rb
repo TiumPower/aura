@@ -266,6 +266,94 @@ ActsAsTenant.with_tenant(ws) do
     m.save!
   end
 
+
+  # ---- Danh mục dịch vụ ---------------------------------------------------
+  ServiceCategory.presets_for(ws.business_type).each_with_index do |attrs, i|
+    ws.service_categories.find_or_create_by!(name: attrs[:name]) { |c| c.assign_attributes(attrs.merge(position: i)) }
+  end
+  cats = ws.service_categories.index_by(&:name)
+
+  service_specs = [
+    # [tên, nhóm, phút, giá, loại phòng, biến thể]
+    ["Massage body tinh dầu", "Massage body", 60, 450_000, %w[single couple vip],
+     [["90′", 90, 620_000], ["120′", 120, 820_000]]],
+    ["Massage đá nóng",       "Massage body", 90, 750_000, %w[single vip], []],
+    ["Massage trị liệu vai cổ", "Trị liệu",   60, 520_000, %w[single], [["90′", 90, 720_000]]],
+    ["Foot massage",          "Foot massage", 45, 250_000, %w[foot],
+     [["60′", 60, 320_000], ["90′", 90, 450_000]]],
+    ["Ngâm chân thảo dược",   "Foot massage", 30, 150_000, %w[foot], []],
+    ["Chăm sóc da cơ bản",    "Chăm sóc da",  60, 400_000, %w[facial], []],
+    ["Trị mụn chuyên sâu",    "Trị liệu da",  75, 850_000, %w[facial laser], []],
+    ["Xông hơi & jacuzzi",    "Xông hơi & jacuzzi", 45, 120_000, %w[sauna], []]
+  ]
+
+  service_specs.each_with_index do |(name, cat, mins, price, type_keys, variants), i|
+    svc = ws.services.find_or_initialize_by(name: name)
+    if svc.new_record?
+      svc.assign_attributes(
+        service_category: cats[cat], duration_minutes: mins, price: price,
+        cost: (price * 0.12).round(-3), position: i,
+        room_type_ids: type_keys.filter_map { |k| types[k]&.id },
+        requires_staff: name.include?("Xông hơi") ? false : true,
+        staff_count: name.include?("Xông hơi") ? 0 : 1,
+        description: "Liệu trình #{mins} phút trong không gian yên tĩnh, kết thúc bằng trà thảo mộc."
+      )
+      svc.save!
+      # Khi dịch vụ có biến thể thì CHỈ biến thể được bán, nên mốc gốc cũng phải
+      # là một biến thể — nếu không, 60′ biến mất khỏi menu của khách.
+      variants.each_with_index do |(vname, vmins, vprice), vi|
+        svc.service_variants.create!(workspace: ws, name: vname, duration_minutes: vmins,
+                                     price: vprice, position: vi + 1)
+      end
+    end
+    # Chạy mọi lần seed (kể cả dịch vụ đã có): dịch vụ có biến thể thì mốc gốc
+    # cũng phải là một biến thể, nếu không 60′ biến mất khỏi menu của khách.
+    if svc.service_variants.any? && svc.service_variants.none? { |v| v.duration_minutes == mins }
+      svc.service_variants.create!(workspace: ws, name: "#{mins}′", duration_minutes: mins,
+                                   price: price, position: 0)
+    end
+  end
+
+  # Addon
+  [["Ngải cứu nóng", 15, 80_000], ["Giác hơi", 20, 150_000], ["Đắp mặt nạ", 15, 120_000]].each do |nm, mins, price|
+    ws.services.find_or_create_by!(name: nm) do |a|
+      a.is_addon = true
+      a.duration_minutes = mins
+      a.price = price
+      a.requires_room = false
+      a.requires_staff = false
+      a.staff_count = 0
+    end
+  end
+
+  # ---- Lịch hẹn mẫu cho hôm nay & mai -------------------------------------
+  if ws.bookings.count.zero?
+    bookable = ws.services.main.active.where(requires_staff: true).to_a
+    guests = ws.members.to_a
+    [Date.current, Date.current + 1].each do |day|
+      # rải 7 lịch trong ngày, giờ chẵn để dễ nhìn trên lịch
+      [9, 10, 11, 14, 15, 17, 19].each_with_index do |hour, idx|
+        svc = bookable[idx % bookable.size]
+        member = guests[idx % guests.size]
+        at = Time.zone.local(day.year, day.month, day.day, hour, [0, 30].sample)
+        res = BookingScheduler.create(
+          branch: branches[idx % branches.size], starts_at: at,
+          lines: [{ service: svc }], member: member,
+          source: %w[staff app phone walk_in][idx % 4], status: "confirmed"
+        )
+        next unless res.ok?
+        b = res.booking
+        # Lịch của hôm qua/hôm nay đã qua giờ thì cho chạy tiếp trạng thái để
+        # màn hình hàng chờ có cả ba cột dữ liệu.
+        if day == Date.current && at < Time.current - 2.hours
+          b.transition_to!("checked_in") && b.transition_to!("in_progress") && b.transition_to!("completed")
+        elsif day == Date.current && at < Time.current
+          b.transition_to!("checked_in")
+        end
+      end
+    end
+  end
+
   # Một khách bỏ hẹn nhiều lần → thấy được cơ chế chặn đặt online.
   noshow = Member.find_by(workspace: ws, phone: "0977222333")
   noshow&.update!(no_show_count: 3, cancel_count: 1)
@@ -274,6 +362,8 @@ end
 puts "  ✓ Spa demo: #{ws.name} (#{ws.subdomain}) — #{ws.branches.count} cơ sở, " \
      "#{ws.rooms.count} phòng (#{ws.rooms.sum(:capacity)} chỗ), " \
      "#{ws.staff_members.count} nhân sự, #{ws.staff_shifts.count} ca, #{ws.members.count} khách"
+puts "  ✓ Danh mục: #{ws.services.main.count} dịch vụ (#{ws.service_variants.count} biến thể), " \
+     "#{ws.services.where(is_addon: true).count} addon, #{ws.bookings.count} lịch hẹn mẫu"
 puts "  ✓ Chủ spa: chu@aura.local#{seed_password_hint(owner_created)}"
 puts "  ✓ Lễ tân:  letan@aura.local#{seed_password_hint(reception_created)}"
 puts "  ✓ Khách demo (đăng nhập bằng SĐT + OTP): 0905111222"

@@ -1,0 +1,13 @@
+<% content_for :tab, "book" %>
+<% content_for :title, "Đặt lịch" %>
+<%= render "customer/shared/appbar", title: "Đặt lịch", back: member_root_path %>
+<div class="l-screen">
+  <div class="l-tile" style="text-align:center; padding:34px 18px;">
+    <div style="font-size:40px;">🌙</div>
+    <p style="font-weight:700; margin-top:10px;">Spa chưa mở cơ sở nào cho đặt online</p>
+    <p style="font-size:13.5px; color:var(--ink-2); margin-top:6px;">Vui lòng liên hệ trực tiếp với spa.</p>
+    <% if current_workspace.contact_phone.present? %>
+      <%= link_to "☎ Gọi spa", "tel:#{current_workspace.contact_phone}", class: "l-btn l-btn-primary", style: "margin-top:14px;" %>
+    <% end %>
+  </div>
+</div>

@@ -39,6 +39,12 @@ class Workspace < ApplicationRecord
   has_many :shift_templates, dependent: :destroy
   has_many :member_tiers, dependent: :destroy
   has_many :members, dependent: :destroy
+  has_many :service_categories, dependent: :destroy
+  has_many :services, dependent: :destroy
+  has_many :service_variants, dependent: :destroy
+  has_many :staff_services, dependent: :destroy
+  has_many :bookings, dependent: :destroy
+  has_many :booking_items, dependent: :destroy
   has_many :expenses, dependent: :destroy
   has_many :conversations, dependent: :destroy
   has_many :messages, dependent: :destroy

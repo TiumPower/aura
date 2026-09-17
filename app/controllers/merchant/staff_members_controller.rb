@@ -4,7 +4,7 @@ module Merchant
   # tài khoản người dùng.
   class StaffMembersController < BaseController
     before_action :require_manager!, except: [:index, :show]
-    before_action :set_staff, only: [:show, :edit, :update, :archive, :reactivate]
+    before_action :set_staff, only: [:show, :edit, :update, :archive, :reactivate, :skills]
 
     def index
       scope = current_workspace.staff_members.includes(:branch, :staff_level)
@@ -22,6 +22,8 @@ module Merchant
       @new_template = @staff.shift_templates.new
       @upcoming_shifts = @staff.staff_shifts.between(Date.current, 13.days.from_now).ordered.to_a
       @branches = current_workspace.branches.ordered.to_a
+      @services = current_workspace.services.main.active.ordered.to_a
+      @skill_ids = @staff.staff_services.pluck(:service_id)
     end
 
     def new
@@ -74,6 +76,18 @@ module Merchant
     def reactivate
       @staff.update!(status: "active", left_at: nil)
       redirect_to merchant_staff_path(@staff), notice: "Đã nhận #{@staff.name} trở lại."
+    end
+
+    # Kỹ năng: KTV này làm được dịch vụ nào. Để TRỐNG nghĩa là làm được tất cả —
+    # spa nhỏ không phải khai ma trận kỹ năng trước khi nhận khách đầu tiên.
+    def skills
+      ids = Array(params[:service_ids]).map(&:to_i).reject(&:zero?)
+      @staff.staff_services.where.not(service_id: ids).destroy_all
+      (ids - @staff.staff_services.pluck(:service_id)).each do |sid|
+        @staff.staff_services.create!(workspace: current_workspace, service_id: sid)
+      end
+      audit!("staff.skills", target: @staff, summary: "#{ids.size} dịch vụ")
+      redirect_to merchant_staff_path(@staff), notice: "Đã lưu kỹ năng của #{@staff.name}."
     end
 
     private

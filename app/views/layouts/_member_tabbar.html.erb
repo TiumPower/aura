@@ -6,6 +6,11 @@
   <%= link_to member_root_path, class: ("active" if key == "home") do %>
     <span class="ce-tab-ic"><%= ui_icon(:home, size: 22) %></span><span><%= t("customer.nav.home") %></span>
   <% end %>
+  <% if current_workspace&.feature?("booking") %>
+    <%= link_to member_booking_list_path, class: ("active" if key == "book") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span><%= t("customer.nav.bookings") %></span>
+    <% end %>
+  <% end %>
   <%= link_to member_notifications_path, class: ("active" if key == "alerts") do %>
     <span class="ce-tab-ic"><%= ui_icon(:bell, size: 22) %></span><span><%= t("customer.nav.notifications") %></span>
   <% end %>

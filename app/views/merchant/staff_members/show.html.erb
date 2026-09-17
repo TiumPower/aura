@@ -90,6 +90,33 @@
     <% end %>
   </div>
 
+  <div>
+  <div class="l-panel" style="margin-bottom:18px;">
+    <div class="l-section-h" style="margin:0 0 6px;"><h3>Kỹ năng</h3></div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+      Không tick gì = KTV này làm được <strong>mọi dịch vụ</strong>. Chỉ khai khi spa
+      thật sự phân tay nghề — khai nửa vời sẽ khiến engine không tìm được người.
+    </p>
+    <% if @services.empty? %>
+      <p style="font-size:13px; color:var(--ink-2);">
+        Chưa có dịch vụ nào. <%= link_to "Tạo dịch vụ →", new_merchant_service_path %>
+      </p>
+    <% else %>
+      <%= form_with url: skills_merchant_staff_path(@staff), method: :patch do %>
+        <div style="max-height:220px; overflow:auto; margin-bottom:12px;">
+          <% @services.each do |svc| %>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; padding:5px 0;">
+              <%= check_box_tag "service_ids[]", svc.id, @skill_ids.include?(svc.id), id: "skill_#{svc.id}" %>
+              <span style="flex:1;"><%= svc.name %></span>
+              <span style="color:var(--ink-2); font-size:12px;"><%= svc.duration_label %></span>
+            </label>
+          <% end %>
+        </div>
+        <%= submit_tag "Lưu kỹ năng", class: "l-btn l-btn-ghost l-btn-block" %>
+      <% end %>
+    <% end %>
+  </div>
+
   <div class="l-panel">
     <div class="l-section-h" style="margin:0 0 10px;">
       <h3>Ca 14 ngày tới</h3>
@@ -108,5 +135,6 @@
         </div>
       <% end %>
     <% end %>
+  </div>
   </div>
 </div>

@@ -57,12 +57,25 @@
   <%# ---- Đặt lịch (mở khi module booking bật ở phase sau) ---- %>
   <% if ws.feature?("booking") %>
     <div class="l-tile" style="margin-bottom:14px;">
-      <div style="font-weight:700; font-size:15px;"><%= t("customer.home.booking_soon_title") %></div>
+      <div style="font-weight:700; font-size:15px;"><%= t("customer.home.book_title") %></div>
       <div style="font-size:13px; color:var(--ink-2); margin-top:5px; line-height:1.5;">
-        <%= t("customer.home.booking_soon_body") %>
+        <%= t("customer.home.book_body", term: ws.branding_value("staff_term")) %>
       </div>
-      <% if ws.contact_phone.present? %>
-        <%= link_to t("customer.home.call"), "tel:#{ws.contact_phone}", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:12px;" %>
+      <%= link_to t("customer.home.book_cta"), member_new_booking_path,
+            class: "l-btn l-btn-primary l-btn-block", style: "margin-top:12px;" %>
+      <% if @next_booking %>
+        <%= link_to member_booking_path(id: @next_booking.id),
+              style: "display:block; margin-top:10px; padding:11px 13px; border-radius:13px; background:var(--surface-2); text-decoration:none; color:inherit;" do %>
+          <div style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2);">
+            <%= t("customer.home.next_booking") %>
+          </div>
+          <div style="font-weight:700; font-size:14.5px; margin-top:3px;">
+            <%= @next_booking.date_label %> · <%= @next_booking.starts_at.strftime("%H:%M") %>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-2);">
+            <%= @next_booking.service_summary.truncate(46) %>
+          </div>
+        <% end %>
       <% end %>
     </div>
   <% end %>

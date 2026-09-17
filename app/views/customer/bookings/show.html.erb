@@ -1,0 +1,80 @@
+<% content_for :tab, "book" %>
+<% content_for :title, "Lịch hẹn" %>
+<% b = @booking %>
+<%= render "customer/shared/appbar", title: "Lịch hẹn", back: member_booking_list_path %>
+
+<div class="l-screen">
+  <div class="l-tile" style="text-align:center; padding:24px 18px;">
+    <span class="l-pill" style="--_c:<%= b.status_color %>;"><%= b.status_label %></span>
+    <div class="l-display" style="font-size:26px; margin-top:10px;"><%= b.starts_at.strftime("%H:%M") %></div>
+    <div style="font-size:14px; color:var(--ink-2);"><%= l(b.starts_at.to_date, format: "%A, %d/%m/%Y") %></div>
+    <div class="l-mono" style="font-size:12.5px; color:var(--ink-2); margin-top:10px;">Mã hẹn <%= b.code %></div>
+  </div>
+
+  <div class="l-tile" style="margin-top:12px;">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Nội dung buổi</div>
+    <% @items.each do |item| %>
+      <div style="display:flex; gap:8px; padding:9px 0; border-top:1px solid var(--line);">
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;"><%= item.service_label %></div>
+          <div style="font-size:12.5px; color:var(--ink-2); margin-top:2px;">
+            <%= item.time_label %>
+            <% if item.staff_member %> · <%= item.staff_member.display_name %><% end %>
+          </div>
+        </div>
+        <strong style="font-variant-numeric:tabular-nums;"><%= vnd(item.total) %></strong>
+      </div>
+    <% end %>
+    <div style="display:flex; justify-content:space-between; padding-top:11px; border-top:2px solid var(--ink); margin-top:6px;">
+      <strong>Tạm tính</strong>
+      <strong class="l-num" style="font-size:18px;"><%= vnd(b.estimated_total) %></strong>
+    </div>
+  </div>
+
+  <div class="l-tile" style="margin-top:12px;">
+    <div class="l-eyebrow" style="margin-bottom:8px;">Địa điểm</div>
+    <div style="font-weight:600; font-size:14.5px;"><%= b.branch.name %></div>
+    <div style="font-size:13px; color:var(--ink-2); margin-top:3px;"><%= b.branch.short_address %></div>
+    <% if b.branch.directions.present? %>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:8px; line-height:1.55;"><%= b.branch.directions %></div>
+    <% end %>
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+      <% if b.branch.phone.present? %>
+        <%= link_to "☎ Gọi cơ sở", "tel:#{b.branch.phone}", class: "l-chip l-chip-brand", style: "text-decoration:none;" %>
+      <% end %>
+      <% if b.branch.mapped? %>
+        <%= link_to "📍 Chỉ đường", "https://www.google.com/maps/search/?api=1&query=#{b.branch.lat},#{b.branch.lng}",
+              class: "l-chip", target: "_blank", rel: "noopener", style: "text-decoration:none;" %>
+      <% end %>
+    </div>
+  </div>
+
+  <% if b.note.present? %>
+    <div class="l-tile" style="margin-top:12px;">
+      <div class="l-eyebrow" style="margin-bottom:6px;">Ghi chú bạn đã gửi</div>
+      <div style="font-size:13.5px; line-height:1.55;"><%= b.note %></div>
+    </div>
+  <% end %>
+
+  <% if b.member_can_cancel? %>
+    <%= form_with url: member_cancel_booking_path(id: b.id), method: :patch, style: "margin-top:14px;" do %>
+      <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do huỷ (tuỳ chọn)", style: "margin-bottom:8px;" %>
+      <%= submit_tag "Huỷ lịch hẹn này", class: "l-btn l-btn-ghost l-btn-block",
+            data: { turbo_confirm: "Huỷ lịch hẹn #{b.starts_at.strftime('%H:%M %d/%m')}?" } %>
+    <% end %>
+    <p style="font-size:12px; color:var(--ink-2); margin-top:8px; text-align:center;">
+      Được tự huỷ tới trước <%= b.branch.setting_i("cancel_cutoff_hours") %> giờ so với giờ hẹn.
+    </p>
+  <% elsif b.live? %>
+    <div class="l-tile" style="margin-top:14px; text-align:center;">
+      <p style="font-size:13px; color:var(--ink-2);">
+        Đã sát giờ hẹn nên không tự huỷ được — vui lòng gọi cho spa nếu cần đổi.
+      </p>
+      <% if b.branch.phone.present? %>
+        <%= link_to "☎ Gọi #{b.branch.name}", "tel:#{b.branch.phone}", class: "l-btn l-btn-primary", style: "margin-top:10px;" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div style="height:90px;"></div>
+</div>

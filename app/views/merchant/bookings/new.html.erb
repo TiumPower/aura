@@ -1,0 +1,155 @@
+<% content_for :title, @walk_in ? "Khách vãng lai" : "Nhận lịch hẹn" %>
+
+<style>
+  .bk-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:start; }
+  @media (max-width:900px) { .bk-grid { grid-template-columns:1fr; } }
+  .bk-slots { display:flex; flex-wrap:wrap; gap:7px; }
+  .bk-slot { border:1px solid var(--line); background:#fff; border-radius:10px; padding:8px 11px;
+    font-size:13px; font-weight:600; cursor:pointer; font-variant-numeric:tabular-nums; }
+  .bk-slot:hover { border-color:var(--primary); }
+  .bk-slot.on { background:var(--primary); border-color:var(--primary); color:var(--on-primary); }
+  .bk-cust { display:flex; flex-wrap:wrap; gap:6px; max-height:132px; overflow:auto; }
+</style>
+
+<%= form_with url: merchant_bookings_path, method: :post, data: { controller: "bookslots", slots_url: slots_merchant_bookings_path } do %>
+  <%= hidden_field_tag :walk_in, @walk_in ? "1" : "0" %>
+  <%= hidden_field_tag :branch_id, @branch.id %>
+  <%= hidden_field_tag :time, params[:time], data: { bookslots_target: "time" } %>
+  <%= hidden_field_tag :room_id, nil, data: { bookslots_target: "room" } %>
+  <%= hidden_field_tag :staff_member_id, nil, data: { bookslots_target: "staffPick" } %>
+
+  <div class="bk-grid">
+    <div>
+      <%# ---- Khách ---- %>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Khách</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label class="l-label">Số điện thoại</label>
+            <%= telephone_field_tag :guest_phone, params[:guest_phone], class: "l-field", placeholder: "0901234567" %>
+            <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+              Số đã có hồ sơ sẽ được dùng lại, không tạo hồ sơ thứ hai.
+            </div>
+          </div>
+          <div>
+            <label class="l-label">Tên khách</label>
+            <%= text_field_tag :guest_name, params[:guest_name], class: "l-field" %>
+          </div>
+        </div>
+        <% if @recent_members.any? %>
+          <div class="l-label" style="margin-top:12px;">Hoặc chọn khách quen</div>
+          <div class="bk-cust">
+            <% @recent_members.each do |m| %>
+              <label class="l-chip" style="cursor:pointer;">
+                <%= radio_button_tag :member_id, m.id, false, style: "margin-right:4px;" %>
+                <%= m.display_name %> · <%= m.phone %>
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# ---- Dịch vụ ---- %>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Dịch vụ</div>
+        <% if @services.empty? %>
+          <p style="font-size:13.5px; color:var(--ink-2);">
+            Chưa có dịch vụ nào. <%= link_to "Tạo dịch vụ đầu tiên →", new_merchant_service_path %>
+          </p>
+        <% else %>
+          <div style="display:grid; grid-template-columns:1.4fr .9fr .7fr; gap:12px;">
+            <div>
+              <label class="l-label">Dịch vụ <span style="color:#e5484d;">*</span></label>
+              <%= select_tag :service_id,
+                    options_from_collection_for_select(@services, :id,
+                      ->(s) { "#{s.name} · #{s.duration_label} · #{s.price_label}" }, params[:service_id]),
+                    class: "l-field", data: { bookslots_target: "service", action: "change->bookslots#load" } %>
+            </div>
+            <div>
+              <label class="l-label">KTV</label>
+              <%= select_tag :staff_member_id_pick,
+                    options_from_collection_for_select(@staff, :id, :display_name, params[:staff_member_id]),
+                    include_blank: "Spa tự xếp", class: "l-field",
+                    data: { bookslots_target: "staff", action: "change->bookslots#load" } %>
+            </div>
+            <div>
+              <label class="l-label">Số khách</label>
+              <%= number_field_tag :party_size, params[:party_size] || 1, min: 1,
+                    max: current_workspace.setting_i("max_party_size"), class: "l-field",
+                    data: { bookslots_target: "party", action: "change->bookslots#load" } %>
+            </div>
+          </div>
+
+          <% if @addons.any? %>
+            <div class="l-label" style="margin-top:14px;">Dịch vụ thêm (addon)</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <% @addons.each do |a| %>
+                <label class="l-chip" style="cursor:pointer;">
+                  <%= check_box_tag "addon_ids[]", a.id, false, style: "margin-right:4px;" %>
+                  <%= a.name %> +<%= a.duration_minutes %>′ · <%= a.price_label %>
+                </label>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if current_workspace.setting?("allow_gender_preference") %>
+            <div style="margin-top:14px;">
+              <label class="l-label">Khách muốn KTV</label>
+              <%= select_tag :gender, options_for_select([["Không yêu cầu", ""], ["Nữ", "Nữ"], ["Nam", "Nam"]], params[:gender]),
+                    class: "l-field", style: "max-width:220px;",
+                    data: { bookslots_target: "gender", action: "change->bookslots#load" } %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%# ---- Giờ ---- %>
+      <% unless @walk_in %>
+        <div class="l-panel">
+          <div class="l-eyebrow" style="margin-bottom:12px;">Giờ hẹn</div>
+          <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;">
+            <div>
+              <label class="l-label">Ngày</label>
+              <%= date_field_tag :date, @date.to_s, class: "l-field",
+                    data: { bookslots_target: "date", action: "change->bookslots#load" } %>
+            </div>
+            <div style="font-size:12.5px; color:var(--ink-2); padding-bottom:12px;">
+              Chỉ hiện những giờ <strong>thật sự còn phòng và còn KTV</strong>.
+            </div>
+          </div>
+          <div class="bk-slots" data-bookslots-target="slots">
+            <span style="font-size:13px; color:var(--ink-2);">Đang tải giờ trống…</span>
+          </div>
+          <p data-bookslots-target="picked" style="font-size:13.5px; font-weight:600; margin-top:12px; color:var(--primary-ink);"></p>
+        </div>
+      <% end %>
+    </div>
+
+    <div>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Ghi chú</div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Khách nhắn</label>
+          <%= text_area_tag :note, params[:note], class: "l-field", rows: 2,
+                placeholder: "VD: đau vai phải, nhẹ tay vùng cổ" %>
+        </div>
+        <div>
+          <label class="l-label">Ghi chú nội bộ (khách không thấy)</label>
+          <%= text_area_tag :internal_note, params[:internal_note], class: "l-field", rows: 2 %>
+        </div>
+      </div>
+
+      <div class="l-panel">
+        <% if @walk_in %>
+          <div style="font-weight:700; font-size:15px;">⚡ Khách vãng lai</div>
+          <p style="font-size:13px; color:var(--ink-2); margin:6px 0 14px; line-height:1.5;">
+            Lịch sẽ bắt đầu <strong>ngay bây giờ</strong> và hệ thống tự tìm phòng + KTV đang rảnh.
+            Không còn chỗ thì sẽ báo rõ lý do.
+          </p>
+        <% end %>
+        <%= submit_tag @walk_in ? "Nhận khách ngay" : "Tạo lịch hẹn", class: "l-btn l-btn-primary l-btn-block" %>
+        <%= link_to "Huỷ", merchant_calendar_path(date: @date), class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:8px;" %>
+      </div>
+    </div>
+  </div>
+<% end %>

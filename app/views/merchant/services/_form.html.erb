@@ -1,0 +1,145 @@
+<%= form_with model: service, url: url, method: method, multipart: true do |f| %>
+  <% if service.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <%= service.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div style="display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:start;">
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:12px;">Thông tin bán</div>
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Tên dịch vụ <span style="color:#e5484d;">*</span></label>
+          <%= f.text_field :name, class: "l-field", placeholder: "VD: Massage trị liệu vai cổ" %>
+        </div>
+        <div>
+          <label class="l-label">Nhóm</label>
+          <%= f.select :service_category_id, @categories.map { |c| [c.name, c.id] },
+                { include_blank: "Chưa phân nhóm" }, class: "l-field" %>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Thời lượng (phút) <span style="color:#e5484d;">*</span></label>
+          <%= f.number_field :duration_minutes, class: "l-field", min: 5, step: 5 %>
+        </div>
+        <div>
+          <label class="l-label">Giá (đ)</label>
+          <%= f.number_field :price, class: "l-field", min: 0, step: 10_000 %>
+        </div>
+        <div>
+          <label class="l-label">Giá vốn ước tính (đ)</label>
+          <%= f.number_field :cost, class: "l-field", min: 0, step: 10_000 %>
+          <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">Tinh dầu, khăn, mặt nạ… để biết lãi gộp.</div>
+        </div>
+        <div>
+          <label class="l-label">Dọn phòng sau (phút)</label>
+          <%= f.number_field :buffer_minutes, class: "l-field", min: 0, step: 5,
+                placeholder: "theo phòng / #{current_workspace.setting('default_turnaround_minutes')}" %>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Mô tả cho khách</label>
+        <%= f.text_area :description, class: "l-field", rows: 3 %>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">KTV cần chuẩn bị gì</label>
+        <%= f.text_area :prep_notes, class: "l-field", rows: 2, placeholder: "VD: hâm đá 15′ trước giờ hẹn" %>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Chống chỉ định</label>
+        <%= f.text_area :contraindications, class: "l-field", rows: 2,
+              placeholder: "VD: không làm cho phụ nữ mang thai, người cao huyết áp" %>
+        <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+          Hiện cho KTV trước buổi làm — phần chống rủi ro nghề nghiệp.
+        </div>
+      </div>
+      <div>
+        <label class="l-label">Ảnh minh hoạ (hiện trong app khách)</label>
+        <%= f.file_field :photo, accept: "image/*", class: "l-field" %>
+      </div>
+    </div>
+
+    <div>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Cách xếp lịch</div>
+        <div class="l-toggle-row">
+          <div>
+            <div style="font-weight:600; font-size:14px;">Cần phòng</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Tắt với dịch vụ làm ở khu chung (gội, nail lẻ).</div>
+          </div>
+          <label class="l-switch"><%= f.check_box :requires_room %><span class="knob"></span></label>
+        </div>
+        <div class="l-toggle-row">
+          <div>
+            <div style="font-weight:600; font-size:14px;">Cần KTV</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Tắt với xông hơi / jacuzzi tự phục vụ.</div>
+          </div>
+          <label class="l-switch"><%= f.check_box :requires_staff %><span class="knob"></span></label>
+        </div>
+        <div style="margin:12px 0;">
+          <label class="l-label">Số KTV mỗi lượt</label>
+          <%= f.number_field :staff_count, class: "l-field", min: 0, max: 4 %>
+          <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">Massage 4 tay = 2 KTV.</div>
+        </div>
+        <div>
+          <label class="l-label">Chạy được ở loại phòng</label>
+          <% if @room_types.empty? %>
+            <p style="font-size:13px; color:var(--ink-2);">
+              Chưa khai loại phòng. <%= link_to "Khai ngay →", merchant_room_types_path %>
+            </p>
+          <% else %>
+            <% selected = service.allowed_room_type_ids %>
+            <% @room_types.each do |t| %>
+              <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; padding:4px 0;">
+                <%= check_box_tag "service[room_type_ids][]", t.id, selected.include?(t.id), id: "rt_#{t.id}" %>
+                <%= t.display_name %>
+              </label>
+            <% end %>
+            <div style="font-size:12px; color:var(--ink-2); margin-top:6px;">
+              Không tick gì = phòng nào cũng chạy được.
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="l-panel">
+        <div class="l-eyebrow" style="margin-bottom:12px;">Bán &amp; hoa hồng</div>
+        <div class="l-toggle-row">
+          <div><div style="font-weight:600; font-size:14px;">Đang bán</div></div>
+          <label class="l-switch"><%= f.check_box :active %><span class="knob"></span></label>
+        </div>
+        <div class="l-toggle-row">
+          <div>
+            <div style="font-weight:600; font-size:14px;">Khách đặt online được</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Tắt để chỉ bán tại quầy.</div>
+          </div>
+          <label class="l-switch"><%= f.check_box :online_bookable %><span class="knob"></span></label>
+        </div>
+        <div class="l-toggle-row">
+          <div><div style="font-weight:600; font-size:14px;">Là dịch vụ thêm (addon)</div></div>
+          <label class="l-switch"><%= f.check_box :is_addon %><span class="knob"></span></label>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">
+          <div>
+            <label class="l-label">Hoa hồng riêng (%)</label>
+            <%= f.number_field :commission_percent, class: "l-field", min: 0, max: 100,
+                  placeholder: current_workspace.setting("commission_default_percent") %>
+          </div>
+          <div>
+            <label class="l-label">Điểm thưởng riêng</label>
+            <%= f.number_field :points_earned, class: "l-field", min: 0, placeholder: "theo chi tiêu" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin-top:18px;">
+    <%= f.submit service.persisted? ? "Lưu dịch vụ" : "Thêm dịch vụ", class: "l-btn l-btn-primary" %>
+    <%= link_to "Huỷ", service.persisted? ? merchant_service_path(service) : merchant_services_path, class: "l-btn l-btn-ghost" %>
+  </div>
+<% end %>

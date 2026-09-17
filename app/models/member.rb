@@ -37,6 +37,7 @@ class Member < ApplicationRecord
   has_many :referrals, class_name: "Member", foreign_key: :referred_by_member_id, dependent: :nullify
   has_many :notifications, dependent: :destroy
   has_many :push_subscriptions, dependent: :destroy
+  has_many :bookings, dependent: :nullify
   has_one  :conversation, dependent: :destroy
   has_one_attached :avatar
 

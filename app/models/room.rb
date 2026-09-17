@@ -9,6 +9,7 @@ class Room < ApplicationRecord
   belongs_to :workspace
   belongs_to :branch
   belongs_to :room_type, optional: true
+  has_many :booking_items, dependent: :nullify
 
   validates :name, presence: true
   validates :capacity, numericality: { greater_than: 0 }

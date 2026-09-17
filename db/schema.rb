@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -84,6 +84,102 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
     t.index ["target_type", "target_id"], name: "index_audit_logs_on_target_type_and_target_id"
     t.index ["workspace_id", "created_at"], name: "index_audit_logs_on_workspace_id_and_created_at"
     t.index ["workspace_id"], name: "index_audit_logs_on_workspace_id"
+  end
+
+  create_table "booking_holds", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "branch_id", null: false
+    t.bigint "room_id"
+    t.bigint "staff_member_id"
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at", null: false
+    t.string "token", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["branch_id", "starts_at", "ends_at"], name: "index_booking_holds_on_branch_id_and_starts_at_and_ends_at"
+    t.index ["branch_id"], name: "index_booking_holds_on_branch_id"
+    t.index ["expires_at"], name: "index_booking_holds_on_expires_at"
+    t.index ["room_id"], name: "index_booking_holds_on_room_id"
+    t.index ["staff_member_id"], name: "index_booking_holds_on_staff_member_id"
+    t.index ["token"], name: "index_booking_holds_on_token", unique: true
+    t.index ["workspace_id"], name: "index_booking_holds_on_workspace_id"
+  end
+
+  create_table "booking_items", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "booking_id", null: false
+    t.bigint "service_id", null: false
+    t.bigint "service_variant_id"
+    t.bigint "staff_member_id"
+    t.bigint "room_id"
+    t.bigint "parent_item_id"
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at", null: false
+    t.integer "duration_minutes", null: false
+    t.integer "buffer_minutes", default: 0, null: false
+    t.integer "price", default: 0, null: false
+    t.integer "staff_surcharge", default: 0, null: false
+    t.integer "discount_amount", default: 0, null: false
+    t.string "guest_label"
+    t.string "status", default: "planned", null: false
+    t.bigint "package_credit_id"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_booking_items_on_booking_id"
+    t.index ["parent_item_id"], name: "index_booking_items_on_parent_item_id"
+    t.index ["room_id", "starts_at", "ends_at"], name: "index_booking_items_on_room_id_and_starts_at_and_ends_at"
+    t.index ["room_id"], name: "index_booking_items_on_room_id"
+    t.index ["service_id"], name: "index_booking_items_on_service_id"
+    t.index ["service_variant_id"], name: "index_booking_items_on_service_variant_id"
+    t.index ["staff_member_id", "starts_at", "ends_at"], name: "idx_on_staff_member_id_starts_at_ends_at_98085d8f21"
+    t.index ["staff_member_id"], name: "index_booking_items_on_staff_member_id"
+    t.index ["workspace_id", "starts_at"], name: "index_booking_items_on_workspace_id_and_starts_at"
+    t.index ["workspace_id"], name: "index_booking_items_on_workspace_id"
+  end
+
+  create_table "bookings", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "branch_id", null: false
+    t.bigint "member_id"
+    t.string "code", null: false
+    t.string "guest_name"
+    t.string "guest_phone"
+    t.string "status", default: "pending", null: false
+    t.string "source", default: "staff", null: false
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at", null: false
+    t.integer "party_size", default: 1, null: false
+    t.string "staff_gender_preference"
+    t.text "note"
+    t.text "internal_note"
+    t.integer "estimated_total", default: 0, null: false
+    t.integer "deposit_amount", default: 0, null: false
+    t.string "deposit_state", default: "none", null: false
+    t.datetime "deposit_paid_at"
+    t.datetime "confirmed_at"
+    t.datetime "checked_in_at"
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.datetime "cancelled_at"
+    t.datetime "no_show_at"
+    t.string "cancel_reason"
+    t.string "cancelled_by"
+    t.bigint "created_by_id"
+    t.datetime "reminder_sent_at"
+    t.datetime "review_requested_at"
+    t.bigint "order_id"
+    t.jsonb "settings", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["branch_id", "starts_at"], name: "index_bookings_on_branch_id_and_starts_at"
+    t.index ["branch_id"], name: "index_bookings_on_branch_id"
+    t.index ["member_id", "starts_at"], name: "index_bookings_on_member_id_and_starts_at"
+    t.index ["member_id"], name: "index_bookings_on_member_id"
+    t.index ["workspace_id", "code"], name: "index_bookings_on_workspace_id_and_code", unique: true
+    t.index ["workspace_id", "status"], name: "index_bookings_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_bookings_on_workspace_id"
   end
 
   create_table "branch_closures", force: :cascade do |t|
@@ -416,6 +512,83 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
     t.index ["workspace_id"], name: "index_rooms_on_workspace_id"
   end
 
+  create_table "service_categories", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "name", null: false
+    t.string "icon"
+    t.string "color"
+    t.integer "position", default: 0, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["workspace_id", "position"], name: "index_service_categories_on_workspace_id_and_position"
+    t.index ["workspace_id"], name: "index_service_categories_on_workspace_id"
+  end
+
+  create_table "service_prices", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "service_id", null: false
+    t.bigint "branch_id", null: false
+    t.bigint "service_variant_id"
+    t.integer "price", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["branch_id"], name: "index_service_prices_on_branch_id"
+    t.index ["service_id", "branch_id", "service_variant_id"], name: "idx_service_price_unique", unique: true
+    t.index ["service_id"], name: "index_service_prices_on_service_id"
+    t.index ["service_variant_id"], name: "index_service_prices_on_service_variant_id"
+    t.index ["workspace_id"], name: "index_service_prices_on_workspace_id"
+  end
+
+  create_table "service_variants", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "service_id", null: false
+    t.string "name", null: false
+    t.integer "duration_minutes", null: false
+    t.integer "price", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_id", "position"], name: "index_service_variants_on_service_id_and_position"
+    t.index ["service_id"], name: "index_service_variants_on_service_id"
+    t.index ["workspace_id"], name: "index_service_variants_on_workspace_id"
+  end
+
+  create_table "services", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "service_category_id"
+    t.string "name", null: false
+    t.string "code"
+    t.string "slug"
+    t.text "description"
+    t.text "prep_notes"
+    t.text "contraindications"
+    t.integer "duration_minutes", default: 60, null: false
+    t.integer "buffer_minutes"
+    t.integer "price", default: 0, null: false
+    t.integer "cost", default: 0, null: false
+    t.boolean "requires_room", default: true, null: false
+    t.boolean "requires_staff", default: true, null: false
+    t.integer "staff_count", default: 1, null: false
+    t.jsonb "room_type_ids", default: [], null: false
+    t.boolean "is_addon", default: false, null: false
+    t.boolean "online_bookable", default: true, null: false
+    t.boolean "active", default: true, null: false
+    t.boolean "deposit_required", default: false, null: false
+    t.integer "deposit_amount"
+    t.integer "commission_percent"
+    t.integer "points_earned"
+    t.integer "position", default: 0, null: false
+    t.jsonb "settings", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_category_id"], name: "index_services_on_service_category_id"
+    t.index ["workspace_id", "active"], name: "index_services_on_workspace_id_and_active"
+    t.index ["workspace_id", "slug"], name: "index_services_on_workspace_id_and_slug"
+    t.index ["workspace_id"], name: "index_services_on_workspace_id"
+  end
+
   create_table "shift_templates", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.bigint "staff_member_id", null: false
@@ -493,6 +666,19 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
     t.index ["workspace_id"], name: "index_staff_members_on_workspace_id"
   end
 
+  create_table "staff_services", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "staff_member_id", null: false
+    t.bigint "service_id", null: false
+    t.integer "proficiency", default: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_id"], name: "index_staff_services_on_service_id"
+    t.index ["staff_member_id", "service_id"], name: "idx_staff_service_unique", unique: true
+    t.index ["staff_member_id"], name: "index_staff_services_on_staff_member_id"
+    t.index ["workspace_id"], name: "index_staff_services_on_workspace_id"
+  end
+
   create_table "staff_shifts", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.bigint "staff_member_id", null: false
@@ -560,6 +746,19 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_logs", "workspaces"
+  add_foreign_key "booking_holds", "branches"
+  add_foreign_key "booking_holds", "rooms"
+  add_foreign_key "booking_holds", "staff_members"
+  add_foreign_key "booking_holds", "workspaces"
+  add_foreign_key "booking_items", "bookings"
+  add_foreign_key "booking_items", "rooms"
+  add_foreign_key "booking_items", "service_variants"
+  add_foreign_key "booking_items", "services"
+  add_foreign_key "booking_items", "staff_members"
+  add_foreign_key "booking_items", "workspaces"
+  add_foreign_key "bookings", "branches"
+  add_foreign_key "bookings", "members"
+  add_foreign_key "bookings", "workspaces"
   add_foreign_key "branch_closures", "branches"
   add_foreign_key "branch_closures", "workspaces"
   add_foreign_key "branch_hours", "branches"
@@ -592,6 +791,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
   add_foreign_key "rooms", "branches"
   add_foreign_key "rooms", "room_types"
   add_foreign_key "rooms", "workspaces"
+  add_foreign_key "service_categories", "workspaces"
+  add_foreign_key "service_prices", "branches"
+  add_foreign_key "service_prices", "service_variants"
+  add_foreign_key "service_prices", "services"
+  add_foreign_key "service_prices", "workspaces"
+  add_foreign_key "service_variants", "services"
+  add_foreign_key "service_variants", "workspaces"
+  add_foreign_key "services", "service_categories"
+  add_foreign_key "services", "workspaces"
   add_foreign_key "shift_templates", "branches"
   add_foreign_key "shift_templates", "staff_members"
   add_foreign_key "shift_templates", "workspaces"
@@ -603,6 +811,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_020244) do
   add_foreign_key "staff_members", "staff_levels"
   add_foreign_key "staff_members", "users"
   add_foreign_key "staff_members", "workspaces"
+  add_foreign_key "staff_services", "services"
+  add_foreign_key "staff_services", "staff_members"
+  add_foreign_key "staff_services", "workspaces"
   add_foreign_key "staff_shifts", "branches"
   add_foreign_key "staff_shifts", "staff_members"
   add_foreign_key "staff_shifts", "workspaces"

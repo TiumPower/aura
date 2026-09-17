@@ -1,0 +1,133 @@
+<% content_for :title, @service.name %>
+<% s = @service %>
+
+<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:18px;">
+  <div style="flex:1; min-width:240px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;"><%= s.name %></h2>
+      <% unless s.active %><span class="l-pill" style="--_c:#8A8078;">Ngưng bán</span><% end %>
+      <% if s.is_addon? %><span class="l-chip">Addon</span><% end %>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">
+      <%= s.service_category&.name || "Chưa phân nhóm" %> ·
+      <%= s.duration_label %> · <%= s.price_label %>
+      <%= " · dọn #{s.buffer_for}′" %>
+    </div>
+  </div>
+  <% if current_membership&.can_manage? %>
+    <div style="display:flex; gap:8px;">
+      <%= link_to "Sửa", edit_merchant_service_path(s), class: "l-btn l-btn-primary" %>
+      <% if s.active %>
+        <%= button_to "Ngưng bán", archive_merchant_service_path(s), method: :patch, class: "l-btn l-btn-ghost",
+              form: { data: { turbo_confirm: "Ngưng bán #{s.name}? Lịch sử vẫn được giữ." } } %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;">
+  <div>
+    <%# ---- Biến thể ---- %>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div class="l-section-h" style="margin:0 0 6px;"><h3>Biến thể thời lượng</h3></div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+        "60′ / 90′ / 120′" là <strong>một</strong> dịch vụ với ba biến thể — tách thành ba dịch vụ thì báo cáo bị vụn.
+        Khi đã có biến thể thì khách <strong>chỉ chọn được biến thể</strong>; mốc gốc
+        (<%= s.duration_label %> · <%= s.price_label %>) chỉ còn là giá trị mặc định.
+      </p>
+      <% if @variants.any? && @variants.none? { |v| v.duration_minutes == s.duration_minutes } %>
+        <div style="background:#fdf3e8; border:1px solid #f0dcc0; border-radius:12px; padding:10px 12px;
+                    font-size:12.5px; line-height:1.5; margin-bottom:10px;">
+          ⚠️ Mốc <strong><%= s.duration_label %></strong> hiện <strong>không bán được</strong> vì chưa có biến thể tương ứng.
+          Thêm một biến thể <%= s.duration_minutes %>′ nếu spa vẫn muốn bán mốc này.
+        </div>
+      <% end %>
+      <% if @variants.any? %>
+        <% @variants.each do |v| %>
+          <div style="display:flex; align-items:center; gap:8px; padding:9px 0; border-top:1px solid var(--line);">
+            <strong style="font-size:14px; flex:1;"><%= v.name %></strong>
+            <span style="font-size:13px; color:var(--ink-2);"><%= v.duration_minutes %>′</span>
+            <span style="font-weight:700; font-variant-numeric:tabular-nums;"><%= vnd(v.price) %></span>
+            <%= button_to "✕", merchant_service_service_variant_path(s, v), method: :delete,
+                  class: "l-chip", form: { style: "display:inline;" } %>
+          </div>
+        <% end %>
+      <% else %>
+        <p style="font-size:13px; color:var(--ink-2);">Chưa có biến thể — dịch vụ bán theo đúng <%= s.duration_label %> / <%= s.price_label %>.</p>
+      <% end %>
+
+      <% if current_membership&.can_manage? %>
+        <%= form_with model: @new_variant, url: merchant_service_service_variants_path(s), method: :post,
+              style: "display:grid; grid-template-columns:1.2fr .8fr 1fr auto; gap:8px; align-items:end; margin-top:14px;" do |f| %>
+          <div>
+            <label class="l-label">Tên</label>
+            <%= f.text_field :name, class: "l-field", placeholder: "90′" %>
+          </div>
+          <div>
+            <label class="l-label">Phút</label>
+            <%= f.number_field :duration_minutes, class: "l-field", min: 5, step: 5, value: 90 %>
+          </div>
+          <div>
+            <label class="l-label">Giá</label>
+            <%= f.number_field :price, class: "l-field", min: 0, step: 10_000, value: s.price %>
+          </div>
+          <%= f.submit "Thêm", class: "l-btn l-btn-primary" %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# ---- Cách xếp lịch ---- %>
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Cách engine xếp dịch vụ này</div>
+      <div style="font-size:13.5px; line-height:1.9;">
+        <div><span style="color:var(--ink-2);">Chiếm phòng:</span>
+          <%= s.requires_room? ? "có" : "không" %>
+          <% if s.requires_room? %>
+            — <%= s.any_room? ? "loại phòng nào cũng được" :
+                  current_workspace.room_types.where(id: s.allowed_room_type_ids).pluck(:name).join(", ") %>
+          <% end %>
+        </div>
+        <div><span style="color:var(--ink-2);">Cần KTV:</span>
+          <%= s.requires_staff? ? "#{s.staff_count} người" : "không" %></div>
+        <div><span style="color:var(--ink-2);">Dọn phòng sau:</span> <%= s.buffer_for %> phút</div>
+        <div><span style="color:var(--ink-2);">Khách đặt online:</span> <%= s.online_bookable? ? "được" : "không" %></div>
+        <div><span style="color:var(--ink-2);">Hoa hồng KTV:</span> <%= s.commission_percent.presence || current_workspace.setting("commission_default_percent") %>%</div>
+        <div><span style="color:var(--ink-2);">Lãi gộp mỗi lượt:</span> <%= vnd(s.price - s.cost) %></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <%# ---- Kỹ năng KTV ---- %>
+    <div class="l-panel">
+      <div class="l-section-h" style="margin:0 0 6px;"><h3>KTV làm được dịch vụ này</h3></div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+        Không tick ai = <strong>mọi KTV</strong> đều làm được. Chỉ khai khi dịch vụ đòi tay nghề riêng —
+        khai nửa vời sẽ làm engine không tìm được người và khách thấy "hết chỗ".
+      </p>
+      <% if @staff.empty? %>
+        <p style="font-size:13px; color:var(--ink-2);">Chưa có KTV nào.</p>
+      <% else %>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <% @staff.each do |st| %>
+            <%= link_to merchant_staff_path(st), class: "l-chip #{'l-chip-brand' if @skilled_ids.include?(st.id)}",
+                  style: "text-decoration:none;" do %>
+              <%= st.display_name %>
+              <%= "✓" if @skilled_ids.include?(st.id) %>
+            <% end %>
+          <% end %>
+        </div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-top:10px;">
+          Khai kỹ năng ở trang từng KTV (mục “Kỹ năng”).
+        </p>
+      <% end %>
+    </div>
+
+    <% if s.contraindications.present? %>
+      <div class="l-panel" style="margin-top:16px; background:#fdf3e8; border-color:#f0dcc0;">
+        <div style="font-weight:700; font-size:14px;">⚠️ Chống chỉ định</div>
+        <div style="font-size:13.5px; margin-top:6px; line-height:1.55;"><%= simple_format s.contraindications %></div>
+      </div>
+    <% end %>
+  </div>
+</div>

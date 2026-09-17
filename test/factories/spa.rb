@@ -65,3 +65,18 @@ FactoryBot.define do
     spent_on { Date.current }
   end
 end
+
+FactoryBot.define do
+  factory :service_category do
+    workspace
+    sequence(:name) { |n| "Nhóm #{n}" }
+  end
+
+  factory :service do
+    workspace
+    sequence(:name) { |n| "Dịch vụ #{n}" }
+    duration_minutes { 60 }
+    price { 400_000 }
+    active { true }
+  end
+end

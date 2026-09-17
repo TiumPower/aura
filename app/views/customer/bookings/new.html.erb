@@ -1,0 +1,262 @@
+<% content_for :tab, "book" %>
+<% content_for :title, "Đặt lịch" %>
+<%= render "customer/shared/appbar", title: "Đặt lịch", back: member_root_path %>
+
+<style>
+  .bk-steps { display:flex; gap:6px; padding:0 16px 12px; }
+  .bk-steps div { flex:1; height:4px; border-radius:999px; background:var(--surface-2); }
+  .bk-steps div.on { background:var(--primary); }
+  .bk-svc { display:flex; gap:12px; align-items:center; text-decoration:none; color:inherit; }
+  .bk-days { display:flex; gap:8px; overflow-x:auto; padding:2px 16px 4px; margin:0 -16px; }
+  .bk-day { flex:none; min-width:62px; text-align:center; padding:9px 4px; border-radius:14px;
+    border:1px solid var(--line); background:#fff; text-decoration:none; color:inherit; }
+  .bk-day.on { background:var(--primary); color:var(--on-primary); border-color:var(--primary); }
+  .bk-day .d { font-size:11px; opacity:.8; }
+  .bk-day .n { font-family:var(--font-display); font-size:19px; font-weight:700; line-height:1.1; }
+  .bk-times { display:grid; grid-template-columns:repeat(auto-fill,minmax(78px,1fr)); gap:8px; }
+  .bk-time { text-align:center; padding:11px 4px; border-radius:12px; border:1px solid var(--line);
+    background:#fff; font-weight:700; font-size:14px; text-decoration:none; color:inherit;
+    font-variant-numeric:tabular-nums; }
+  .bk-time.on { background:var(--primary); color:var(--on-primary); border-color:var(--primary); }
+  .bk-staff { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+  .bk-st { flex:none; width:82px; text-align:center; text-decoration:none; color:inherit;
+    border:1px solid var(--line); border-radius:14px; padding:10px 6px; background:#fff; }
+  .bk-st.on { border-color:var(--primary); box-shadow:0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent); }
+  .bk-st .av { width:40px; height:40px; border-radius:12px; margin:0 auto 6px; display:grid; place-items:center;
+    color:#fff; font-weight:700; font-size:14px; }
+  .bk-st .nm { font-size:11.5px; font-weight:600; line-height:1.25; }
+</style>
+
+<% if @blocked %>
+  <div class="l-screen">
+    <div class="l-tile" style="text-align:center; padding:34px 18px;">
+      <div style="font-size:40px;">🔒</div>
+      <p style="font-weight:700; margin-top:10px;">Tài khoản đang tạm không đặt online được</p>
+      <p style="font-size:13.5px; color:var(--ink-2); margin-top:6px;">
+        Vui lòng gọi trực tiếp cho spa để được xếp lịch.
+      </p>
+      <% if current_workspace.contact_phone.present? %>
+        <%= link_to "☎ Gọi spa", "tel:#{current_workspace.contact_phone}", class: "l-btn l-btn-primary", style: "margin-top:14px;" %>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="bk-steps">
+    <div class="on"></div>
+    <div class="<%= 'on' if %w[time confirm].include?(@step) %>"></div>
+    <div class="<%= 'on' if @step == 'confirm' %>"></div>
+  </div>
+
+  <div class="l-screen">
+    <%# ---- Chọn cơ sở ---- %>
+    <% if @branches.size > 1 %>
+      <div class="l-label">Cơ sở</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+        <% @branches.each do |b| %>
+          <%= link_to member_new_booking_path(branch_id: b.id, service_id: @service&.id),
+                class: "l-chip #{'l-chip-brand' if b.id == @branch.id}", style: "text-decoration:none;" do %>
+            <%= b.name %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# ---- BƯỚC 1: dịch vụ ---- %>
+    <% if @step == "service" %>
+      <h2 class="l-display" style="font-size:21px; margin-bottom:4px;">Chọn dịch vụ</h2>
+      <p style="font-size:13px; color:var(--ink-2); margin-bottom:14px;">
+        Giá và thời lượng đã gồm thời gian nghỉ ngơi sau buổi.
+      </p>
+      <% if @services.empty? %>
+        <div class="l-tile" style="text-align:center; padding:30px;">
+          <p style="font-weight:600;">Spa chưa mở dịch vụ nào cho đặt online.</p>
+          <% if current_workspace.contact_phone.present? %>
+            <%= link_to "☎ Gọi spa", "tel:#{current_workspace.contact_phone}", class: "l-btn l-btn-primary", style: "margin-top:12px;" %>
+          <% end %>
+        </div>
+      <% end %>
+      <% @services.group_by(&:service_category).each do |cat, list| %>
+        <% if cat %><div class="l-section-h"><h3><%= cat.display_name %></h3></div><% end %>
+        <% list.each do |s| %>
+          <div class="l-tile" style="margin-bottom:10px;">
+            <div style="font-weight:700; font-size:15px;"><%= s.name %></div>
+            <% if s.description.present? %>
+              <div style="font-size:12.5px; color:var(--ink-2); margin-top:4px; line-height:1.5;"><%= s.description.truncate(110) %></div>
+            <% end %>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+              <% s.variant_options(branch: @branch).each do |(variant, mins, price)| %>
+                <%= link_to member_new_booking_path(branch_id: @branch.id, service_id: s.id,
+                              service_variant_id: variant&.id),
+                      class: "l-chip l-chip-brand", style: "text-decoration:none;" do %>
+                  <%= mins %>′ · <%= vnd(price) %>
+                <% end %>
+              <% end %>
+            </div>
+            <% if s.contraindications.present? %>
+              <details style="margin-top:10px;">
+                <summary style="cursor:pointer; font-size:12.5px; color:var(--ink-2);">Ai không nên làm dịch vụ này?</summary>
+                <p style="font-size:12.5px; color:var(--ink-2); margin-top:6px; line-height:1.5;"><%= s.contraindications %></p>
+              </details>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
+    <%# ---- BƯỚC 2: ngày & giờ ---- %>
+    <% else %>
+      <% base = { branch_id: @branch.id, service_id: @service.id, service_variant_id: @variant&.id,
+                  staff_member_id: @chosen_staff&.id, gender: @gender, addon_ids: params[:addon_ids] } %>
+      <div class="l-tile" style="margin-bottom:14px;">
+        <div style="font-weight:700; font-size:15px;"><%= @service.name %></div>
+        <div style="font-size:13px; color:var(--ink-2); margin-top:3px;">
+          <%= @variant ? "#{@variant.name} · #{@variant.duration_minutes}′" : @service.duration_label %>
+          · <%= vnd(@service.price_for(@variant, branch: @branch)) %>
+        </div>
+        <%= link_to "Đổi dịch vụ", member_new_booking_path(branch_id: @branch.id),
+              style: "font-size:13px; font-weight:600; color:var(--primary-ink); text-decoration:none; display:inline-block; margin-top:8px;" %>
+      </div>
+
+      <%# KTV %>
+      <% if @staff.any? %>
+        <div class="l-label">Chọn <%= current_workspace.branding_value("staff_term") %> (không chọn cũng được)</div>
+        <div class="bk-staff" style="margin-bottom:14px;">
+          <%= link_to member_new_booking_path(base.merge(staff_member_id: nil, date: @date)),
+                class: "bk-st #{'on' unless @chosen_staff}" do %>
+            <div class="av" style="background:var(--surface-2); color:var(--ink-2);">★</div>
+            <div class="nm">Spa tự xếp</div>
+          <% end %>
+          <% @staff.each do |st| %>
+            <%= link_to member_new_booking_path(base.merge(staff_member_id: st.id, date: @date)),
+                  class: "bk-st #{'on' if @chosen_staff&.id == st.id}" do %>
+              <div class="av" style="background:<%= st.color %>;"><%= st.initials %></div>
+              <div class="nm"><%= st.nickname.presence || st.name.split.last %></div>
+              <% if st.surcharge.positive? %>
+                <div style="font-size:10.5px; color:var(--ink-2); margin-top:2px;">+<%= number_to_human(st.surcharge, units: { thousand: "k" }) %></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      <% elsif @branch.setting?("allow_gender_preference") && @service.requires_staff? %>
+        <div class="l-label">Bạn muốn <%= current_workspace.branding_value("staff_term") %></div>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <% [["Không yêu cầu", nil], ["Nữ", "Nữ"], ["Nam", "Nam"]].each do |label, val| %>
+            <%= link_to label, member_new_booking_path(base.merge(gender: val, date: @date)),
+                  class: "l-chip #{'l-chip-brand' if @gender == val}", style: "text-decoration:none;" %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Ngày %>
+      <div class="l-label">Ngày</div>
+      <% if @open_days.empty? %>
+        <div class="l-tile" style="text-align:center; padding:26px;">
+          <p style="font-weight:600;">Không còn chỗ trong <%= @branch.setting_i("booking_horizon_days") %> ngày tới</p>
+          <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+            Thử bỏ chọn <%= current_workspace.branding_value("staff_term") %> cụ thể, hoặc gọi cho spa.
+          </p>
+        </div>
+      <% else %>
+        <div class="bk-days">
+          <% @open_days.each do |d| %>
+            <%= link_to member_new_booking_path(base.merge(date: d.to_s)), class: "bk-day #{'on' if d == @date}" do %>
+              <div class="d"><%= d == Date.current ? "Hôm nay" : Branch.weekday_short(d.wday) %></div>
+              <div class="n"><%= d.day %></div>
+              <div class="d"><%= "th#{d.month}" %></div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="l-label" style="margin-top:16px;">Giờ</div>
+        <% if @slots.empty? %>
+          <p style="font-size:13.5px; color:var(--ink-2);">Ngày này đã kín — chọn ngày khác nhé.</p>
+        <% else %>
+          <div class="bk-times">
+            <% @slots.each do |slot| %>
+              <%= link_to slot.label,
+                    member_new_booking_path(base.merge(date: @date.to_s, time: slot.label)),
+                    class: "bk-time #{'on' if @chosen_slot && @chosen_slot.label == slot.label}" %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
+      <%# ---- BƯỚC 3: xác nhận ---- %>
+      <% if @step == "confirm" && @chosen_slot %>
+        <div class="l-tile" style="margin-top:18px; border-color:color-mix(in srgb, var(--primary) 40%, var(--line));">
+          <div class="l-eyebrow">Xác nhận lịch hẹn</div>
+          <div style="font-size:15px; font-weight:700; margin-top:8px;">
+            <%= l(@date, format: "%A, %d/%m") %> · <%= @chosen_slot.label %>
+          </div>
+          <div style="font-size:13.5px; color:var(--ink-2); margin-top:4px; line-height:1.6;">
+            <%= @service.name %><%= " #{@variant.name}" if @variant %><br>
+            <% if @chosen_staff %><%= current_workspace.branding_value("staff_term") %>: <%= @chosen_staff.display_name %><br><% end %>
+            <%= @branch.name %> · <%= @branch.short_address %>
+          </div>
+
+          <%= form_with url: member_bookings_path, method: :post, style: "margin-top:14px;" do %>
+            <%= hidden_field_tag :branch_id, @branch.id %>
+            <%= hidden_field_tag :service_id, @service.id %>
+            <%= hidden_field_tag :service_variant_id, @variant&.id %>
+            <%= hidden_field_tag :staff_member_id, @chosen_staff&.id %>
+            <%= hidden_field_tag :gender, @gender %>
+            <%= hidden_field_tag :date, @date.to_s %>
+            <%= hidden_field_tag :time, @chosen_slot.label %>
+
+            <% if @addons.any? %>
+              <div class="l-label">Thêm vào buổi này?</div>
+              <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+                <% @addons.each do |a| %>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:13.5px;">
+                    <%= check_box_tag "addon_ids[]", a.id, Array(params[:addon_ids]).include?(a.id.to_s) %>
+                    <span style="flex:1;"><%= a.name %> <span style="color:var(--ink-2);">+<%= a.duration_minutes %>′</span></span>
+                    <strong><%= vnd(a.price) %></strong>
+                  </label>
+                <% end %>
+              </div>
+            <% end %>
+
+            <div style="margin-bottom:12px;">
+              <label class="l-label">Ghi chú cho spa</label>
+              <%= text_area_tag :note, params[:note], class: "l-field", rows: 2,
+                    placeholder: "VD: đau vai phải, nhẹ tay vùng cổ" %>
+            </div>
+
+            <div style="border-top:1px solid var(--line); padding-top:10px; margin-top:4px;">
+              <% Array(@estimate_lines).each do |(label, amount)| %>
+                <div style="display:flex; justify-content:space-between; gap:10px; font-size:13px;
+                            color:<%= amount.negative? ? 'var(--primary-ink)' : 'var(--ink-2)' %>; padding:3px 0;">
+                  <span><%= label %></span>
+                  <span style="font-variant-numeric:tabular-nums; white-space:nowrap;">
+                    <%= amount.negative? ? "−#{vnd(amount.abs)}" : vnd(amount) %>
+                  </span>
+                </div>
+              <% end %>
+              <div style="display:flex; justify-content:space-between; align-items:baseline;
+                          padding-top:9px; margin-top:6px; border-top:1px solid var(--line);">
+                <span style="font-size:13.5px; font-weight:600;">Tạm tính</span>
+                <strong class="l-num" style="font-size:20px;"><%= vnd(@estimate) %></strong>
+              </div>
+              <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+                Thanh toán tại quầy sau buổi. Addon chọn thêm sẽ cộng vào khi tính tiền.
+              </div>
+            </div>
+            <% unless @branch.setting?("auto_confirm_online") %>
+              <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+                Spa sẽ xác nhận lại trước khi lịch có hiệu lực.
+              </div>
+            <% end %>
+            <% if current_workspace.branding_value("booking_note").present? %>
+              <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+                <%= current_workspace.branding_value("booking_note") %>
+              </div>
+            <% end %>
+
+            <%= submit_tag "Đặt lịch", class: "l-btn l-btn-primary l-btn-block" %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <div style="height:90px;"></div>
+  </div>
+<% end %>

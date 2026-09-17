@@ -1,0 +1,46 @@
+<% content_for :title, "Nhóm dịch vụ" %>
+
+<div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
+  <div>
+    <% if @categories.empty? %>
+      <div class="l-panel" style="text-align:center; padding:32px;">
+        <div style="font-size:38px;">🗂️</div>
+        <p style="font-weight:700; margin-top:8px;">Chưa có nhóm nào</p>
+        <% if @presets.any? %>
+          <%= button_to "Nạp #{@presets.size} nhóm gợi ý", seed_presets_merchant_service_categories_path,
+                class: "l-btn l-btn-primary", style: "margin-top:12px;" %>
+        <% end %>
+      </div>
+    <% else %>
+      <% @categories.each do |c| %>
+        <div class="l-row">
+          <div class="ic"><%= c.icon.presence || "🗂️" %></div>
+          <div class="bd">
+            <div class="t"><%= c.name %></div>
+            <div class="s"><%= @counts[c.id].to_i %> dịch vụ</div>
+          </div>
+          <%= link_to "Sửa", edit_merchant_service_category_path(c), class: "l-chip" %>
+        </div>
+      <% end %>
+      <% if @presets.any? %>
+        <%= button_to "Nạp thêm nhóm gợi ý", seed_presets_merchant_service_categories_path,
+              class: "l-btn l-btn-ghost", style: "margin-top:8px;" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Thêm nhóm</div>
+    <%= form_with model: @category, url: merchant_service_categories_path, method: :post do |f| %>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Tên nhóm <span style="color:#e5484d;">*</span></label>
+        <%= f.text_field :name, class: "l-field", placeholder: "VD: Massage trị liệu" %>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Icon</label>
+        <%= f.text_field :icon, class: "l-field", placeholder: "💆" %>
+      </div>
+      <%= f.submit "Thêm nhóm", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+  </div>
+</div>

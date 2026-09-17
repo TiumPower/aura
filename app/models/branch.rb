@@ -16,6 +16,8 @@ class Branch < ApplicationRecord
   has_many :staff_branches, dependent: :destroy
   has_many :staff_members, dependent: :nullify
   has_many :expenses, dependent: :nullify
+  has_many :bookings, dependent: :destroy
+  has_many :service_prices, dependent: :destroy
   has_one_attached :cover
   has_many_attached :photos
 
@@ -81,8 +83,13 @@ class Branch < ApplicationRecord
     end
   end
 
-  WEEKDAY_LABELS = %w[Chủ\ nhật Thứ\ hai Thứ\ ba Thứ\ tư Thứ\ năm Thứ\ sáu Thứ\ bảy].freeze
+  WEEKDAY_LABELS = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"].freeze
+  # Nhãn ngắn cho lưới ngày trên điện thoại. Đừng cắt chuỗi dài bằng `sub` —
+  # "Thứ hai" sẽ thành "Thai".
+  WEEKDAY_SHORT = %w[CN T2 T3 T4 T5 T6 T7].freeze
+
   def self.weekday_label(wd) = WEEKDAY_LABELS[wd.to_i]
+  def self.weekday_short(wd) = WEEKDAY_SHORT[wd.to_i]
 
   private
 

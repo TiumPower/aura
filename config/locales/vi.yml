@@ -905,6 +905,7 @@ vi:
     nav:
       home: "Trang chủ"
       notifications: "Thông báo"
+      bookings: "Lịch hẹn"
       chat: "Nhắn tin"
       me: "Cá nhân"
     session:
@@ -923,6 +924,10 @@ vi:
       dev_code: "Mã của bạn (chế độ thử nghiệm): %{code}"
     home:
       hello: "Xin chào"
+      book_title: "Đặt lịch hẹn"
+      book_body: "Chọn dịch vụ, giờ và %{term} quen của bạn — chỉ những giờ còn chỗ thật mới được hiện."
+      book_cta: "Đặt lịch ngay"
+      next_booking: "Lịch hẹn tới"
       member_since: "Thành viên từ %{date}"
       tier_progress: "Còn %{amount} nữa để lên hạng %{tier}"
       tier_top: "Bạn đang ở hạng cao nhất 🎉"

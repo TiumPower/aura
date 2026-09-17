@@ -1,0 +1,58 @@
+<% content_for :title, "Dịch vụ" %>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+  <%= form_with url: merchant_services_path, method: :get, style: "display:flex; gap:8px;" do %>
+    <%= select_tag :category_id, options_from_collection_for_select(@categories, :id, :name, params[:category_id]),
+          include_blank: "Mọi nhóm", class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
+    <%= hidden_field_tag :addons, params[:addons] %>
+  <% end %>
+  <%= link_to "Dịch vụ chính (#{@counts[:active]})", merchant_services_path,
+        class: "l-chip #{'l-chip-brand' if params[:addons] != '1'}" %>
+  <%= link_to "Addon (#{@counts[:addons]})", merchant_services_path(addons: 1),
+        class: "l-chip #{'l-chip-brand' if params[:addons] == '1'}" %>
+  <%= link_to "Đã ngưng bán (#{@counts[:inactive]})", merchant_services_path(status: "inactive"),
+        class: "l-chip #{'l-chip-brand' if params[:status] == 'inactive'}" %>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <%= link_to "Nhóm dịch vụ", merchant_service_categories_path, class: "l-btn l-btn-ghost" %>
+    <% if current_membership&.can_manage? %>
+      <%= link_to "+ Thêm dịch vụ", new_merchant_service_path(addon: params[:addons]), class: "l-btn l-btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @services.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">💆</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có dịch vụ nào</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 14px; max-width:44ch; margin-inline:auto;">
+      Dịch vụ là bản ghi engine xếp lịch đọc: nó chiếm phòng loại nào, bao lâu,
+      cần mấy KTV. Khai xong mới đặt được lịch.
+    </p>
+    <%= link_to "Tạo dịch vụ đầu tiên", new_merchant_service_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <% @services.group_by(&:service_category).each do |cat, list| %>
+    <div class="l-section-h"><h3><%= cat&.display_name || "Chưa phân nhóm" %></h3></div>
+    <% list.each do |s| %>
+      <%= link_to merchant_service_path(s), class: "l-row" do %>
+        <div class="ic"><%= s.is_addon? ? "➕" : "💆" %></div>
+        <div class="bd">
+          <div class="t">
+            <%= s.name %>
+            <% unless s.active %><span class="l-pill" style="--_c:#8A8078;">Ngưng bán</span><% end %>
+            <% unless s.online_bookable %><span class="l-pill" style="--_c:#B08D57;">Chỉ tại quầy</span><% end %>
+          </div>
+          <div class="s">
+            <%= s.duration_label %> · <%= s.price_label %>
+            <% if s.service_variants.any? %>· <%= s.service_variants.size %> biến thể<% end %>
+            <% if s.requires_staff? %>· <%= s.staff_count %> KTV<% else %>· không cần KTV<% end %>
+            <% if s.requires_room? %>
+              · <%= s.any_room? ? "phòng nào cũng được" : "#{s.allowed_room_type_ids.size} loại phòng" %>
+            <% else %>· không cần phòng<% end %>
+          </div>
+        </div>
+        <div class="go">›</div>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

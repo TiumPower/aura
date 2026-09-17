@@ -862,6 +862,7 @@ en:
     nav:
       home: "Home"
       notifications: "Alerts"
+      bookings: "Bookings"
       chat: "Messages"
       me: "Profile"
     session:
@@ -880,6 +881,10 @@ en:
       dev_code: "Your code (test mode): %{code}"
     home:
       hello: "Hello"
+      book_title: "Book an appointment"
+      book_body: "Pick a service, a time and your usual %{term} — only genuinely free times are shown."
+      book_cta: "Book now"
+      next_booking: "Next appointment"
       member_since: "Member since %{date}"
       tier_progress: "%{amount} more to reach %{tier}"
       tier_top: "You are at the top tier 🎉"

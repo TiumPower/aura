@@ -77,11 +77,35 @@ Rails.application.routes.draw do
       collection { post :seed_presets }
     end
 
+    # ---- Danh mục dịch vụ -------------------------------------------------
+    resources :services do
+      member { patch :archive }
+      resources :service_variants, path: "variants", only: [:create, :destroy]
+    end
+    resources :service_categories, path: "categories", except: [:show] do
+      collection { post :seed_presets }
+    end
+
+    # ---- Lịch hẹn ---------------------------------------------------------
+    get  "calendar", to: "bookings#index", as: :calendar
+    resources :bookings, except: [:index] do
+      member do
+        patch :status
+        patch :reschedule
+        patch :assign
+      end
+      collection do
+        get  :slots        # JSON: giờ còn trống cho form đặt lịch
+        get  :queue        # khách đang chờ / đang làm ở quầy
+      end
+    end
+
     # ---- Nhân sự ----------------------------------------------------------
     resources :staff, controller: "staff_members", except: [:destroy] do
       member do
         patch :archive
         patch :reactivate
+        patch :skills
       end
       resources :shift_templates, path: "shift-templates", only: [:create, :destroy]
     end
@@ -161,6 +185,14 @@ Rails.application.routes.draw do
     post   "chat/messages",     to: "chat#create_message", as: :chat_messages
     patch  "chat/messages/:id", to: "chat#update_message", as: :chat_message
     delete "chat/messages/:id", to: "chat#destroy_message"
+
+    # Đặt lịch: dịch vụ → ngày & giờ → xác nhận
+    get  "dat-lich",           to: "bookings#new",     as: :new_booking
+    get  "dat-lich/gio",       to: "bookings#slots",   as: :booking_slots
+    post "dat-lich",           to: "bookings#create",  as: :bookings
+    get  "lich-hen",           to: "bookings#index",   as: :booking_list
+    get  "lich-hen/:id",       to: "bookings#show",    as: :booking
+    patch "lich-hen/:id/huy",  to: "bookings#cancel",  as: :cancel_booking
 
     get   "toi", to: "profile#show", as: :profile
     patch "toi", to: "profile#update"

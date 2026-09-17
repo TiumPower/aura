@@ -17,6 +17,9 @@ module Customer
         @tiers    = current_workspace.member_tiers.ordered.to_a
         @next_tier = @tiers.find { |t| t.min_spent > @member.total_spent }
         @preferred_staff = @member.preferred_staff
+        @next_booking = @member.bookings.where(status: Booking::LIVE_STATUSES)
+                               .where("bookings.starts_at >= ?", Time.current - 1.hour)
+                               .order(:starts_at).first
         render :show
       end
     end

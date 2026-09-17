@@ -1,0 +1,177 @@
+<% content_for :title, "Lịch hẹn #{@booking.code}" %>
+<% b = @booking %>
+
+<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:18px;">
+  <div style="flex:1; min-width:240px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;"><%= b.customer_name %></h2>
+      <span class="l-pill" style="--_c:<%= b.status_color %>;"><%= b.status_label %></span>
+      <span class="l-chip l-mono"><%= b.code %></span>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">
+      <%= b.date_label %> · <%= b.time_label %> · <%= b.branch.name %>
+      · <%= b.source_label %>
+      <% if b.customer_phone.present? %>
+        · <%= link_to b.customer_phone, "tel:#{b.customer_phone}", style: "color:inherit;" %>
+      <% end %>
+      <% if b.party_size > 1 %> · <%= b.party_size %> khách<% end %>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <% if b.member %>
+      <%= link_to "Hồ sơ khách", merchant_customer_path(b.member), class: "l-btn l-btn-ghost" %>
+    <% end %>
+    <%= link_to "Về lịch ngày", merchant_calendar_path(date: b.starts_at.to_date), class: "l-btn l-btn-ghost" %>
+  </div>
+</div>
+
+<%# ---- Hành động theo trạng thái ---- %>
+<div class="l-panel" style="margin-bottom:16px;">
+  <div class="l-eyebrow" style="margin-bottom:10px;">Thao tác quầy</div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <% [["confirmed", "Xác nhận lịch", true], ["checked_in", "Khách đã đến", true],
+        ["in_progress", "Bắt đầu làm", true], ["completed", "Hoàn thành", true]].each do |target, label, primary| %>
+      <% if b.can_transition_to?(target) %>
+        <%= button_to label, status_merchant_booking_path(b, value: target), method: :patch,
+              class: "l-btn #{primary ? 'l-btn-primary' : 'l-btn-ghost'}", form: { style: "display:inline;" } %>
+      <% end %>
+    <% end %>
+    <% if b.can_transition_to?("no_show") %>
+      <%= button_to "Khách không đến", status_merchant_booking_path(b, value: "no_show"), method: :patch,
+            class: "l-btn l-btn-ghost", style: "color:#B4402F;",
+            form: { style: "display:inline;", data: { turbo_confirm: "Đánh dấu khách không đến? Số lần bỏ hẹn của khách sẽ tăng và có thể bị chặn đặt online." } } %>
+    <% end %>
+  </div>
+  <% if b.can_transition_to?("cancelled") %>
+    <%= form_with url: status_merchant_booking_path(b, value: "cancelled"), method: :patch,
+          style: "display:flex; gap:8px; margin-top:12px; max-width:520px;" do %>
+      <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do huỷ (khách đổi ý, spa hết chỗ…)" %>
+      <%= submit_tag "Huỷ lịch", class: "l-btn l-btn-ghost", style: "color:#B4402F; white-space:nowrap;",
+            data: { turbo_confirm: "Huỷ lịch hẹn này?" } %>
+    <% end %>
+  <% end %>
+  <% if b.late? %>
+    <p style="font-size:13px; color:#B4402F; font-weight:600; margin-top:10px;">
+      ⏰ Khách đã quá giờ hẹn <%= b.late_minutes %> phút.
+    </p>
+  <% end %>
+</div>
+
+<div style="display:grid; grid-template-columns:1.2fr .8fr; gap:18px; align-items:start;">
+  <div>
+    <%# ---- Các lượt dịch vụ ---- %>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div class="l-section-h" style="margin:0 0 10px;">
+        <h3>Nội dung buổi</h3>
+        <strong style="font-size:15px;"><%= vnd(b.estimated_total) %></strong>
+      </div>
+      <% @items.each do |item| %>
+        <div style="border-top:1px solid var(--line); padding:12px 0;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <strong style="font-size:14.5px;"><%= item.service_label %></strong>
+            <% if item.parent_item_id %><span class="l-chip">addon</span><% end %>
+            <span class="l-pill" style="--_c:<%= item.cancelled? ? '#B4402F' : '#3F7A57' %>;"><%= item.status_label %></span>
+            <span style="margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums;"><%= vnd(item.total) %></span>
+          </div>
+          <div style="font-size:13px; color:var(--ink-2); margin-top:4px;">
+            <%= item.time_label %> (<%= item.duration_minutes %>′<%= ", dọn #{item.buffer_minutes}′" if item.buffer_minutes.to_i.positive? %>)
+            · <%= item.guest_label %>
+            · <%= item.room&.display_name || "chưa có phòng" %>
+            · <%= item.staff_member&.display_name || "chưa gán KTV" %>
+            <%= " · phụ thu #{vnd(item.staff_surcharge)}" if item.staff_surcharge.to_i.positive? %>
+          </div>
+
+          <% unless b.finished? %>
+            <%= form_with url: assign_merchant_booking_path(b), method: :patch,
+                  style: "display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;" do %>
+              <%= hidden_field_tag :item_id, item.id %>
+              <%= select_tag :staff_member_id,
+                    options_from_collection_for_select(@staff, :id, :display_name, item.staff_member_id),
+                    include_blank: "— KTV —", class: "l-field", style: "width:auto; padding:8px 11px;" %>
+              <%= select_tag :room_id,
+                    options_from_collection_for_select(@rooms, :id, :display_name, item.room_id),
+                    include_blank: "— Phòng —", class: "l-field", style: "width:auto; padding:8px 11px;" %>
+              <%= submit_tag "Gán", class: "l-btn l-btn-ghost", style: "padding:8px 14px;" %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# ---- Đổi giờ ---- %>
+    <% unless b.finished? %>
+      <div class="l-panel">
+        <div class="l-eyebrow" style="margin-bottom:10px;">Đổi giờ hẹn</div>
+        <%= form_with url: reschedule_merchant_booking_path(b), method: :patch,
+              style: "display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;" do %>
+          <div>
+            <label class="l-label">Ngày</label>
+            <%= date_field_tag :date, b.starts_at.to_date.to_s, class: "l-field" %>
+          </div>
+          <div>
+            <label class="l-label">Giờ bắt đầu</label>
+            <%= time_field_tag :time, b.starts_at.strftime("%H:%M"), class: "l-field" %>
+          </div>
+          <%= submit_tag "Đổi giờ", class: "l-btn l-btn-primary" %>
+        <% end %>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-top:10px;">
+          Cả khối giờ được dịch cùng nhau. Nếu phòng hoặc KTV đã có khách ở giờ mới, hệ thống sẽ từ chối và nói rõ vướng ai.
+        </p>
+      </div>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Thông tin</div>
+      <div style="font-size:13.5px; line-height:1.9;">
+        <div><span style="color:var(--ink-2);">Mã hẹn:</span> <strong class="l-mono"><%= b.code %></strong></div>
+        <div><span style="color:var(--ink-2);">Nguồn:</span> <%= b.source_label %></div>
+        <div><span style="color:var(--ink-2);">Tạo lúc:</span> <%= l(b.created_at, format: "%H:%M %d/%m/%Y") %></div>
+        <% if b.confirmed_at %><div><span style="color:var(--ink-2);">Xác nhận:</span> <%= l(b.confirmed_at, format: "%H:%M %d/%m") %></div><% end %>
+        <% if b.checked_in_at %><div><span style="color:var(--ink-2);">Khách đến:</span> <%= l(b.checked_in_at, format: "%H:%M") %></div><% end %>
+        <% if b.completed_at %><div><span style="color:var(--ink-2);">Xong lúc:</span> <%= l(b.completed_at, format: "%H:%M") %></div><% end %>
+        <% if b.cancelled_at %>
+          <div><span style="color:var(--ink-2);">Huỷ lúc:</span> <%= l(b.cancelled_at, format: "%H:%M %d/%m") %>
+            <%= " (#{b.cancelled_by})" if b.cancelled_by %></div>
+          <% if b.cancel_reason.present? %><div><span style="color:var(--ink-2);">Lý do:</span> <%= b.cancel_reason %></div><% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if b.member&.health_notes.present? %>
+      <div class="l-panel" style="margin-bottom:16px; background:#fdf3e8; border-color:#f0dcc0;">
+        <div style="font-weight:700; font-size:14px;">⚠️ Lưu ý sức khoẻ của khách</div>
+        <div style="font-size:13.5px; margin-top:6px; line-height:1.55;"><%= b.member.health_notes %></div>
+      </div>
+    <% end %>
+
+    <% if b.member && b.member.preferences.any? %>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:8px;">Sở thích của khách</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <% Member::PREFERENCE_FIELDS.each do |key, cfg| %>
+            <% val = b.member.preference(key) %>
+            <% next if val.blank? %>
+            <span class="l-chip"><%= cfg[:label] %>: <strong><%= val %></strong></span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Ghi chú</div>
+      <%= form_with model: b, url: merchant_booking_path(b), method: :patch do |f| %>
+        <div style="margin-bottom:10px;">
+          <label class="l-label">Khách nhắn</label>
+          <%= f.text_area :note, class: "l-field", rows: 2 %>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label class="l-label">Ghi chú nội bộ</label>
+          <%= f.text_area :internal_note, class: "l-field", rows: 2 %>
+        </div>
+        <%= f.submit "Lưu ghi chú", class: "l-btn l-btn-ghost l-btn-block" %>
+      <% end %>
+    </div>
+  </div>
+</div>

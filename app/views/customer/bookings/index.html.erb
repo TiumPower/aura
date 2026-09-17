@@ -1,0 +1,47 @@
+<% content_for :tab, "book" %>
+<% content_for :title, "Lịch hẹn của tôi" %>
+<%= render "customer/shared/appbar", title: "Lịch hẹn của tôi", back: member_root_path %>
+
+<div class="l-screen">
+  <%= link_to "+ Đặt lịch mới", member_new_booking_path, class: "l-btn l-btn-primary l-btn-block", style: "margin-bottom:16px;" %>
+
+  <% if @upcoming.any? %>
+    <div class="l-section-h"><h3>Sắp tới</h3></div>
+    <% @upcoming.each do |b| %>
+      <%= link_to member_booking_path(id: b.id), class: "l-tile", style: "display:block; margin-bottom:10px; text-decoration:none; color:inherit;" do %>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:15px;"><%= b.date_label %> · <%= b.starts_at.strftime("%H:%M") %></div>
+            <div style="font-size:13px; color:var(--ink-2); margin-top:3px;"><%= b.service_summary %></div>
+          </div>
+          <span class="l-pill" style="--_c:<%= b.status_color %>;"><%= b.status_label %></span>
+        </div>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-top:8px;">
+          <%= b.branch.name %> · <%= b.staff_summary %>
+        </div>
+      <% end %>
+    <% end %>
+  <% else %>
+    <div class="l-tile" style="text-align:center; padding:32px 18px;">
+      <div style="font-size:38px;">🌿</div>
+      <p style="font-weight:700; margin-top:8px;">Bạn chưa có lịch hẹn nào</p>
+      <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">Đặt trước để chọn được giờ và KTV mình thích.</p>
+    </div>
+  <% end %>
+
+  <% if @past.any? %>
+    <div class="l-section-h" style="margin-top:22px;"><h3>Đã qua</h3></div>
+    <% @past.each do |b| %>
+      <%= link_to member_booking_path(id: b.id), class: "l-row", style: "opacity:.92;" do %>
+        <div class="ic" style="font-size:16px;"><%= b.completed? ? "✓" : (b.cancelled? ? "✕" : "·") %></div>
+        <div class="bd">
+          <div class="t"><%= b.date_label %> · <%= b.starts_at.strftime("%H:%M") %></div>
+          <div class="s"><%= b.service_summary.truncate(44) %> · <%= b.status_label %></div>
+        </div>
+        <div class="go">›</div>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <div style="height:90px;"></div>
+</div>

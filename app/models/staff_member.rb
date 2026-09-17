@@ -26,6 +26,9 @@ class StaffMember < ApplicationRecord
   has_many :staff_branches, dependent: :destroy
   has_many :branches, through: :staff_branches
   has_many :staff_shifts, dependent: :destroy
+  has_many :staff_services, dependent: :destroy
+  has_many :services, through: :staff_services
+  has_many :booking_items, dependent: :nullify
   has_many :shift_templates, dependent: :destroy
   has_one_attached :avatar
 

@@ -1,0 +1,34 @@
+<% content_for :title, "Sửa lịch hẹn #{@booking.code}" %>
+<%= form_with model: @booking, url: merchant_booking_path(@booking), method: :patch do |f| %>
+  <div class="l-panel" style="max-width:620px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+      <div>
+        <label class="l-label">Tên khách lẻ</label>
+        <%= f.text_field :guest_name, class: "l-field" %>
+      </div>
+      <div>
+        <label class="l-label">SĐT khách lẻ</label>
+        <%= f.telephone_field :guest_phone, class: "l-field" %>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="l-label">Số khách</label>
+      <%= f.number_field :party_size, class: "l-field", min: 1 %>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="l-label">Khách nhắn</label>
+      <%= f.text_area :note, class: "l-field", rows: 2 %>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="l-label">Ghi chú nội bộ</label>
+      <%= f.text_area :internal_note, class: "l-field", rows: 2 %>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <%= f.submit "Lưu", class: "l-btn l-btn-primary" %>
+      <%= link_to "Huỷ", merchant_booking_path(@booking), class: "l-btn l-btn-ghost" %>
+      <%= button_to "Xoá lịch hẹn", merchant_booking_path(@booking), method: :delete, class: "l-btn l-btn-ghost",
+            style: "margin-left:auto; color:#B4402F;",
+            form: { data: { turbo_confirm: "Xoá hẳn lịch hẹn này? Nên HUỶ thay vì xoá để giữ lịch sử." } } %>
+    </div>
+  </div>
+<% end %>

@@ -3,8 +3,8 @@
 <% nav = defined?(nav_key) ? nav_key : nil %>
 <nav class="l-mtab">
   <div class="l-mtab-inner">
-    <%= link_to merchant_shifts_path, class: ("active" if nav == :shifts) do %>
-      <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Ca làm</span>
+    <%= link_to merchant_calendar_path, class: ("active" if nav == :calendar) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Lịch hẹn</span>
     <% end %>
     <%= link_to merchant_customers_path, class: ("active" if nav == :customers) do %>
       <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Khách</span>
@@ -18,7 +18,7 @@
         <%= render "layouts/staff_chat_badge", count: chat_unread_count %>
       </span><span>Chat</span>
     <% end %>
-    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :payment, :settings, :billing, :audit, :branches, :staff, :rooms, :expenses].include?(nav)) do %>
+    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :payment, :settings, :billing, :audit, :branches, :staff, :rooms, :expenses, :services, :shifts].include?(nav)) do %>
       <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Cá nhân</span>
     <% end %>
   </div>
