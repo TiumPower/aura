@@ -798,11 +798,11 @@ en:
       sort_label: "Sort"
     plans:
       starter:
-        features: ["1 building · up to 20 units", "Automatic bills & reminders", "E-contracts + deposit settlement", "AI meter photo reading", "Tenant app (PWA)"]
+        features: ["1 branch · 8 staff · 8 rooms", "Online booking + guest app", "Checkout & treatment packages", "Therapist commissions", "Chat and push notifications"]
       pro:
-        features: ["5 buildings · up to 100 units", "Everything in Starter", "Staff & permissions", "Chat and push notifications", "List vacancies on the marketplace"]
+        features: ["3 branches · 30 staff", "Everything in Starter", "Stock & consumables", "Treatment records + progress photos", "Room & therapist performance reports"]
       business:
-        features: ["Unlimited buildings and units", "Everything in Pro", "Custom domain", "Priority support"]
+        features: ["Unlimited branches / staff", "Everything in Pro", "Custom domain", "Per-branch reporting", "Priority support & training"]
     reward_units:
       vnd_label: "Value (đ)"
       percent_label: "Value (%)"
@@ -863,6 +863,7 @@ en:
       home: "Home"
       notifications: "Alerts"
       bookings: "Bookings"
+      wallet: "Cards"
       chat: "Messages"
       me: "Profile"
     session:

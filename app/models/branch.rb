@@ -17,6 +17,7 @@ class Branch < ApplicationRecord
   has_many :staff_members, dependent: :nullify
   has_many :expenses, dependent: :nullify
   has_many :bookings, dependent: :destroy
+  has_many :orders, dependent: :restrict_with_error
   has_many :service_prices, dependent: :destroy
   has_one_attached :cover
   has_many_attached :photos

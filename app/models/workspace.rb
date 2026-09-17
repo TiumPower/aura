@@ -45,6 +45,14 @@ class Workspace < ApplicationRecord
   has_many :staff_services, dependent: :destroy
   has_many :bookings, dependent: :destroy
   has_many :booking_items, dependent: :destroy
+  has_many :packages, dependent: :destroy
+  has_many :member_packages, dependent: :destroy
+  has_many :orders, dependent: :destroy
+  has_many :order_items, dependent: :destroy
+  has_many :order_payments, dependent: :destroy
+  has_many :commission_entries, dependent: :destroy
+  has_many :wallet_transactions, dependent: :destroy
+  has_many :point_transactions, dependent: :destroy
   has_many :expenses, dependent: :destroy
   has_many :conversations, dependent: :destroy
   has_many :messages, dependent: :destroy

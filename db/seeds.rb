@@ -217,8 +217,8 @@ ActsAsTenant.with_tenant(ws) do
 
   ws.memberships.find_or_create_by!(user: reception) { |m| m.role = "receptionist"; m.branch = main }
 
-  # Sinh ca thật cho tuần này và tuần sau.
-  StaffShift.generate_from_templates!(ws, from: Date.current.beginning_of_week,
+  # Sinh ca thật cho 3 tuần trước (để bill lịch sử có KTV) và 2 tuần tới.
+  StaffShift.generate_from_templates!(ws, from: Date.current - 21,
                                           to: Date.current.beginning_of_week + 13)
 
   # Một KTV xin nghỉ phép để thấy engine cắt đúng khoảng đó.
@@ -326,6 +326,51 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
+  # ---- Gói / thẻ liệu trình ----------------------------------------------
+  body   = ws.services.find_by(name: "Massage body tinh dầu")
+  foot   = ws.services.find_by(name: "Foot massage")
+  facial = ws.services.find_by(name: "Chăm sóc da cơ bản")
+
+  pkg_specs = [
+    { name: "Thẻ 10 buổi massage body", kind: "session_pack", price: 3_900_000,
+      validity_days: 180, lines: [[body, 10]] },
+    { name: "Thẻ 10 buổi foot massage", kind: "session_pack", price: 2_200_000,
+      validity_days: 180, lines: [[foot, 10]] },
+    { name: "Combo 5 body + 5 foot", kind: "session_pack", price: 2_900_000,
+      validity_days: 120, lines: [[body, 5], [foot, 5]] },
+    { name: "Liệu trình da 8 buổi", kind: "session_pack", price: 2_800_000,
+      validity_days: 150, lines: [[facial, 8]] },
+    { name: "Thẻ tiền 5 triệu", kind: "value_card", price: 5_000_000,
+      face_value: 6_000_000, validity_days: 365, lines: [] }
+  ]
+
+  pkg_specs.each_with_index do |spec, i|
+    next if spec[:lines].any? { |(svc, _)| svc.nil? }
+    pkg = ws.packages.find_or_initialize_by(name: spec[:name])
+    next unless pkg.new_record?
+    pkg.assign_attributes(kind: spec[:kind], price: spec[:price], face_value: spec[:face_value],
+                          validity_days: spec[:validity_days], position: i, active: true,
+                          description: "Mua gói tiết kiệm hơn đi lẻ, dùng trong #{spec[:validity_days]} ngày.")
+    pkg.save!
+    spec[:lines].each { |(svc, n)| pkg.package_lines.create!(workspace: ws, service: svc, sessions: n) }
+  end
+
+  # Bán sẵn một thẻ cho khách quen để thấy luồng trừ buổi.
+  vip = Member.find_by(workspace: ws, phone: "0912555666")
+  combo = ws.packages.find_by(name: "Thẻ 10 buổi massage body")
+  if vip && combo && vip.member_packages.empty?
+    card = vip.member_packages.create!(
+      workspace: ws, package: combo, name: combo.name, kind: combo.kind,
+      price_paid: combo.price, purchased_on: Date.current - 40,
+      expires_on: Date.current + 140,
+      sold_by: ws.staff_members.find_by(role: "consultant")
+    )
+    combo.package_lines.each do |line|
+      card.package_credits.create!(workspace: ws, service: line.service,
+                                   total_sessions: line.sessions, used_sessions: 3)
+    end
+  end
+
   # ---- Lịch hẹn mẫu cho hôm nay & mai -------------------------------------
   if ws.bookings.count.zero?
     bookable = ws.services.main.active.where(requires_staff: true).to_a
@@ -354,6 +399,57 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
+  # ---- Bill đã đóng của 14 ngày trước → báo cáo & hoa hồng có dữ liệu thật ---
+  if ws.orders.count.zero?
+    cashier = owner
+    sellable = ws.services.main.active.where(requires_staff: true).to_a
+    therapists = ws.staff_members.active.therapists.to_a
+    customers = ws.members.to_a
+    (1..14).each do |days_ago|
+      day = Date.current - days_ago
+      # 3–6 bill mỗi ngày, giờ rải trong ngày
+      rand(3..6).times do |n|
+        svc = sellable.sample
+        st  = therapists.sample
+        cust = rand < 0.8 ? customers.sample : nil
+        at = Time.zone.local(day.year, day.month, day.day, rand(9..19), [0, 30].sample)
+        res = BookingScheduler.create(
+          branch: branches[n % branches.size], starts_at: at, member: cust,
+          guest_name: cust ? nil : "Khách lẻ",
+          lines: [{ service: svc, staff: st }], source: %w[staff app phone walk_in].sample,
+          status: "confirmed"
+        )
+        next unless res.ok?
+        b = res.booking
+        b.transition_to!("checked_in")
+        b.transition_to!("in_progress")
+        order = Checkout.open_for_booking(booking: b, actor: cashier).order
+        next if order.nil?
+        Checkout.add_tip(order: order, amount: [0, 0, 50_000, 100_000].sample, staff: st) if rand < 0.4
+        order.reload
+        Checkout.pay(order: order, method: %w[cash vietqr transfer card].sample,
+                     amount: order.total, actor: cashier)
+        Checkout.close!(order: order, actor: cashier)
+        # Ngày bán được thẻ
+        if rand < 0.12 && cust
+          pkg = ws.packages.active.sample
+          blank = Checkout.open_blank(branch: b.branch, member: cust, actor: cashier).order
+          Checkout.add_package(order: blank, package: pkg,
+                               consultant: ws.staff_members.find_by(role: "consultant"))
+          blank.reload
+          Checkout.pay(order: blank, method: "transfer", amount: blank.total, actor: cashier)
+          Checkout.close!(order: blank, actor: cashier)
+        end
+      end
+    end
+    # Lùi ngày đóng bill về đúng ngày phát sinh để báo cáo theo kỳ đúng.
+    ws.orders.paid.each do |o|
+      next if o.booking.nil?
+      o.update_columns(closed_at: o.booking.starts_at + 1.hour, created_at: o.booking.starts_at)
+      o.commission_entries.update_all(earned_on: o.booking.starts_at.to_date)
+    end
+  end
+
   # Một khách bỏ hẹn nhiều lần → thấy được cơ chế chặn đặt online.
   noshow = Member.find_by(workspace: ws, phone: "0977222333")
   noshow&.update!(no_show_count: 3, cancel_count: 1)
@@ -363,7 +459,10 @@ puts "  ✓ Spa demo: #{ws.name} (#{ws.subdomain}) — #{ws.branches.count} cơ 
      "#{ws.rooms.count} phòng (#{ws.rooms.sum(:capacity)} chỗ), " \
      "#{ws.staff_members.count} nhân sự, #{ws.staff_shifts.count} ca, #{ws.members.count} khách"
 puts "  ✓ Danh mục: #{ws.services.main.count} dịch vụ (#{ws.service_variants.count} biến thể), " \
-     "#{ws.services.where(is_addon: true).count} addon, #{ws.bookings.count} lịch hẹn mẫu"
+     "#{ws.services.where(is_addon: true).count} addon, #{ws.packages.count} gói/thẻ"
+puts "  ✓ Vận hành mẫu: #{ws.bookings.count} lịch hẹn, #{ws.orders.paid.count} bill đã đóng " \
+     "(#{ActiveSupport::NumberHelper.number_to_delimited(ws.orders.paid.sum(:total))}đ), " \
+     "#{ws.commission_entries.count} dòng hoa hồng"
 puts "  ✓ Chủ spa: chu@aura.local#{seed_password_hint(owner_created)}"
 puts "  ✓ Lễ tân:  letan@aura.local#{seed_password_hint(reception_created)}"
 puts "  ✓ Khách demo (đăng nhập bằng SĐT + OTP): 0905111222"

@@ -11,8 +11,14 @@
       <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span><%= t("customer.nav.bookings") %></span>
     <% end %>
   <% end %>
-  <%= link_to member_notifications_path, class: ("active" if key == "alerts") do %>
-    <span class="ce-tab-ic"><%= ui_icon(:bell, size: 22) %></span><span><%= t("customer.nav.notifications") %></span>
+  <% if current_workspace&.feature?("packages") || current_workspace&.feature?("wallet") %>
+    <%= link_to member_wallet_path, class: ("active" if key == "wallet") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:card, size: 22) %></span><span><%= t("customer.nav.wallet") %></span>
+    <% end %>
+  <% else %>
+    <%= link_to member_notifications_path, class: ("active" if key == "alerts") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:bell, size: 22) %></span><span><%= t("customer.nav.notifications") %></span>
+    <% end %>
   <% end %>
   <% if current_workspace&.feature?("chat") %>
     <%= link_to member_chat_path, class: ("active" if key == "chat") do %>

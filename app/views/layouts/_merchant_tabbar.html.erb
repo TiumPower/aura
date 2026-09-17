@@ -6,8 +6,8 @@
     <%= link_to merchant_calendar_path, class: ("active" if nav == :calendar) do %>
       <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Lịch hẹn</span>
     <% end %>
-    <%= link_to merchant_customers_path, class: ("active" if nav == :customers) do %>
-      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Khách</span>
+    <%= link_to merchant_orders_path, class: ("active" if nav == :orders) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:receipt, size: 22) %></span><span>Bill</span>
     <% end %>
     <%= link_to merchant_root_path, class: "ce-tab-home #{'active' if nav == :dashboard}" do %>
       <span class="ce-tab-ic"><%= ui_icon(:home, size: 27) %></span><span>Tổng quan</span>
@@ -18,7 +18,8 @@
         <%= render "layouts/staff_chat_badge", count: chat_unread_count %>
       </span><span>Chat</span>
     <% end %>
-    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :payment, :settings, :billing, :audit, :branches, :staff, :rooms, :expenses, :services, :shifts].include?(nav)) do %>
+    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :payment, :settings, :billing, :audit, :branches, :staff, :rooms, :expenses, :services,
+                 :shifts, :packages, :reports, :commissions].include?(nav)) do %>
       <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Cá nhân</span>
     <% end %>
   </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_17_110002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -169,7 +169,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.bigint "created_by_id"
     t.datetime "reminder_sent_at"
     t.datetime "review_requested_at"
-    t.bigint "order_id"
     t.jsonb "settings", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -251,6 +250,27 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.index ["workspace_id"], name: "index_broadcasts_on_workspace_id"
   end
 
+  create_table "commission_entries", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "staff_member_id", null: false
+    t.bigint "order_id"
+    t.bigint "order_item_id"
+    t.string "role", default: "therapist", null: false
+    t.string "basis", default: "percent", null: false
+    t.integer "base_amount", default: 0, null: false
+    t.integer "rate", default: 0, null: false
+    t.integer "amount", default: 0, null: false
+    t.date "earned_on", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_item_id"], name: "index_commission_entries_on_order_item_id"
+    t.index ["staff_member_id", "earned_on"], name: "index_commission_entries_on_staff_member_id_and_earned_on"
+    t.index ["staff_member_id"], name: "index_commission_entries_on_staff_member_id"
+    t.index ["workspace_id", "earned_on"], name: "index_commission_entries_on_workspace_id_and_earned_on"
+    t.index ["workspace_id"], name: "index_commission_entries_on_workspace_id"
+  end
+
   create_table "conversations", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.bigint "member_id", null: false
@@ -307,6 +327,30 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.index ["payos_order_code"], name: "index_invoices_on_payos_order_code", unique: true, where: "(payos_order_code IS NOT NULL)"
     t.index ["workspace_id", "status"], name: "index_invoices_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_invoices_on_workspace_id"
+  end
+
+  create_table "member_packages", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "member_id", null: false
+    t.bigint "package_id"
+    t.bigint "order_id"
+    t.bigint "sold_by_id"
+    t.string "name", null: false
+    t.string "kind", default: "session_pack", null: false
+    t.string "status", default: "active", null: false
+    t.integer "price_paid", default: 0, null: false
+    t.integer "value_balance", default: 0, null: false
+    t.date "purchased_on", null: false
+    t.date "expires_on"
+    t.datetime "frozen_at"
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["member_id", "status"], name: "index_member_packages_on_member_id_and_status"
+    t.index ["member_id"], name: "index_member_packages_on_member_id"
+    t.index ["package_id"], name: "index_member_packages_on_package_id"
+    t.index ["workspace_id", "expires_on"], name: "index_member_packages_on_workspace_id_and_expires_on"
+    t.index ["workspace_id"], name: "index_member_packages_on_workspace_id"
   end
 
   create_table "member_tiers", force: :cascade do |t|
@@ -425,6 +469,83 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.index ["workspace_id"], name: "index_notifications_on_workspace_id"
   end
 
+  create_table "order_items", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "order_id", null: false
+    t.string "kind", default: "service", null: false
+    t.bigint "service_id"
+    t.bigint "package_id"
+    t.bigint "booking_item_id"
+    t.bigint "staff_member_id"
+    t.bigint "consultant_id"
+    t.bigint "package_credit_id"
+    t.string "name", null: false
+    t.integer "quantity", default: 1, null: false
+    t.integer "unit_price", default: 0, null: false
+    t.integer "discount_amount", default: 0, null: false
+    t.integer "total", default: 0, null: false
+    t.integer "commission_amount", default: 0, null: false
+    t.jsonb "meta", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_item_id"], name: "index_order_items_on_booking_item_id"
+    t.index ["order_id"], name: "index_order_items_on_order_id"
+    t.index ["staff_member_id", "created_at"], name: "index_order_items_on_staff_member_id_and_created_at"
+    t.index ["workspace_id"], name: "index_order_items_on_workspace_id"
+  end
+
+  create_table "order_payments", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "order_id", null: false
+    t.string "method", null: false
+    t.integer "amount", default: 0, null: false
+    t.string "reference"
+    t.bigint "received_by_id"
+    t.datetime "received_at", null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id", "method"], name: "index_order_payments_on_order_id_and_method"
+    t.index ["order_id"], name: "index_order_payments_on_order_id"
+    t.index ["workspace_id", "received_at"], name: "index_order_payments_on_workspace_id_and_received_at"
+    t.index ["workspace_id"], name: "index_order_payments_on_workspace_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "branch_id", null: false
+    t.bigint "member_id"
+    t.bigint "booking_id"
+    t.string "code", null: false
+    t.string "status", default: "open", null: false
+    t.integer "subtotal", default: 0, null: false
+    t.integer "discount_total", default: 0, null: false
+    t.integer "service_charge", default: 0, null: false
+    t.integer "vat_total", default: 0, null: false
+    t.integer "tip_total", default: 0, null: false
+    t.integer "total", default: 0, null: false
+    t.integer "paid_total", default: 0, null: false
+    t.integer "points_earned", default: 0, null: false
+    t.integer "points_redeemed", default: 0, null: false
+    t.string "discount_note"
+    t.text "note"
+    t.bigint "cashier_id"
+    t.bigint "voided_by_id"
+    t.datetime "closed_at"
+    t.datetime "voided_at"
+    t.string "void_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_orders_on_booking_id"
+    t.index ["branch_id", "closed_at"], name: "index_orders_on_branch_id_and_closed_at"
+    t.index ["branch_id"], name: "index_orders_on_branch_id"
+    t.index ["member_id", "closed_at"], name: "index_orders_on_member_id_and_closed_at"
+    t.index ["member_id"], name: "index_orders_on_member_id"
+    t.index ["workspace_id", "code"], name: "index_orders_on_workspace_id_and_code", unique: true
+    t.index ["workspace_id", "status"], name: "index_orders_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_orders_on_workspace_id"
+  end
+
   create_table "otp_challenges", force: :cascade do |t|
     t.bigint "workspace_id"
     t.string "identifier", null: false
@@ -440,6 +561,74 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.index ["scope", "identifier"], name: "index_otp_challenges_on_scope_and_identifier"
     t.index ["workspace_id", "identifier"], name: "index_otp_challenges_on_workspace_id_and_identifier"
     t.index ["workspace_id"], name: "index_otp_challenges_on_workspace_id"
+  end
+
+  create_table "package_credit_uses", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "package_credit_id", null: false
+    t.bigint "booking_item_id"
+    t.bigint "order_item_id"
+    t.bigint "staff_member_id"
+    t.integer "sessions", default: 1, null: false
+    t.string "reason"
+    t.bigint "actor_id"
+    t.datetime "used_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["package_credit_id", "used_at"], name: "index_package_credit_uses_on_package_credit_id_and_used_at"
+    t.index ["package_credit_id"], name: "index_package_credit_uses_on_package_credit_id"
+    t.index ["workspace_id"], name: "index_package_credit_uses_on_workspace_id"
+  end
+
+  create_table "package_credits", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "member_package_id", null: false
+    t.bigint "service_id", null: false
+    t.bigint "service_variant_id"
+    t.integer "total_sessions", default: 0, null: false
+    t.integer "used_sessions", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["member_package_id", "service_id"], name: "idx_credit_pkg_service"
+    t.index ["member_package_id"], name: "index_package_credits_on_member_package_id"
+    t.index ["service_id"], name: "index_package_credits_on_service_id"
+    t.index ["service_variant_id"], name: "index_package_credits_on_service_variant_id"
+    t.index ["workspace_id"], name: "index_package_credits_on_workspace_id"
+  end
+
+  create_table "package_lines", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "package_id", null: false
+    t.bigint "service_id", null: false
+    t.bigint "service_variant_id"
+    t.integer "sessions", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["package_id", "service_id"], name: "index_package_lines_on_package_id_and_service_id"
+    t.index ["package_id"], name: "index_package_lines_on_package_id"
+    t.index ["service_id"], name: "index_package_lines_on_service_id"
+    t.index ["service_variant_id"], name: "index_package_lines_on_service_variant_id"
+    t.index ["workspace_id"], name: "index_package_lines_on_workspace_id"
+  end
+
+  create_table "packages", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "name", null: false
+    t.string "kind", default: "session_pack", null: false
+    t.text "description"
+    t.integer "price", default: 0, null: false
+    t.integer "face_value"
+    t.integer "validity_days"
+    t.boolean "transferable", default: false, null: false
+    t.boolean "family_share", default: false, null: false
+    t.boolean "online_sellable", default: false, null: false
+    t.boolean "active", default: true, null: false
+    t.integer "commission_percent"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["workspace_id", "active"], name: "index_packages_on_workspace_id_and_active"
+    t.index ["workspace_id"], name: "index_packages_on_workspace_id"
   end
 
   create_table "plans", force: :cascade do |t|
@@ -460,6 +649,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_plans_on_key", unique: true
+  end
+
+  create_table "point_transactions", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "member_id", null: false
+    t.bigint "order_id"
+    t.string "kind", null: false
+    t.integer "points", null: false
+    t.integer "balance_after", default: 0, null: false
+    t.string "note"
+    t.bigint "actor_id"
+    t.datetime "expires_on"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["member_id", "created_at"], name: "index_point_transactions_on_member_id_and_created_at"
+    t.index ["member_id"], name: "index_point_transactions_on_member_id"
+    t.index ["workspace_id"], name: "index_point_transactions_on_workspace_id"
   end
 
   create_table "push_subscriptions", force: :cascade do |t|
@@ -720,6 +926,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "wallet_transactions", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "member_id", null: false
+    t.bigint "order_id"
+    t.string "kind", null: false
+    t.integer "amount", null: false
+    t.integer "balance_after", default: 0, null: false
+    t.string "note"
+    t.bigint "actor_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["member_id", "created_at"], name: "index_wallet_transactions_on_member_id_and_created_at"
+    t.index ["member_id"], name: "index_wallet_transactions_on_member_id"
+    t.index ["workspace_id"], name: "index_wallet_transactions_on_workspace_id"
+  end
+
   create_table "workspaces", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -765,11 +987,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
   add_foreign_key "branch_hours", "workspaces"
   add_foreign_key "branches", "workspaces"
   add_foreign_key "broadcasts", "workspaces"
+  add_foreign_key "commission_entries", "staff_members"
+  add_foreign_key "commission_entries", "workspaces"
   add_foreign_key "conversations", "members"
   add_foreign_key "conversations", "workspaces"
   add_foreign_key "expenses", "branches"
   add_foreign_key "expenses", "workspaces"
   add_foreign_key "invoices", "workspaces"
+  add_foreign_key "member_packages", "members"
+  add_foreign_key "member_packages", "packages"
+  add_foreign_key "member_packages", "workspaces"
   add_foreign_key "member_tiers", "workspaces"
   add_foreign_key "members", "branches", column: "home_branch_id"
   add_foreign_key "members", "member_tiers"
@@ -783,7 +1010,28 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
   add_foreign_key "notifications", "broadcasts"
   add_foreign_key "notifications", "members"
   add_foreign_key "notifications", "workspaces"
+  add_foreign_key "order_items", "orders"
+  add_foreign_key "order_items", "workspaces"
+  add_foreign_key "order_payments", "orders"
+  add_foreign_key "order_payments", "workspaces"
+  add_foreign_key "orders", "bookings"
+  add_foreign_key "orders", "branches"
+  add_foreign_key "orders", "members"
+  add_foreign_key "orders", "workspaces"
   add_foreign_key "otp_challenges", "workspaces"
+  add_foreign_key "package_credit_uses", "package_credits"
+  add_foreign_key "package_credit_uses", "workspaces"
+  add_foreign_key "package_credits", "member_packages"
+  add_foreign_key "package_credits", "service_variants"
+  add_foreign_key "package_credits", "services"
+  add_foreign_key "package_credits", "workspaces"
+  add_foreign_key "package_lines", "packages"
+  add_foreign_key "package_lines", "service_variants"
+  add_foreign_key "package_lines", "services"
+  add_foreign_key "package_lines", "workspaces"
+  add_foreign_key "packages", "workspaces"
+  add_foreign_key "point_transactions", "members"
+  add_foreign_key "point_transactions", "workspaces"
   add_foreign_key "push_subscriptions", "members"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "push_subscriptions", "workspaces"
@@ -817,4 +1065,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_17_100002) do
   add_foreign_key "staff_shifts", "branches"
   add_foreign_key "staff_shifts", "staff_members"
   add_foreign_key "staff_shifts", "workspaces"
+  add_foreign_key "wallet_transactions", "members"
+  add_foreign_key "wallet_transactions", "workspaces"
 end

@@ -1,0 +1,75 @@
+<% content_for :title, @package.name %>
+<% p = @package %>
+
+<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:18px;">
+  <div style="flex:1; min-width:220px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;"><%= p.name %></h2>
+      <% unless p.active %><span class="l-pill" style="--_c:#8A8078;">Ngưng bán</span><% end %>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">
+      <%= p.kind_label %> · <%= vnd(p.price) %> · hạn <%= p.validity %> ngày
+    </div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <%= link_to "Sửa", edit_merchant_package_path(p), class: "l-btn l-btn-primary" %>
+    <% if p.active %>
+      <%= button_to "Ngưng bán", archive_merchant_package_path(p), method: :patch, class: "l-btn l-btn-ghost" %>
+    <% end %>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px;">
+  <div class="l-kpi"><div class="k">Giá bán</div><div class="v" style="font-size:24px;"><%= vnd(p.price) %></div></div>
+  <div class="l-kpi"><div class="k">Giá trị dùng được</div><div class="v" style="font-size:24px;"><%= vnd(p.face) %></div>
+    <% if p.savings.positive? %><div style="font-size:12px; color:var(--good);">khách lợi <%= vnd(p.savings) %></div><% end %></div>
+  <div class="l-kpi"><div class="k">Đã bán</div><div class="v" style="font-size:24px;"><%= @cards.size %></div></div>
+  <div class="l-kpi"><div class="k">Hoa hồng chốt thẻ</div><div class="v" style="font-size:24px;"><%= p.commission_rate %>%</div></div>
+</div>
+
+<div style="display:grid; grid-template-columns:.9fr 1.1fr; gap:18px; align-items:start;">
+  <div class="l-panel">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Gói gồm</div>
+    <% if p.package_lines.any? %>
+      <% p.package_lines.each do |line| %>
+        <div style="display:flex; justify-content:space-between; gap:8px; padding:8px 0; border-top:1px solid var(--line); font-size:13.5px;">
+          <span><%= line.label %></span>
+          <span style="color:var(--ink-2);"><%= vnd(line.sessions * line.unit_price) %></span>
+        </div>
+      <% end %>
+    <% else %>
+      <p style="font-size:13px; color:var(--ink-2);">
+        <%= p.value_card? ? "Thẻ tiền: khách nạp trước rồi trừ dần, không theo buổi." : "Chưa khai buổi nào." %>
+      </p>
+    <% end %>
+    <% if p.description.present? %>
+      <div class="l-eyebrow" style="margin:14px 0 6px;">Mô tả cho khách</div>
+      <div style="font-size:13.5px; line-height:1.55;"><%= simple_format p.description %></div>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-section-h" style="margin:0 0 10px;">
+      <h3>Khách đã mua</h3>
+      <%= link_to "Tất cả thẻ", merchant_member_packages_path %>
+    </div>
+    <% if @cards.empty? %>
+      <p style="font-size:13px; color:var(--ink-2);">Chưa có khách nào mua gói này.</p>
+    <% else %>
+      <% @cards.each do |c| %>
+        <%= link_to merchant_member_package_path(c), class: "l-row", style: "margin-bottom:8px;" do %>
+          <div class="ic"><%= c.member.initials %></div>
+          <div class="bd">
+            <div class="t"><%= c.member.display_name %></div>
+            <div class="s">
+              Mua <%= l(c.purchased_on, format: "%d/%m/%Y") %> ·
+              còn <%= c.value_card? ? vnd(c.value_balance) : "#{c.sessions_left}/#{c.sessions_total} buổi" %> ·
+              <%= c.status_label %>
+            </div>
+          </div>
+          <div class="go">›</div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

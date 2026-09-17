@@ -38,6 +38,7 @@ class Booking < ApplicationRecord
   belongs_to :member, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   has_many :booking_items, -> { order(:starts_at, :position) }, dependent: :destroy
+  has_one  :order, dependent: :nullify
   accepts_nested_attributes_for :booking_items, allow_destroy: true
 
   validates :code, presence: true, uniqueness: { scope: :workspace_id }

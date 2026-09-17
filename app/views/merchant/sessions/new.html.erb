@@ -1,8 +1,8 @@
-<% content_for :title, "Đăng nhập chủ hộ" %>
+<% content_for :title, "Đăng nhập quản lý" %>
 <h1>Đăng nhập</h1>
 <p class="sub">Dùng mật khẩu, hoặc nhận mã đăng nhập (OTP) qua email.</p>
 
-<%# turbo: false — đăng nhập xong là redirect sang subdomain của chủ hộ, và
+<%# turbo: false — đăng nhập xong là redirect sang subdomain của spa, và
     Turbo không theo được redirect chéo origin: nó gửi OPTIONS rồi im lặng bỏ,
     người dùng ngồi lại đúng trang đăng nhập mà không có lỗi nào hiện ra. %>
 <%= form_with url: merchant_login_path, method: :post, data: { turbo: false } do %>

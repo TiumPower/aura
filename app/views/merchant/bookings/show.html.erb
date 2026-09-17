@@ -18,6 +18,16 @@
     </div>
   </div>
   <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <% if module_on?("pos") && !b.cancelled? && !b.no_show? %>
+      <% existing = b.order %>
+      <% if existing %>
+        <%= link_to existing.paid? ? "Xem bill #{existing.code}" : "Tiếp tục thu tiền",
+              merchant_order_path(existing), class: "l-btn l-btn-primary" %>
+      <% else %>
+        <%= button_to "💰 Thu tiền", open_for_booking_merchant_orders_path, method: :post,
+              params: { booking_id: b.id }, class: "l-btn l-btn-primary" %>
+      <% end %>
+    <% end %>
     <% if b.member %>
       <%= link_to "Hồ sơ khách", merchant_customer_path(b.member), class: "l-btn l-btn-ghost" %>
     <% end %>

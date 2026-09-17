@@ -1,0 +1,96 @@
+<% content_for :title, "Hoa hồng & hiệu suất KTV" %>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+  <%= form_with url: merchant_commissions_path, method: :get, style: "display:flex; gap:8px; align-items:center;" do %>
+    <label class="l-label" style="margin:0;">Kỳ</label>
+    <%= month_field_tag :month, @from.strftime("%Y-%m"), class: "l-field", style: "width:auto;",
+          onchange: "this.form.requestSubmit()" %>
+  <% end %>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <% if @status_totals["pending"].to_i.positive? %>
+      <%= button_to "Chốt kỳ này", merchant_approve_commissions_path(month: @from.strftime("%Y-%m")), method: :patch,
+            class: "l-btn l-btn-primary",
+            form: { data: { turbo_confirm: "Chốt toàn bộ hoa hồng kỳ #{@from.strftime('%m/%Y')}?" } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi"><div class="k">Tổng hoa hồng kỳ</div><div class="v" style="font-size:26px;"><%= vnd(@total) %></div></div>
+  <div class="l-kpi"><div class="k">Chờ chốt</div><div class="v" style="font-size:26px;"><%= vnd(@status_totals["pending"].to_i) %></div></div>
+  <div class="l-kpi"><div class="k">Đã chốt</div><div class="v" style="font-size:26px;"><%= vnd(@status_totals["approved"].to_i) %></div></div>
+  <div class="l-kpi"><div class="k">Số KTV có hoa hồng</div><div class="v" style="font-size:26px;"><%= @by_staff.size %></div></div>
+</div>
+
+<% if @by_staff.empty? %>
+  <div class="l-panel" style="text-align:center; padding:36px;">
+    <div style="font-size:38px;">🧮</div>
+    <p style="font-weight:700; margin-top:8px;">Kỳ <%= @from.strftime("%m/%Y") %> chưa có hoa hồng</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin-top:6px;">
+      Hoa hồng sinh ra khi bill được đóng — chưa đóng bill nào thì chưa có gì để chốt.
+    </p>
+  </div>
+<% else %>
+  <div class="l-panel" style="padding:0; overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:720px;">
+      <thead>
+        <tr style="font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2);">
+          <th style="text-align:left; padding:12px 18px;">Nhân sự</th>
+          <th style="text-align:right; padding:12px 8px;">Lượt làm</th>
+          <th style="text-align:right; padding:12px 8px;">Giờ có mặt</th>
+          <th style="text-align:right; padding:12px 8px;">Doanh thu tạo ra</th>
+          <th style="text-align:right; padding:12px 8px;">DT/giờ</th>
+          <th style="text-align:right; padding:12px 8px;">Tip</th>
+          <th style="text-align:right; padding:12px 18px;">Hoa hồng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @by_staff.sort_by { |_, v| -v }.each do |staff_id, amount| %>
+          <% st = @staff[staff_id] %>
+          <% hours = @hours_by_staff[staff_id].to_f.round(1) %>
+          <% revenue = @revenue_by_staff[staff_id].to_i %>
+          <tr style="border-top:1px solid var(--line); font-size:13.5px;">
+            <td style="padding:12px 18px;">
+              <%= link_to st&.display_name || "—", st ? merchant_staff_path(st) : "#",
+                    style: "color:inherit; font-weight:600; text-decoration:none;" %>
+              <div style="font-size:12px; color:var(--ink-2);"><%= st&.level_name %></div>
+            </td>
+            <td style="text-align:right; padding:12px 8px;"><%= @count_by_staff[staff_id].to_i %></td>
+            <td style="text-align:right; padding:12px 8px;"><%= hours %></td>
+            <td style="text-align:right; padding:12px 8px;"><%= vnd(revenue) %></td>
+            <td style="text-align:right; padding:12px 8px; font-weight:600;">
+              <%= hours.positive? ? vnd((revenue / hours).round) : "—" %>
+            </td>
+            <td style="text-align:right; padding:12px 8px;"><%= vnd(@tips_by_staff[staff_id].to_i) %></td>
+            <td style="text-align:right; padding:12px 18px; font-weight:700; font-variant-numeric:tabular-nums;">
+              <%= vnd(amount) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:12.5px; color:var(--ink-2); margin-top:10px; max-width:74ch;">
+    <strong>DT/giờ</strong> là doanh thu mỗi giờ KTV có mặt — chỉ số cho biết ai đang tạo ra giá trị,
+    không chỉ ai làm nhiều buổi. KTV làm ít buổi nhưng toàn dịch vụ giá cao vẫn có thể hiệu quả hơn.
+  </p>
+
+  <div class="l-section-h" style="margin-top:22px;"><h3>Từng dòng hoa hồng</h3></div>
+  <div class="l-panel" style="padding:0; overflow:hidden;">
+    <% @entries.first(120).each do |e| %>
+      <div style="display:grid; grid-template-columns:110px 1fr 120px 100px; gap:10px; padding:10px 18px;
+                  border-top:1px solid var(--line); font-size:13px; align-items:center;">
+        <span style="color:var(--ink-2);"><%= l(e.earned_on, format: "%d/%m/%Y") %></span>
+        <span>
+          <strong><%= e.staff_member.display_name %></strong>
+          <span style="color:var(--ink-2);">· <%= e.role_label %><%= " (tip)" if e.tip? %>
+            <%= " · #{e.order_item&.name}" if e.order_item %></span>
+        </span>
+        <span style="color:var(--ink-2); text-align:right;">
+          <%= vnd(e.base_amount) %> × <%= e.rate %>%
+        </span>
+        <span style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;"><%= vnd(e.amount) %></span>
+      </div>
+    <% end %>
+  </div>
+<% end %>

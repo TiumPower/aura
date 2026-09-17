@@ -24,7 +24,7 @@ module Pwa
       end
       render json: {
         name: name, short_name: name.to_s[0, 30],
-        description: "Quản lý căn hộ cho thuê",
+        description: "Quản lý spa & massage",
         start_url: "/merchant", scope: "/merchant", display: "standalone",
         background_color: bg, theme_color: theme, lang: "vi",
         icons: [
@@ -51,7 +51,7 @@ module Pwa
       {
         name: app_name,
         short_name: app_name.to_s[0, 30],
-        description: ws&.branding_value("tagline") || "Quản lý căn hộ cho thuê",
+        description: ws&.branding_value("tagline") || "Quản lý spa & massage",
         start_url: start,
         scope: start,
         display: "standalone",

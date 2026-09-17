@@ -2,7 +2,7 @@
 
 <div style="max-width:640px;">
   <%= link_to "← Workspaces", admin_workspaces_path, style: "color:var(--ink-2); font-size:13px; text-decoration:none;" %>
-  <h2 class="l-display" style="font-size:24px; margin:8px 0 16px;">Tạo chủ hộ mới</h2>
+  <h2 class="l-display" style="font-size:24px; margin:8px 0 16px;">Tạo spa mới</h2>
 
   <% if @workspace.errors.any? %>
     <div class="l-chip" style="background:#F3DDD7; color:#B4402F; margin-bottom:14px; display:block; padding:10px 14px;">
@@ -13,7 +13,7 @@
   <%= form_with model: @workspace, url: admin_workspaces_path, method: :post do |f| %>
     <div class="l-panel" style="margin-bottom:16px;">
       <h3 class="l-display" style="font-size:18px; margin-bottom:12px;">Không gian</h3>
-      <label class="l-label">Tên chủ hộ / doanh nghiệp</label>
+      <label class="l-label">Tên spa / doanh nghiệp</label>
       <%= f.text_field :name, class: "l-field", placeholder: "VD: Sunrise Apartments" %>
 
       <label class="l-label" style="margin-top:12px;">Subdomain</label>
@@ -36,10 +36,10 @@
     </div>
 
     <div class="l-panel" style="margin-bottom:16px;">
-      <h3 class="l-display" style="font-size:18px; margin-bottom:12px;">Tài khoản chủ hộ</h3>
+      <h3 class="l-display" style="font-size:18px; margin-bottom:12px;">Tài khoản chủ spa</h3>
       <p style="color:var(--ink-2); font-size:13px; margin-bottom:10px;">Chủ hộ đăng nhập bằng email + OTP tại <span class="l-mono">/merchant/login</span>.</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div><label class="l-label">Tên chủ hộ</label><%= text_field_tag :owner_name, params[:owner_name], class: "l-field" %></div>
+        <div><label class="l-label">Tên chủ spa</label><%= text_field_tag :owner_name, params[:owner_name], class: "l-field" %></div>
         <div><label class="l-label">Email đăng nhập</label><%= email_field_tag :owner_email, params[:owner_email], class: "l-field", placeholder: "owner@example.com" %></div>
       </div>
     </div>

@@ -30,6 +30,27 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     @booking = BookingScheduler.create(branch: @branch, starts_at: Time.current.tomorrow.change(hour: 10),
                                        lines: [{ service: @service }], member: @member,
                                        source: "staff").booking
+    @order = Checkout.open_blank(branch: @branch, member: @member, actor: @user).order
+    @package = @ws.packages.create!(name: "Thẻ 5 buổi", kind: "session_pack", price: 1_500_000)
+    @package.package_lines.create!(workspace: @ws, service: @service, sessions: 5)
+    @card = @member.member_packages.create!(workspace: @ws, package: @package, name: @package.name,
+                                            kind: "session_pack", purchased_on: Date.current)
+    @card.package_credits.create!(workspace: @ws, service: @service, total_sessions: 5)
+    # Một bill ĐÃ ĐÓNG để các trang báo cáo / hoa hồng render nhánh có dữ liệu —
+    # kỳ rỗng không đi qua được phần lớn mã của mấy trang đó.
+    # Giờ phải nằm trong ca 09:00–21:00 của KTV, nếu không engine từ chối xếp.
+    paid_res = BookingScheduler.create(branch: @branch,
+                                       starts_at: Time.zone.now.change(hour: 15, min: 0),
+                                       lines: [{ service: @service, staff: @staff }],
+                                       member: @member, source: "staff")
+    assert paid_res.ok?, "không dựng được bill mẫu: #{paid_res.error}"
+    paid_booking = paid_res.booking
+    paid_booking.transition_to!("checked_in")
+    @paid_order = Checkout.open_for_booking(booking: paid_booking, actor: @user).order
+    Checkout.add_tip(order: @paid_order, amount: 50_000, staff: @staff)
+    @paid_order.reload
+    Checkout.pay(order: @paid_order, method: "cash", amount: @paid_order.total, actor: @user)
+    Checkout.close!(order: @paid_order, actor: @user)
     ActsAsTenant.current_tenant = nil
 
     @user = create(:user)
@@ -48,6 +69,8 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     /merchant/chat /merchant/announcements/new
     /merchant/services /merchant/services/new /merchant/categories
     /merchant/calendar /merchant/bookings/new /merchant/bookings/new?walk_in=1 /merchant/bookings/queue
+    /merchant/bills /merchant/packages /merchant/packages/new /merchant/cards
+    /merchant/reports /merchant/commissions
     /merchant/settings /merchant/settings/modules
     /merchant/appearance /merchant/payment /merchant/audit /merchant/billing
   ].freeze
@@ -77,7 +100,14 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
       "/merchant/services/#{@service.slug}/edit",
       "/merchant/categories/#{@category.id}/edit",
       "/merchant/bookings/#{@booking.id}",
-      "/merchant/bookings/#{@booking.id}/edit"
+      "/merchant/bookings/#{@booking.id}/edit",
+      "/merchant/bills/#{@order.id}",
+      "/merchant/bills/#{@order.id}/receipt",
+      "/merchant/bills/#{@paid_order.id}",
+      "/merchant/bills/#{@paid_order.id}/receipt",
+      "/merchant/packages/#{@package.id}",
+      "/merchant/packages/#{@package.id}/edit",
+      "/merchant/cards/#{@card.id}"
     ].each do |path|
       get path
       assert_includes [200, 302], response.status, "#{path} trả về #{response.status}"
@@ -107,7 +137,8 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     assert_response :redirect
 
     ["/w/#{slug}", "/w/#{slug}/notifications", "/w/#{slug}/chat", "/w/#{slug}/toi",
-     "/w/#{slug}/dat-lich", "/w/#{slug}/lich-hen", "/w/#{slug}/lich-hen/#{@booking.id}"].each do |path|
+     "/w/#{slug}/dat-lich", "/w/#{slug}/lich-hen", "/w/#{slug}/lich-hen/#{@booking.id}",
+     "/w/#{slug}/the-cua-toi", "/w/#{slug}/chi-tieu"].each do |path|
       get path
       assert_response :success, "#{path} trả về #{response.status}"
     end

@@ -90,15 +90,15 @@ module Merchant
       session.delete(:impersonator_admin_id)
       ws = Workspace.find_by(id: ws_id)
       target = ws ? "https://#{PLATFORM_HOST}/admin/workspaces/#{ws.to_param}" : "https://#{PLATFORM_HOST}/admin"
-      redirect_to target, allow_other_host: true, notice: "Đã thoát chế độ xem chủ hộ."
+      redirect_to target, allow_other_host: true, notice: "Đã thoát chế độ xem chủ spa."
     end
 
     private
 
-    # Đây là URL TUYỆT ĐỐI sang subdomain của chủ hộ (không phải path), nên mọi
+    # Đây là URL TUYỆT ĐỐI sang subdomain của spa (không phải path), nên mọi
     # redirect tới nó phải mang `allow_other_host: true`: Rails 7 chặn redirect
     # chéo host, và trong dev thì `merchant_url_for` trả về path tương đối nên
-    # lỗi chỉ lộ ra trên production — đăng nhập chủ hộ ở host gốc chết 500.
+    # lỗi chỉ lộ ra trên production — đăng nhập quản lý ở host gốc chết 500.
     # Host được dựng từ `workspace.subdomain` của chính mình, không từ tham số
     # người dùng gửi lên, nên mở host khác ở đây là an toàn.
     def after_login_url

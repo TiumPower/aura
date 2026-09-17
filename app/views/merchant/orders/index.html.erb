@@ -1,0 +1,73 @@
+<% content_for :title, "Bill & doanh thu" %>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+  <%= form_with url: merchant_orders_path, method: :get, style: "display:flex; gap:8px; align-items:center;" do %>
+    <%= date_field_tag :date, @date.to_s, class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
+  <% end %>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <%= button_to "+ Mở bill trắng", open_blank_merchant_orders_path, method: :post, class: "l-btn l-btn-primary",
+          params: { branch_id: current_branch&.id } %>
+  </div>
+</div>
+
+<div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi"><div class="k">Doanh thu ngày</div><div class="v" style="font-size:26px;"><%= vnd(@totals[:revenue]) %></div>
+    <div style="font-size:12px; color:var(--ink-2);"><%= @totals[:count] %> bill</div></div>
+  <div class="l-kpi"><div class="k">Bill trung bình (ATV)</div><div class="v" style="font-size:26px;"><%= vnd(@totals[:atv]) %></div></div>
+  <div class="l-kpi"><div class="k">Tip trong ngày</div><div class="v" style="font-size:26px;"><%= vnd(@totals[:tips]) %></div></div>
+  <div class="l-kpi"><div class="k">Bill đang mở</div><div class="v" style="font-size:26px;"><%= @open_orders.size %></div></div>
+</div>
+
+<% if @totals[:by_method].any? %>
+  <div class="l-panel" style="margin-bottom:18px;">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Thu theo phương thức</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      <% @totals[:by_method].sort_by { |_, v| -v }.each do |method, amount| %>
+        <span class="l-chip"><%= OrderPayment::METHOD_ICONS[method] %> <%= OrderPayment::METHOD_LABELS[method] %>
+          · <strong><%= vnd(amount) %></strong></span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @open_orders.any? %>
+  <div class="l-section-h"><h3>Bill đang mở</h3></div>
+  <% @open_orders.each do |o| %>
+    <%= link_to merchant_order_path(o), class: "l-row" do %>
+      <div class="ic">🧾</div>
+      <div class="bd">
+        <div class="t"><span class="l-mono"><%= o.code %></span> · <%= o.customer_name %></div>
+        <div class="s"><%= o.order_items.size %> dòng · <%= vnd(o.total) %>
+          <%= " · còn thiếu #{vnd(o.due)}" if o.due.positive? %></div>
+      </div>
+      <div class="go">›</div>
+    <% end %>
+  <% end %>
+<% end %>
+
+<div class="l-section-h" style="margin-top:22px;"><h3>Bill ngày <%= l(@date, format: "%d/%m/%Y") %></h3></div>
+<% if @closed.empty? %>
+  <div class="l-panel" style="text-align:center; padding:34px;">
+    <div style="font-size:38px;">🧾</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có bill nào đóng trong ngày này</p>
+  </div>
+<% else %>
+  <% @closed.each do |o| %>
+    <%= link_to merchant_order_path(o), class: "l-row" do %>
+      <div class="ic" style="<%= 'opacity:.5;' if o.voided? %>"><%= o.voided? ? "✕" : "✓" %></div>
+      <div class="bd">
+        <div class="t">
+          <span class="l-mono"><%= o.code %></span> · <%= o.customer_name %>
+          <% if o.voided? %><span class="l-pill" style="--_c:#B4402F;">Đã huỷ</span><% end %>
+        </div>
+        <div class="s">
+          <%= o.closed_at ? l(o.closed_at, format: "%H:%M") : "—" %> ·
+          <%= o.order_items.reject { |i| i.kind == "tip" }.map(&:name).first(2).join(", ").truncate(44) %>
+        </div>
+      </div>
+      <div style="font-weight:700; font-variant-numeric:tabular-nums; <%= 'text-decoration:line-through; opacity:.6;' if o.voided? %>">
+        <%= vnd(o.total) %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

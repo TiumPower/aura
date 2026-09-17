@@ -13,7 +13,7 @@
 <%# ---- Filters ---- %>
 <%= form_with url: admin_billing_path, method: :get, data: { turbo: false } do %>
   <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
-    <input type="search" name="q" value="<%= @q %>" placeholder="Tìm theo chủ hộ hoặc tên toà nhà…"
+    <input type="search" name="q" value="<%= @q %>" placeholder="Tìm theo tên spa hoặc tên cơ sở…"
            class="l-field" style="flex:1; min-width:240px; max-width:420px;">
     <select name="status" class="l-field" style="width:auto;" onchange="this.form.requestSubmit()">
       <option value="">Tất cả trạng thái</option>
@@ -40,7 +40,7 @@
     <div style="text-align:center; padding:44px; color:var(--ink-2);">
       <div style="font-size:40px;">🧾</div>
       <p style="font-weight:600; margin-top:8px; color:var(--ink);">Không có giao dịch</p>
-      <p style="font-size:13px;">Khi chủ hộ thanh toán gói thuê bao, giao dịch sẽ hiện ở đây.</p>
+      <p style="font-size:13px;">Khi spa thanh toán gói thuê bao, giao dịch sẽ hiện ở đây.</p>
     </div>
   <% else %>
     <div style="overflow-x:auto;">

@@ -1,0 +1,372 @@
+<% content_for :title, "Bill #{@order.code}" %>
+<% o = @order %>
+
+<style>
+  .pos { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:start; }
+  @media (max-width:980px) { .pos { grid-template-columns:1fr; } }
+  .pos-line { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center;
+    padding:11px 0; border-top:1px solid var(--line); }
+  .pos-line .nm { font-weight:600; font-size:14px; }
+  .pos-line .sub { font-size:12px; color:var(--ink-2); margin-top:2px; }
+  .pos-line .amt { font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .pos-sum { display:flex; justify-content:space-between; padding:5px 0; font-size:13.5px; }
+  .pos-sum.big { font-size:18px; font-weight:700; padding-top:11px; margin-top:6px; border-top:2px solid var(--ink); }
+  .pos-pay { display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr)); gap:8px; }
+  .pos-pay button { border:1px solid var(--line); background:#fff; border-radius:12px; padding:11px 6px;
+    font-size:13px; font-weight:600; cursor:pointer; }
+  .pos-pay button:hover { border-color:var(--primary); }
+</style>
+
+<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:16px;">
+  <div style="flex:1; min-width:220px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;">Bill <span class="l-mono"><%= o.code %></span></h2>
+      <span class="l-pill" style="--_c:<%= o.paid? ? '#3F7A57' : (o.voided? ? '#B4402F' : '#B08D57') %>;"><%= o.status_label %></span>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">
+      <%= o.branch.name %> ·
+      <% if o.member %>
+        <%= link_to o.customer_name, merchant_customer_path(o.member), style: "color:inherit; font-weight:600;" %>
+        · <%= o.member.phone %>
+      <% else %>
+        Khách lẻ
+      <% end %>
+      <% if o.booking %> · <%= link_to "hẹn #{o.booking.code}", merchant_booking_path(o.booking), style: "color:inherit;" %><% end %>
+      <%= " · thu lúc #{l(o.closed_at, format: '%H:%M %d/%m')}" if o.closed_at %>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <%= link_to "In biên lai", receipt_merchant_order_path(o), class: "l-btn l-btn-ghost", target: "_blank" %>
+    <%= link_to "Danh sách bill", merchant_orders_path, class: "l-btn l-btn-ghost" %>
+  </div>
+</div>
+
+<% if o.member %>
+  <% cards = @cards %>
+  <% if cards.any? || o.member.wallet_balance.positive? || o.member.points_balance.positive? %>
+    <div class="l-panel" style="margin-bottom:14px; background:color-mix(in srgb, var(--primary) 5%, #fff);">
+      <div class="l-eyebrow" style="margin-bottom:8px;">Khách này đang có</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:13px;">
+        <% if o.member.wallet_balance.positive? %>
+          <span class="l-chip">👛 Ví <strong><%= vnd(o.member.wallet_balance) %></strong></span>
+        <% end %>
+        <% if o.member.points_balance.positive? %>
+          <span class="l-chip">⭐ <strong><%= o.member.points_balance %></strong> điểm
+            (≈<%= vnd(o.member.points_balance * current_workspace.setting_i("points_value")) %>)</span>
+        <% end %>
+        <% cards.each do |c| %>
+          <%= link_to merchant_member_package_path(c), class: "l-chip l-chip-brand", style: "text-decoration:none;" do %>
+            🎟️ <%= c.name %> · còn <%= c.value_card? ? vnd(c.value_balance) : "#{c.sessions_left} buổi" %>
+          <% end %>
+        <% end %>
+        <% if o.member.tier_discount.positive? %>
+          <span class="l-chip">Hạng <%= o.member.tier_name %> −<%= o.member.tier_discount %>%</span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<div class="pos">
+  <%# ---- Nội dung bill ---- %>
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div class="l-section-h" style="margin:0 0 4px;"><h3>Nội dung bill</h3></div>
+      <% if o.order_items.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2); padding:12px 0;">Bill trống — thêm dịch vụ, thẻ hoặc hàng bên dưới.</p>
+      <% end %>
+      <% o.order_items.each do |item| %>
+        <div class="pos-line">
+          <div>
+            <div class="nm">
+              <%= item.name %>
+              <% if item.from_package? %><span class="l-pill" style="--_c:#2F6F63;">trừ buổi trong thẻ</span><% end %>
+              <% if item.kind == "tip" %><span class="l-pill" style="--_c:#B08D57;">tip</span><% end %>
+            </div>
+            <div class="sub">
+              <%= item.kind_label %>
+              <%= " · KTV #{item.staff_member.display_name}" if item.staff_member %>
+              <%= " · tư vấn #{item.consultant.display_name}" if item.consultant %>
+              <% if item.discount_amount.positive? %> · giảm <%= vnd(item.discount_amount) %><% end %>
+            </div>
+          </div>
+          <div class="amt"><%= item.from_package? ? "0đ" : vnd(item.total) %></div>
+          <% if o.open? %>
+            <%= button_to "✕", remove_item_merchant_order_path(o, item_id: item.id), method: :delete,
+                  class: "l-chip", form: { style: "display:inline;" } %>
+          <% else %>
+            <span></span>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--line);">
+        <div class="pos-sum"><span>Tạm tính</span><span><%= vnd(o.subtotal) %></span></div>
+        <% if o.discount_total.positive? %>
+          <div class="pos-sum" style="color:var(--primary-ink);">
+            <span>Giảm giá<%= " (#{o.discount_note})" if o.discount_note.present? %></span>
+            <span>−<%= vnd(o.discount_total) %></span>
+          </div>
+        <% end %>
+        <% if o.service_charge.positive? %>
+          <div class="pos-sum"><span>Phí phục vụ</span><span><%= vnd(o.service_charge) %></span></div>
+        <% end %>
+        <% if o.vat_total.positive? %>
+          <div class="pos-sum" style="color:var(--ink-2);">
+            <span>VAT <%= o.branch.setting_i("vat_percent") %>%<%= " (đã gồm trong giá)" if o.branch.setting?("price_includes_vat") %></span>
+            <span><%= vnd(o.vat_total) %></span>
+          </div>
+        <% end %>
+        <% if o.tip_total.positive? %>
+          <div class="pos-sum"><span>Tip</span><span><%= vnd(o.tip_total) %></span></div>
+        <% end %>
+        <div class="pos-sum big"><span>Khách trả</span><span><%= vnd(o.total) %></span></div>
+        <% if o.paid_total.positive? %>
+          <div class="pos-sum" style="color:#3F7A57;"><span>Đã thu</span><span><%= vnd(o.paid_total) %></span></div>
+        <% end %>
+        <% if o.due.positive? %>
+          <div class="pos-sum" style="color:#B4402F; font-weight:700;"><span>Còn thiếu</span><span><%= vnd(o.due) %></span></div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# ---- Thêm vào bill ---- %>
+    <% if o.open? %>
+      <div class="l-panel">
+        <div class="l-section-h" style="margin:0 0 12px;"><h3>Thêm vào bill</h3></div>
+
+        <details open>
+          <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Dịch vụ</summary>
+          <%= form_with url: add_item_merchant_order_path(o), method: :post,
+                style: "display:grid; grid-template-columns:1.6fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+            <%= hidden_field_tag :kind, "service" %>
+            <div>
+              <label class="l-label">Dịch vụ</label>
+              <%= select_tag :service_id,
+                    options_from_collection_for_select(@services, :id, ->(s) { "#{s.name} · #{s.price_label}" }),
+                    class: "l-field" %>
+            </div>
+            <div>
+              <label class="l-label">KTV thực hiện</label>
+              <%= select_tag :staff_member_id,
+                    options_from_collection_for_select(@staff, :id, :display_name),
+                    include_blank: "—", class: "l-field" %>
+            </div>
+            <%= submit_tag "Thêm", class: "l-btn l-btn-primary" %>
+          <% end %>
+        </details>
+
+        <% if current_workspace.feature?("packages") && @packages.any? %>
+          <details style="margin-top:14px;">
+            <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Bán thẻ liệu trình / gói</summary>
+            <%= form_with url: add_item_merchant_order_path(o), method: :post,
+                  style: "display:grid; grid-template-columns:1.6fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+              <%= hidden_field_tag :kind, "package" %>
+              <div>
+                <label class="l-label">Gói</label>
+                <%= select_tag :package_id,
+                      options_from_collection_for_select(@packages, :id, ->(p) { "#{p.name} · #{vnd(p.price)}" }),
+                      class: "l-field" %>
+              </div>
+              <div>
+                <label class="l-label">Người chốt thẻ</label>
+                <%= select_tag :consultant_id,
+                      options_from_collection_for_select(@staff, :id, :display_name),
+                      include_blank: "—", class: "l-field" %>
+              </div>
+              <%= submit_tag "Thêm", class: "l-btn l-btn-primary" %>
+            <% end %>
+          </details>
+        <% end %>
+
+        <% if current_workspace.feature?("wallet") %>
+          <details style="margin-top:14px;">
+            <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Nạp ví trả trước</summary>
+            <%= form_with url: add_item_merchant_order_path(o), method: :post,
+                  style: "display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+              <%= hidden_field_tag :kind, "topup" %>
+              <div>
+                <label class="l-label">Số tiền nạp</label>
+                <%= number_field_tag :amount, current_workspace.setting_i("wallet_min_topup"),
+                      step: 100_000, class: "l-field" %>
+              </div>
+              <div>
+                <label class="l-label">Người chốt</label>
+                <%= select_tag :consultant_id,
+                      options_from_collection_for_select(@staff, :id, :display_name),
+                      include_blank: "—", class: "l-field" %>
+              </div>
+              <%= submit_tag "Thêm", class: "l-btn l-btn-primary" %>
+            <% end %>
+            <% if current_workspace.setting_i("wallet_topup_bonus_percent").positive? %>
+              <p style="font-size:12.5px; color:var(--ink-2); margin-top:8px;">
+                Spa đang thưởng <strong><%= current_workspace.setting_i("wallet_topup_bonus_percent") %>%</strong> khi nạp ví.
+              </p>
+            <% end %>
+          </details>
+        <% end %>
+
+        <% if current_workspace.setting?("tip_enabled") %>
+          <details style="margin-top:14px;">
+            <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Tip cho KTV</summary>
+            <%= form_with url: add_item_merchant_order_path(o), method: :post,
+                  style: "display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+              <%= hidden_field_tag :kind, "tip" %>
+              <div>
+                <label class="l-label">KTV nhận tip</label>
+                <%= select_tag :staff_member_id,
+                      options_from_collection_for_select(@staff.select(&:therapist?), :id, :display_name),
+                      class: "l-field" %>
+              </div>
+              <div>
+                <label class="l-label">Số tiền</label>
+                <%= number_field_tag :amount, 50_000, step: 10_000, class: "l-field" %>
+              </div>
+              <%= submit_tag "Thêm", class: "l-btn l-btn-primary" %>
+            <% end %>
+            <p style="font-size:12.5px; color:var(--ink-2); margin-top:8px;">
+              KTV nhận <%= current_workspace.setting_i("tip_to_staff_percent") %>% số tip (theo thiết lập).
+            </p>
+          </details>
+        <% end %>
+
+        <details style="margin-top:14px;">
+          <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Giảm giá cả bill</summary>
+          <%= form_with url: discount_merchant_order_path(o), method: :post,
+                style: "display:grid; grid-template-columns:.7fr .7fr 1.4fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+            <div>
+              <label class="l-label">Theo %</label>
+              <%= number_field_tag :percent, nil, min: 0, max: 100, class: "l-field" %>
+            </div>
+            <div>
+              <label class="l-label">Hoặc số tiền</label>
+              <%= number_field_tag :amount, nil, step: 10_000, class: "l-field" %>
+            </div>
+            <div>
+              <label class="l-label">Lý do (vào nhật ký)</label>
+              <%= text_field_tag :note, nil, class: "l-field", placeholder: "Khách quen / đền bù" %>
+            </div>
+            <%= submit_tag "Áp", class: "l-btn l-btn-ghost" %>
+          <% end %>
+        </details>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ---- Thu tiền ---- %>
+  <div>
+    <% if o.open? %>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-section-h" style="margin:0 0 4px;"><h3>Thu tiền</h3></div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+          Thu đủ là bill tự đóng: trừ buổi trong thẻ, cộng điểm và sinh hoa hồng cùng lúc.
+        </p>
+        <% %w[cash vietqr transfer card wallet points].each do |method| %>
+          <% next if %w[wallet points].include?(method) && o.member.nil? %>
+          <% next if method == "wallet" && !current_workspace.feature?("wallet") %>
+          <% next if method == "points" && !current_workspace.feature?("loyalty") %>
+          <%= form_with url: pay_merchant_order_path(o), method: :post,
+                style: "display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:8px; align-items:center;" do %>
+            <%= hidden_field_tag :method, method %>
+            <%= number_field_tag :amount, o.due, step: 1000, class: "l-field",
+                  style: "padding:9px 12px;", "aria-label": OrderPayment::METHOD_LABELS[method] %>
+            <%= submit_tag "#{OrderPayment::METHOD_ICONS[method]} #{OrderPayment::METHOD_LABELS[method]}",
+                  class: "l-btn l-btn-ghost", style: "white-space:nowrap; padding:9px 13px;" %>
+          <% end %>
+          <% if method == "wallet" && o.member %>
+            <div style="font-size:12px; color:var(--ink-2); margin:-4px 0 8px;">Ví còn <%= vnd(o.member.wallet_balance) %></div>
+          <% end %>
+          <% if method == "points" && o.member %>
+            <div style="font-size:12px; color:var(--ink-2); margin:-4px 0 8px;">
+              <%= o.member.points_balance %> điểm ≈ <%= vnd(o.member.points_balance * current_workspace.setting_i("points_value")) %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <% if current_workspace.bank_configured? %>
+          <details style="margin-top:8px;">
+            <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">📱 Mã VietQR đúng số tiền</summary>
+            <div style="text-align:center; margin-top:12px;">
+              <% payload = VietQrService.new(bin: current_workspace.bank_bin,
+                                             account_no: current_workspace.bank_account_no,
+                                             amount: o.due, description: "Bill #{o.code}").payload %>
+              <%= qr_svg(payload, size: 200) %>
+              <div style="font-size:12.5px; color:var(--ink-2); margin-top:8px;">
+                <%= current_workspace.bank_label %> · <%= current_workspace.bank_account_no %><br>
+                Nội dung: Bill <%= o.code %> · Số tiền <strong><%= vnd(o.due) %></strong>
+              </div>
+              <%= link_to "Tải ảnh QR", qr_merchant_order_path(o), class: "l-chip", style: "margin-top:8px; display:inline-block;" %>
+            </div>
+          </details>
+        <% else %>
+          <p style="font-size:12.5px; color:#B4402F; margin-top:8px;">
+            Chưa nhập tài khoản nhận tiền — <%= link_to "nhập ngay", merchant_payment_settings_path %> để có mã VietQR.
+          </p>
+        <% end %>
+
+        <% if o.settled? %>
+          <%= button_to "Đóng bill", close_merchant_order_path(o), method: :patch,
+                class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px;" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if o.order_payments.any? %>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:8px;">Đã thu</div>
+        <% o.order_payments.recent.each do |p| %>
+          <div style="display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-top:1px solid var(--line); font-size:13.5px;">
+            <span><%= p.method_icon %> <%= p.method_label %>
+              <span style="color:var(--ink-2); font-size:12px;"><%= l(p.received_at, format: "%H:%M") %></span>
+            </span>
+            <strong style="font-variant-numeric:tabular-nums;"><%= vnd(p.amount) %></strong>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if o.paid? %>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:8px;">Sau khi đóng bill</div>
+        <div style="font-size:13.5px; line-height:1.9;">
+          <% if o.points_earned.positive? %><div>⭐ Khách nhận <strong><%= o.points_earned %></strong> điểm</div><% end %>
+          <% if o.points_redeemed.positive? %><div>⭐ Đã đổi <strong><%= o.points_redeemed %></strong> điểm</div><% end %>
+          <% used = o.order_items.select(&:from_package?) %>
+          <% if used.any? %><div>🎟️ Đã trừ <strong><%= used.size %></strong> buổi trong thẻ</div><% end %>
+          <% comm = o.commission_entries.sum(:amount) %>
+          <% if comm.positive? %><div>🧮 Hoa hồng phát sinh <strong><%= vnd(comm) %></strong></div><% end %>
+        </div>
+      </div>
+      <% if current_membership&.can_manage? %>
+        <div class="l-panel" style="border-color:#f0d0cc;">
+          <div class="l-eyebrow" style="color:#B4402F;">Huỷ bill</div>
+          <p style="font-size:12.5px; color:var(--ink-2); margin:6px 0 10px;">
+            Huỷ sẽ hoàn lại buổi trong thẻ, tiền ví, điểm và thu hồi hoa hồng. Bill vẫn được giữ để tra.
+          </p>
+          <%= form_with url: void_merchant_order_path(o), method: :patch do %>
+            <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do huỷ", style: "margin-bottom:8px;" %>
+            <%= submit_tag "Huỷ bill này", class: "l-btn l-btn-ghost l-btn-block", style: "color:#B4402F;",
+                  data: { turbo_confirm: "Huỷ bill #{o.code}? Hành động này được ghi vào nhật ký." } %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% if o.voided? %>
+      <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6;">
+        <strong style="color:#a11;">Bill đã huỷ</strong>
+        <div style="font-size:13px; margin-top:6px;">
+          <%= l(o.voided_at, format: "%H:%M %d/%m/%Y") %><%= " · #{o.void_reason}" if o.void_reason.present? %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="l-panel" style="margin-top:16px;">
+      <div class="l-eyebrow" style="margin-bottom:8px;">Ghi chú bill</div>
+      <%= form_with model: o, url: merchant_order_path(o), method: :patch do |f| %>
+        <%= f.text_area :note, class: "l-field", rows: 2 %>
+        <%= f.submit "Lưu", class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:8px;" %>
+      <% end %>
+    </div>
+  </div>
+</div>

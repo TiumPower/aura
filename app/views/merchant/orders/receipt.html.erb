@@ -1,0 +1,79 @@
+<% o = @order %>
+<style>
+  .rc { max-width:360px; margin:0 auto; font-family:var(--font-body); color:#111; }
+  .rc h1 { font-family:var(--font-display); font-size:20px; text-align:center; margin:0 0 2px; }
+  .rc .sub { text-align:center; font-size:12px; color:#555; }
+  .rc hr { border:none; border-top:1px dashed #999; margin:12px 0; }
+  .rc table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .rc td { padding:4px 0; vertical-align:top; }
+  .rc td.r { text-align:right; white-space:nowrap; }
+  .rc .tot td { font-weight:700; font-size:14px; border-top:1px solid #111; padding-top:7px; }
+  .rc .ft { text-align:center; font-size:11.5px; color:#555; margin-top:14px; line-height:1.6; }
+  @media print { .no-print { display:none; } }
+</style>
+
+<div class="rc">
+  <h1><%= current_workspace.name %></h1>
+  <div class="sub"><%= o.branch.name %><br><%= o.branch.short_address %><br><%= o.branch.phone %></div>
+  <hr>
+  <div style="font-size:12.5px;">
+    Bill: <strong><%= o.code %></strong><br>
+    <%= o.closed_at ? l(o.closed_at, format: "%H:%M %d/%m/%Y") : l(Time.current, format: "%H:%M %d/%m/%Y") %><br>
+    Khách: <%= o.customer_name %><br>
+    <% if o.booking %>Lịch hẹn: <%= o.booking.code %><br><% end %>
+    Thu ngân: <%= o.cashier&.name || "—" %>
+  </div>
+  <hr>
+  <table>
+    <% o.order_items.each do |item| %>
+      <tr>
+        <td>
+          <%= item.name %>
+          <% if item.staff_member %><br><span style="color:#666; font-size:11px;">KTV: <%= item.staff_member.display_name %></span><% end %>
+          <% if item.from_package? %><br><span style="color:#666; font-size:11px;">Trừ 1 buổi trong thẻ</span><% end %>
+        </td>
+        <td class="r"><%= item.from_package? ? "0" : number_with_delimiter(item.total) %></td>
+      </tr>
+    <% end %>
+    <tr><td colspan="2"><hr style="margin:6px 0;"></td></tr>
+    <tr><td>Tạm tính</td><td class="r"><%= number_with_delimiter(o.subtotal) %></td></tr>
+    <% if o.discount_total.positive? %>
+      <tr><td>Giảm giá</td><td class="r">−<%= number_with_delimiter(o.discount_total) %></td></tr>
+    <% end %>
+    <% if o.service_charge.positive? %>
+      <tr><td>Phí phục vụ</td><td class="r"><%= number_with_delimiter(o.service_charge) %></td></tr>
+    <% end %>
+    <% if o.vat_total.positive? %>
+      <tr><td>VAT <%= o.branch.setting_i("vat_percent") %>%<%= o.branch.setting?("price_includes_vat") ? " (đã gồm)" : "" %></td>
+        <td class="r"><%= number_with_delimiter(o.vat_total) %></td></tr>
+    <% end %>
+    <% if o.tip_total.positive? %>
+      <tr><td>Tip</td><td class="r"><%= number_with_delimiter(o.tip_total) %></td></tr>
+    <% end %>
+    <tr class="tot"><td>TỔNG CỘNG</td><td class="r"><%= number_with_delimiter(o.total) %>đ</td></tr>
+    <% o.order_payments.each do |p| %>
+      <tr><td><%= p.method_label %></td><td class="r"><%= number_with_delimiter(p.amount) %></td></tr>
+    <% end %>
+  </table>
+
+  <% if o.member %>
+    <hr>
+    <div style="font-size:12px;">
+      <% if o.points_earned.positive? %>Điểm nhận: <strong>+<%= o.points_earned %></strong><br><% end %>
+      Điểm hiện có: <strong><%= o.member.points_balance %></strong><br>
+      <% if o.member.wallet_balance.positive? %>Ví còn: <strong><%= number_with_delimiter(o.member.wallet_balance) %>đ</strong><br><% end %>
+      <% o.member.member_packages.usable.each do |c| %>
+        <%= c.name %>: còn <%= c.value_card? ? "#{number_with_delimiter(c.value_balance)}đ" : "#{c.sessions_left} buổi" %><br>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="ft">
+    Cảm ơn <%= current_workspace.branding_value("customer_term") %> đã tin chọn <%= current_workspace.name %>.<br>
+    <%= current_workspace.branding_value("tagline") %>
+  </div>
+
+  <div class="no-print" style="text-align:center; margin-top:18px;">
+    <button onclick="window.print()" class="l-btn l-btn-primary">In biên lai</button>
+  </div>
+</div>

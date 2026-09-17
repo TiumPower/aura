@@ -1,0 +1,66 @@
+<% content_for :title, "Thẻ liệu trình & gói" %>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+  <p style="color:var(--ink-2); font-size:13.5px; max-width:60ch; margin:0;">
+    Gói là cách spa thu tiền trước và khoá khách quay lại. Bán gói xong, mỗi lần khách đến
+    hệ thống tự trừ buổi và vẫn tính hoa hồng cho KTV.
+  </p>
+  <div style="margin-left:auto; display:flex; gap:8px;">
+    <%= link_to "Thẻ của khách", merchant_member_packages_path, class: "l-btn l-btn-ghost" %>
+    <%= link_to "+ Tạo gói", new_merchant_package_path, class: "l-btn l-btn-primary" %>
+  </div>
+</div>
+
+<% if @packages.empty? %>
+  <div class="l-panel" style="text-align:center; padding:40px;">
+    <div style="font-size:40px;">🎟️</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có gói nào</p>
+    <p style="color:var(--ink-2); font-size:13.5px; margin:6px 0 14px; max-width:46ch; margin-inline:auto;">
+      Ví dụ phổ biến: "Thẻ 10 buổi massage body" bán 4.000.000đ (giá lẻ 4.500.000đ), hạn 6 tháng.
+    </p>
+    <%= link_to "Tạo gói đầu tiên", new_merchant_package_path, class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:14px;">
+    <% @packages.each do |p| %>
+      <div class="l-panel">
+        <div style="display:flex; gap:8px; align-items:flex-start;">
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:16px;"><%= p.name %></div>
+            <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;"><%= p.kind_label %></div>
+          </div>
+          <% unless p.active %><span class="l-pill" style="--_c:#8A8078;">Ngưng bán</span><% end %>
+        </div>
+
+        <div style="display:flex; align-items:baseline; gap:8px; margin-top:12px;">
+          <span class="l-num" style="font-size:24px;"><%= vnd(p.price) %></span>
+          <% if p.savings.positive? %>
+            <span style="font-size:12.5px; color:var(--ink-2); text-decoration:line-through;"><%= vnd(p.face) %></span>
+            <span class="l-pill" style="--_c:#3F7A57;">tiết kiệm <%= vnd(p.savings) %></span>
+          <% end %>
+        </div>
+
+        <div style="font-size:13px; color:var(--ink-2); margin-top:10px; line-height:1.6;">
+          <% p.package_lines.each do |line| %>
+            <div><%= line.label %></div>
+          <% end %>
+          <% if p.value_card? %>
+            <div>Nạp <%= vnd(p.price) %> → dùng được <%= vnd(p.face) %></div>
+          <% end %>
+          <div style="margin-top:4px;">
+            Hạn <%= p.validity %> ngày
+            <%= " · chuyển nhượng được" if p.transferable %>
+            <%= " · dùng chung gia đình" if p.family_share %>
+            <%= " · khách mua được trên app" if p.online_sellable %>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-2);">
+          <span>Đã bán <strong style="color:var(--ink);"><%= @sold[p.id].to_i %></strong></span>
+          <span>Doanh thu <strong style="color:var(--ink);"><%= vnd(@revenue[p.id].to_i) %></strong></span>
+          <%= link_to "Chi tiết →", merchant_package_path(p), style: "margin-left:auto; font-weight:600; color:var(--primary-ink); text-decoration:none;" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

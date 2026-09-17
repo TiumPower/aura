@@ -38,6 +38,10 @@ class Member < ApplicationRecord
   has_many :notifications, dependent: :destroy
   has_many :push_subscriptions, dependent: :destroy
   has_many :bookings, dependent: :nullify
+  has_many :orders, dependent: :nullify
+  has_many :member_packages, dependent: :destroy
+  has_many :wallet_transactions, dependent: :destroy
+  has_many :point_transactions, dependent: :destroy
   has_one  :conversation, dependent: :destroy
   has_one_attached :avatar
 

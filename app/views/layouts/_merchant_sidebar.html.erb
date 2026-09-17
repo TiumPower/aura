@@ -61,8 +61,18 @@
   <%= link_to merchant_shifts_path, class: "l-nav-item #{'active' if nav == :shifts}" do %>
     <span>🗓️</span><span>Bảng ca làm</span>
   <% end %>
+  <% if module_on?("pos") %>
+    <%= link_to merchant_orders_path, class: "l-nav-item #{'active' if nav == :orders}" do %>
+      <span>🧾</span><span>Bill &amp; doanh thu</span>
+    <% end %>
+  <% end %>
   <%= link_to merchant_customers_path, class: "l-nav-item #{'active' if nav == :customers}" do %>
     <span>👤</span><span>Khách hàng</span>
+  <% end %>
+  <% if module_on?("packages") %>
+    <%= link_to merchant_packages_path, class: "l-nav-item #{'active' if nav == :packages}" do %>
+      <span>🎟️</span><span>Thẻ liệu trình</span>
+    <% end %>
   <% end %>
   <% if module_on?("chat") %>
     <%= link_to merchant_conversations_path, class: "l-nav-item #{'active' if nav == :chat}" do %>
@@ -74,6 +84,15 @@
   <% end %>
   <%= link_to merchant_new_announcement_path, class: "l-nav-item #{'active' if nav == :announcements}" do %>
     <span>📢</span><span>Gửi thông báo</span>
+  <% end %>
+
+  <%= link_to merchant_reports_path, class: "l-nav-item #{'active' if nav == :reports}" do %>
+    <span>📊</span><span>Báo cáo</span>
+  <% end %>
+  <% if module_on?("commissions") %>
+    <%= link_to merchant_commissions_path, class: "l-nav-item #{'active' if nav == :commissions}" do %>
+      <span>🧮</span><span>Hoa hồng &amp; lương</span>
+    <% end %>
   <% end %>
 
   <div class="l-navgrp">Thiết lập spa</div>

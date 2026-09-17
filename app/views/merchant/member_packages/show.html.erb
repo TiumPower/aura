@@ -1,0 +1,105 @@
+<% content_for :title, "#{@card.member.display_name} · #{@card.name}" %>
+<% c = @card %>
+
+<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:18px;">
+  <div style="flex:1; min-width:220px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:20px; font-weight:700;"><%= c.name %></h2>
+      <span class="l-pill" style="--_c:<%= c.usable? ? '#3F7A57' : '#8A8078' %>;"><%= c.status_label %></span>
+    </div>
+    <div style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">
+      <%= link_to c.member.display_name, merchant_customer_path(c.member), style: "color:inherit; font-weight:600;" %>
+      · mua <%= l(c.purchased_on, format: "%d/%m/%Y") %>
+      <%= " · hạn #{l(c.expires_on, format: '%d/%m/%Y')}" if c.expires_on %>
+      <%= " · trả #{vnd(c.price_paid)}" if c.price_paid.positive? %>
+      <%= " · chốt bởi #{c.sold_by.display_name}" if c.sold_by %>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;">
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div class="l-eyebrow" style="margin-bottom:10px;">Buổi còn lại</div>
+      <% if c.value_card? %>
+        <div class="l-num" style="font-size:30px;"><%= vnd(c.value_balance) %></div>
+        <div style="font-size:12.5px; color:var(--ink-2);">số dư thẻ tiền</div>
+      <% elsif c.package_credits.any? %>
+        <% c.package_credits.each do |credit| %>
+          <div style="padding:10px 0; border-top:1px solid var(--line);">
+            <div style="display:flex; justify-content:space-between; gap:8px;">
+              <strong style="font-size:14px;"><%= credit.service.name %></strong>
+              <span style="font-weight:700; font-variant-numeric:tabular-nums;">
+                <%= credit.remaining %>/<%= credit.total_sessions %>
+              </span>
+            </div>
+            <div style="height:6px; border-radius:999px; background:var(--surface-2); margin-top:6px; overflow:hidden;">
+              <div style="height:100%; width:<%= credit.total_sessions.positive? ? (credit.used_sessions * 100.0 / credit.total_sessions).round : 0 %>%; background:var(--primary);"></div>
+            </div>
+            <% if current_membership&.can_manage? %>
+              <%= form_with url: grant_merchant_member_package_path(c), method: :patch,
+                    style: "display:grid; grid-template-columns:.5fr 1.3fr auto; gap:6px; margin-top:8px; align-items:end;" do %>
+                <%= hidden_field_tag :credit_id, credit.id %>
+                <div>
+                  <label class="l-label" style="font-size:11px;">Tặng</label>
+                  <%= number_field_tag :sessions, 1, min: 1, class: "l-field", style: "padding:7px 9px;" %>
+                </div>
+                <div>
+                  <label class="l-label" style="font-size:11px;">Lý do</label>
+                  <%= text_field_tag :reason, nil, class: "l-field", style: "padding:7px 9px;", placeholder: "đền bù / khuyến mãi" %>
+                </div>
+                <%= submit_tag "Tặng buổi", class: "l-btn l-btn-ghost", style: "padding:7px 11px; font-size:12.5px;" %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      <% else %>
+        <p style="font-size:13px; color:var(--ink-2);">Thẻ này chưa khai buổi nào.</p>
+      <% end %>
+    </div>
+
+    <% if current_membership&.can_manage? %>
+      <div class="l-panel">
+        <div class="l-eyebrow" style="margin-bottom:10px;">Quản lý thẻ</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <% if c.status == "frozen" %>
+            <%= button_to "Mở lại thẻ", unfreeze_merchant_member_package_path(c), method: :patch, class: "l-btn l-btn-primary" %>
+          <% elsif c.status == "active" %>
+            <%= button_to "Tạm dừng thẻ", freeze_merchant_member_package_path(c), method: :patch, class: "l-btn l-btn-ghost",
+                  form: { data: { turbo_confirm: "Tạm dừng thẻ? Khách sẽ không trừ buổi được cho tới khi mở lại." } } %>
+          <% end %>
+        </div>
+        <%= form_with url: extend_expiry_merchant_member_package_path(c), method: :patch,
+              style: "display:flex; gap:8px; align-items:end;" do %>
+          <div>
+            <label class="l-label">Gia hạn thêm (ngày)</label>
+            <%= number_field_tag :days, 30, min: 1, class: "l-field", style: "max-width:140px;" %>
+          </div>
+          <%= submit_tag "Gia hạn", class: "l-btn l-btn-ghost" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-section-h" style="margin:0 0 6px;"><h3>Nhật ký dùng thẻ</h3></div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+      Mỗi lần trừ hoặc hoàn buổi đều để lại dấu — khi khách thắc mắc "sao hết buổi rồi", đây là câu trả lời.
+    </p>
+    <% if @uses.empty? %>
+      <p style="font-size:13px; color:var(--ink-2);">Chưa dùng buổi nào.</p>
+    <% else %>
+      <% @uses.each do |u| %>
+        <div style="display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--line); font-size:13px;">
+          <span style="color:var(--ink-2); white-space:nowrap;"><%= l(u.used_at, format: "%H:%M %d/%m/%y") %></span>
+          <span style="flex:1;">
+            <strong style="color:<%= u.restored? ? '#3F7A57' : 'var(--ink)' %>;">
+              <%= u.restored? ? "+#{u.sessions.abs}" : "−#{u.sessions}" %> buổi
+            </strong>
+            <%= " · #{u.reason}" if u.reason.present? %>
+          </span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

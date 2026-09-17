@@ -100,6 +100,42 @@ Rails.application.routes.draw do
       end
     end
 
+    # ---- Thu ngân ---------------------------------------------------------
+    resources :orders, path: "bills", except: [:new, :edit, :destroy] do
+      member do
+        post  :add_item
+        delete "items/:item_id", action: :remove_item, as: :remove_item
+        post  :discount
+        post  :pay
+        patch :close
+        patch :void
+        get   :receipt
+        get   :qr
+      end
+      collection do
+        post :open_for_booking
+        post :open_blank
+      end
+    end
+
+    # ---- Thẻ liệu trình & gói ---------------------------------------------
+    resources :packages do
+      member { patch :archive }
+    end
+    resources :member_packages, path: "cards", only: [:index, :show, :create] do
+      member do
+        patch :freeze
+        patch :unfreeze
+        patch :grant
+        patch :extend_expiry
+      end
+    end
+
+    # ---- Hoa hồng & báo cáo -----------------------------------------------
+    get "commissions", to: "commissions#index", as: :commissions
+    patch "commissions/approve", to: "commissions#approve", as: :approve_commissions
+    get "reports", to: "reports#index", as: :reports
+
     # ---- Nhân sự ----------------------------------------------------------
     resources :staff, controller: "staff_members", except: [:destroy] do
       member do
@@ -193,6 +229,10 @@ Rails.application.routes.draw do
     get  "lich-hen",           to: "bookings#index",   as: :booking_list
     get  "lich-hen/:id",       to: "bookings#show",    as: :booking
     patch "lich-hen/:id/huy",  to: "bookings#cancel",  as: :cancel_booking
+
+    # Thẻ liệu trình, ví, điểm và lịch sử chi tiêu của khách
+    get "the-cua-toi", to: "wallet#show", as: :wallet
+    get "chi-tieu",    to: "wallet#orders", as: :spending
 
     get   "toi", to: "profile#show", as: :profile
     patch "toi", to: "profile#update"

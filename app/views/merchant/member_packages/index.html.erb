@@ -1,0 +1,66 @@
+<% content_for :title, "Thẻ của khách" %>
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+  <%= form_with url: merchant_member_packages_path, method: :get, style: "display:flex; gap:8px;" do %>
+    <%= search_field_tag :q, params[:q], class: "l-field", style: "max-width:240px;", placeholder: "Tìm khách…" %>
+    <%= select_tag :status,
+          options_for_select(MemberPackage::STATUSES.map { |s| ["#{MemberPackage::STATUS_LABELS[s]} (#{@counts[s].to_i})", s] }, @status),
+          include_blank: "Mọi trạng thái", class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
+  <% end %>
+  <div style="margin-left:auto;">
+    <%= link_to "Danh mục gói", merchant_packages_path, class: "l-btn l-btn-ghost" %>
+  </div>
+</div>
+
+<% if @expiring.any? || @low.any? %>
+  <div class="l-panel" style="margin-bottom:16px; border-color:color-mix(in srgb, var(--primary-2) 55%, var(--line)); background:color-mix(in srgb, var(--primary-2) 8%, #fff);">
+    <div class="l-eyebrow">Nên gọi khách ngay</div>
+    <% if @low.any? %>
+      <div style="font-weight:700; font-size:14px; margin-top:8px;">🎟️ <%= @low.size %> thẻ còn rất ít buổi</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+        <% @low.first(12).each do |c| %>
+          <%= link_to merchant_member_package_path(c), class: "l-chip", style: "text-decoration:none;" do %>
+            <%= c.member.display_name %> · còn <%= c.sessions_left %> buổi
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+    <% if @expiring.any? %>
+      <div style="font-weight:700; font-size:14px; margin-top:12px;">⏳ <%= @expiring.size %> thẻ sắp hết hạn</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+        <% @expiring.first(12).each do |c| %>
+          <%= link_to merchant_member_package_path(c), class: "l-chip", style: "text-decoration:none;" do %>
+            <%= c.member.display_name %> · còn <%= c.days_left %> ngày
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @cards.empty? %>
+  <div class="l-panel" style="text-align:center; padding:36px;">
+    <div style="font-size:38px;">🎟️</div>
+    <p style="font-weight:700; margin-top:8px;">Chưa có thẻ nào khớp</p>
+  </div>
+<% else %>
+  <% @cards.each do |c| %>
+    <%= link_to merchant_member_package_path(c), class: "l-row" do %>
+      <div class="ic"><%= c.member.initials %></div>
+      <div class="bd">
+        <div class="t">
+          <%= c.member.display_name %> · <%= c.name %>
+          <span class="l-pill" style="--_c:<%= c.usable? ? '#3F7A57' : '#8A8078' %>;"><%= c.status_label %></span>
+        </div>
+        <div class="s">
+          còn <%= c.value_card? ? vnd(c.value_balance) : "#{c.sessions_left}/#{c.sessions_total} buổi" %>
+          <% if c.expires_on %> · hạn <%= l(c.expires_on, format: "%d/%m/%Y") %>
+            <%= "(còn #{c.days_left} ngày)" if c.days_left && c.days_left >= 0 %>
+          <% end %>
+          <%= " · đã trả #{vnd(c.price_paid)}" if c.price_paid.positive? %>
+        </div>
+      </div>
+      <div class="go">›</div>
+    <% end %>
+  <% end %>
+<% end %>

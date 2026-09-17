@@ -1,0 +1,115 @@
+<%= form_with model: package, url: url, method: method do |f| %>
+  <% if package.errors.any? %>
+    <div class="l-panel" style="background:#fdecec; border-color:#f5c6c6; color:#a11; margin-bottom:16px;">
+      <%= package.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
+    <div class="l-panel">
+      <div class="l-eyebrow" style="margin-bottom:12px;">Gói</div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Tên gói <span style="color:#e5484d;">*</span></label>
+        <%= f.text_field :name, class: "l-field", placeholder: "VD: Thẻ 10 buổi massage body" %>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Loại gói</label>
+          <%= f.select :kind, Package::KINDS.map { |k| [Package::KIND_LABELS[k], k] }, {}, class: "l-field" %>
+        </div>
+        <div>
+          <label class="l-label">Giá bán (đ)</label>
+          <%= f.number_field :price, class: "l-field", step: 100_000, min: 0 %>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label class="l-label">Giá trị dùng được (thẻ tiền)</label>
+          <%= f.number_field :face_value, class: "l-field", step: 100_000,
+                placeholder: "Nạp 5tr dùng 6tr → nhập 6.000.000" %>
+        </div>
+        <div>
+          <label class="l-label">Hạn dùng (ngày)</label>
+          <%= f.number_field :validity_days, class: "l-field",
+                placeholder: current_workspace.setting("package_validity_days") %>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="l-label">Mô tả cho khách</label>
+        <%= f.text_area :description, class: "l-field", rows: 3 %>
+      </div>
+      <div>
+        <label class="l-label">Hoa hồng cho người chốt thẻ (%)</label>
+        <%= f.number_field :commission_percent, class: "l-field", min: 0, max: 100,
+              placeholder: current_workspace.setting("commission_on_package_sale_percent") %>
+      </div>
+    </div>
+
+    <div>
+      <div class="l-panel" style="margin-bottom:16px;">
+        <div class="l-eyebrow" style="margin-bottom:6px;">Gói gồm những gì</div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+          Mỗi dòng là "n buổi dịch vụ X". Thẻ tiền thì để trống phần này.
+        </p>
+        <% if @services.empty? %>
+          <p style="font-size:13px; color:var(--ink-2);">
+            Chưa có dịch vụ nào. <%= link_to "Tạo dịch vụ →", new_merchant_service_path %>
+          </p>
+        <% else %>
+          <div data-controller="rows">
+            <%= f.fields_for :package_lines do |lf| %>
+              <div style="display:grid; grid-template-columns:1.6fr .6fr auto; gap:8px; align-items:end; margin-bottom:8px;">
+                <div>
+                  <label class="l-label">Dịch vụ</label>
+                  <%= lf.select :service_id, @services.map { |s| ["#{s.name} · #{s.price_label}", s.id] },
+                        { include_blank: "—" }, class: "l-field" %>
+                </div>
+                <div>
+                  <label class="l-label">Buổi</label>
+                  <%= lf.number_field :sessions, class: "l-field", min: 1, value: lf.object.sessions || 1 %>
+                </div>
+                <label style="font-size:12px; display:flex; align-items:center; gap:4px; padding-bottom:12px;">
+                  <%= lf.check_box :_destroy %> xoá
+                </label>
+              </div>
+            <% end %>
+          </div>
+          <p style="font-size:12px; color:var(--ink-2);">
+            Lưu gói rồi mở lại để thêm dòng tiếp theo.
+          </p>
+        <% end %>
+      </div>
+
+      <div class="l-panel">
+        <div class="l-eyebrow" style="margin-bottom:10px;">Quy tắc dùng thẻ</div>
+        <div class="l-toggle-row">
+          <div><div style="font-weight:600; font-size:14px;">Đang bán</div></div>
+          <label class="l-switch"><%= f.check_box :active %><span class="knob"></span></label>
+        </div>
+        <div class="l-toggle-row">
+          <div>
+            <div style="font-weight:600; font-size:14px;">Khách mua được trên app</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Cần nối cổng thanh toán online.</div>
+          </div>
+          <label class="l-switch"><%= f.check_box :online_sellable %><span class="knob"></span></label>
+        </div>
+        <div class="l-toggle-row">
+          <div><div style="font-weight:600; font-size:14px;">Cho chuyển nhượng</div></div>
+          <label class="l-switch"><%= f.check_box :transferable %><span class="knob"></span></label>
+        </div>
+        <div class="l-toggle-row">
+          <div>
+            <div style="font-weight:600; font-size:14px;">Người thân dùng chung</div>
+            <div style="font-size:12.5px; color:var(--ink-2);">Vợ/chồng, con dùng cùng một thẻ.</div>
+          </div>
+          <label class="l-switch"><%= f.check_box :family_share %><span class="knob"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin-top:18px;">
+    <%= f.submit package.persisted? ? "Lưu gói" : "Tạo gói", class: "l-btn l-btn-primary" %>
+    <%= link_to "Huỷ", package.persisted? ? merchant_package_path(package) : merchant_packages_path, class: "l-btn l-btn-ghost" %>
+  </div>
+<% end %>

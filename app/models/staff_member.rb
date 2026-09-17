@@ -29,6 +29,8 @@ class StaffMember < ApplicationRecord
   has_many :staff_services, dependent: :destroy
   has_many :services, through: :staff_services
   has_many :booking_items, dependent: :nullify
+  has_many :order_items, dependent: :nullify
+  has_many :commission_entries, dependent: :destroy
   has_many :shift_templates, dependent: :destroy
   has_one_attached :avatar
 
