@@ -25,8 +25,8 @@
        "pwa-vapid-value": PushSender.public_key,
        "pwa-subscribe-url-value": merchant_push_subscribe_path,
        "pwa-unsubscribe-url-value": merchant_push_unsubscribe_path,
-       "pwa-on-text": t("customer.pwa.push_on"),
-       "pwa-off-text": t("customer.pwa.push_off"),
+       "pwa-on-text": "đang bật — quầy sẽ nhận lịch hẹn mới và tin nhắn khách",
+       "pwa-off-text": "đang tắt — chạm để bật nhận thông báo cho quầy",
        "pwa-blocked-text": t("customer.pwa.push_blocked"),
        "pwa-unsupported-text": t("customer.pwa.push_unsupported"),
        "pwa-got-it-text": t("customer.pwa.got_it"),
@@ -73,8 +73,14 @@
     <% if current_workspace %><%= turbo_stream_from current_workspace, "staff_chat_badge" %><% end %>
     <%= render "layouts/merchant_tabbar" %>
     <% if current_workspace %>
-      <%= render "layouts/pwa_install" %>
-      <%= render "layouts/pwa_push" %>
+      <%# Chữ dành cho NHÂN SỰ, không dùng chữ của khách. %>
+      <%= render "layouts/pwa_install",
+            title: "Cài app quản lý",
+            body: "Thêm vào màn hình chính để mở nhanh lịch hẹn và quầy thu ngân." %>
+      <%= render "layouts/pwa_push",
+            title: "Bật thông báo cho quầy 🔔",
+            body: "Nhận ngay lịch hẹn mới từ app khách, khách huỷ lịch và tin nhắn của khách.",
+            later: "Để sau", enable: "Bật thông báo" %>
     <% end %>
   </body>
 </html>

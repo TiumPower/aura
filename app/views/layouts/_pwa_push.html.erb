@@ -1,12 +1,23 @@
+<%# locals (tuỳ chọn): title, body, later, enable.
+    Mặc định là chữ dành cho KHÁCH. Cổng quản lý PHẢI truyền chữ riêng — mời
+    nhân viên "nhận nhắc lịch hẹn và ưu đãi từ spa" là sai đối tượng. %>
 <div class="l-a2hs-overlay" data-pwa-target="pushBanner" hidden>
   <div class="l-a2hs">
     <button type="button" class="l-a2hs-x" data-action="pwa#dismissPush" aria-label="Đóng">✕</button>
     <div class="ic">🔔</div>
-    <div style="font-weight:700; font-size:17px;"><%= t("customer.pwa.push_prompt_title") %></div>
-    <div style="font-size:13px; color:var(--ink-2); margin-top:6px;"><%= t("customer.pwa.push_prompt_sub", shop: current_workspace&.name) %></div>
+    <div style="font-weight:700; font-size:17px;">
+      <%= local_assigns[:title] || t("customer.pwa.push_prompt_title") %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+      <%= local_assigns[:body] || t("customer.pwa.push_prompt_sub", shop: current_workspace&.name) %>
+    </div>
     <div style="display:flex; gap:8px; margin-top:18px;">
-      <button type="button" class="l-btn l-btn-ghost" data-action="pwa#dismissPush" style="flex:1;"><%= t("customer.pwa.push_prompt_later") %></button>
-      <button type="button" class="l-btn l-btn-primary" data-action="pwa#enablePush" style="flex:1;"><%= t("customer.pwa.push_prompt_enable") %></button>
+      <button type="button" class="l-btn l-btn-ghost" data-action="pwa#dismissPush" style="flex:1;">
+        <%= local_assigns[:later] || t("customer.pwa.push_prompt_later") %>
+      </button>
+      <button type="button" class="l-btn l-btn-primary" data-action="pwa#enablePush" style="flex:1;">
+        <%= local_assigns[:enable] || t("customer.pwa.push_prompt_enable") %>
+      </button>
     </div>
   </div>
 </div>

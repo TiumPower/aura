@@ -1,9 +1,14 @@
+<%# locals (tuỳ chọn): title, body. Mặc định là chữ dành cho KHÁCH. %>
 <div class="l-a2hs-overlay" data-pwa-target="installBanner" hidden>
   <div class="l-a2hs">
     <button type="button" class="l-a2hs-x" data-action="pwa#dismissInstall" aria-label="Đóng">✕</button>
     <div class="ic">📲</div>
-    <div style="font-weight:700; font-size:17px;"><%= t("customer.pwa.install_title") %></div>
-    <div style="font-size:13px; color:var(--ink-2); margin-top:6px;"><%= t("customer.pwa.install_sub") %></div>
+    <div style="font-weight:700; font-size:17px;">
+      <%= local_assigns[:title] || t("customer.pwa.install_title") %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+      <%= local_assigns[:body] || t("customer.pwa.install_sub") %>
+    </div>
     <div data-pwa-target="iosHint" hidden style="font-size:13px; color:var(--ink-2); margin-top:10px; background:var(--surface-2); border-radius:12px; padding:10px 12px;"><%= t("customer.pwa.ios_hint") %></div>
     <div style="display:flex; gap:8px; margin-top:18px;">
       <button type="button" class="l-btn l-btn-ghost" data-pwa-target="laterButton" data-action="pwa#dismissInstall" style="flex:1;"><%= t("customer.pwa.install_later") %></button>
