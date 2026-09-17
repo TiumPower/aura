@@ -395,9 +395,20 @@ ActsAsTenant.with_tenant(ws) do
         b = res.booking
         # Lịch của hôm qua/hôm nay đã qua giờ thì cho chạy tiếp trạng thái để
         # màn hình hàng chờ có cả ba cột dữ liệu.
-        if day == Date.current && at < Time.current - 2.hours
-          b.transition_to!("checked_in") && b.transition_to!("in_progress") && b.transition_to!("completed")
-        elsif day == Date.current && at < Time.current
+        next unless day == Date.current
+        if at < Time.current - 2.hours
+          # Buổi đã xong thì phải có BILL, nếu không "đã thu hôm nay" ra 0đ trong
+          # khi hôm nay có 20 lịch hẹn — hai con số cạnh nhau tự tố nhau.
+          b.transition_to!("checked_in")
+          b.transition_to!("in_progress")
+          o = Checkout.open_for_booking(booking: b, actor: owner).order
+          if o
+            Checkout.add_tip(order: o, amount: [50_000, 100_000].sample, staff: b.booking_items.first&.staff_member) if rand < 0.35
+            o.reload
+            Checkout.pay(order: o, method: %w[cash vietqr transfer card].sample, amount: o.total, actor: owner)
+            Checkout.close!(order: o, actor: owner)
+          end
+        elsif at < Time.current
           b.transition_to!("checked_in")
         end
       end
