@@ -4,7 +4,8 @@
     <div class="logo"><%= current_workspace&.logo_initials || "AU" %></div>
     <div>
       <div class="nm"><%= current_workspace&.name || "Aura" %></div>
-      <div class="sub"><%= current_workspace&.business_type_label || "Quản lý spa" %></div>
+      <%# Slogan của spa đọc tự nhiên hơn nhãn loại hình ("Kết hợp cả hai"). %>
+      <div class="sub"><%= current_workspace&.branding_value("tagline") || "Quản lý spa" %></div>
     </div>
   </div>
 

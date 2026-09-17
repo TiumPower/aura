@@ -97,7 +97,9 @@ namespace :deploy do
       execute :mkdir, "-p", "#{shared_path}/bin"
       upload! "bin/aura_backup.sh", dest
       execute :chmod, "+x", dest
-      line = "15 3 * * * #{dest} >> #{shared_path}/log/backup.log 2>&1"
+      # 4:15 — KHÔNG trùng estate (3:15) và loyalty (3:45): cả ba dùng chung một
+      # máy 3.7GB RAM, chạy đồng thời hai pg_dump + tar là đẩy máy vào swap.
+      line = "15 4 * * * #{dest} >> #{shared_path}/log/backup.log 2>&1"
       # Idempotent: drop any previous aura_backup line, then append ours.
       execute %(crontab -l 2>/dev/null | grep -v 'aura_backup.sh' > /tmp/aura_cron || true)
       execute %(echo "#{line}" >> /tmp/aura_cron && crontab /tmp/aura_cron && rm -f /tmp/aura_cron)
