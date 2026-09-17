@@ -1,4 +1,5 @@
 <% o = @order %>
+<% content_for :title, "Biên lai #{o.code}" %>
 <style>
   .rc { max-width:360px; margin:0 auto; font-family:var(--font-body); color:#111; }
   .rc h1 { font-family:var(--font-display); font-size:20px; text-align:center; margin:0 0 2px; }
@@ -32,7 +33,7 @@
           <% if item.staff_member %><br><span style="color:#666; font-size:11px;">KTV: <%= item.staff_member.display_name %></span><% end %>
           <% if item.from_package? %><br><span style="color:#666; font-size:11px;">Trừ 1 buổi trong thẻ</span><% end %>
         </td>
-        <td class="r"><%= item.from_package? ? "0" : number_with_delimiter(item.total) %></td>
+        <td class="r"><%= item.from_package? ? "0" : number_with_delimiter(item.gross_total) %></td>
       </tr>
     <% end %>
     <tr><td colspan="2"><hr style="margin:6px 0;"></td></tr>

@@ -29,6 +29,10 @@ class OrderItem < ApplicationRecord
   # nếu không khách sẽ tưởng spa quên trừ buổi.
   def from_package? = package_credit_id.present?
 
+  # Giá trước giảm. `total` đã trừ giảm giá, nên biên lai in `total` ở cột dịch
+  # vụ rồi in "Tạm tính" là giá gốc thì cột không cộng ra được dòng ngay dưới nó.
+  def gross_total = from_package? ? 0 : unit_price.to_i * quantity.to_i
+
   private
 
   def compute_total
