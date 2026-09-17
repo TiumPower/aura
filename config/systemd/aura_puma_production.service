@@ -17,7 +17,9 @@ Environment=WEB_CONCURRENCY=1
 EnvironmentFile=/var/www/aura/shared/.env
 
 ExecStart=/home/deploy/.rbenv/bin/rbenv exec bundle exec puma -e production -C /var/www/aura/current/config/puma.rb
-ExecReload=/bin/kill -USR1 $MAINPID
+# USR2 = hot restart (Puma re-exec, giữ nguyên socket). USR1 là phased restart
+# và chỉ có tác dụng ở cluster mode — ở single mode nó không làm gì.
+ExecReload=/bin/kill -USR2 $MAINPID
 Restart=always
 RestartSec=3
 StandardOutput=append:/var/www/aura/shared/log/puma.log
