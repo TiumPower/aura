@@ -351,7 +351,11 @@ ActsAsTenant.with_tenant(ws) do
         marketing_opt_in: (i % 7) != 0,
         preferences: i.even? ? { "pressure" => ["Nhẹ", "Trung bình", "Mạnh"].sample } : {},
         last_seen_at: (i % 3).zero? ? rand(1..40).days.ago : nil
-      )
+      ).tap do |m|
+        # Rải ngày tạo hồ sơ trong 2 năm: để nguyên hôm nay thì chỉ số "hồ sơ
+        # mới trong kỳ" luôn bằng toàn bộ tệp khách.
+        m.update_columns(created_at: rand(15..730).days.ago)
+      end
     end
   end
 
@@ -517,29 +521,30 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
-  # ---- Chi phí vận hành: không có nó thì "lãi thô" trong demo là 86%, con số
-  # không spa nào có thật và làm người xem mất tin.
+  # ---- Chi phí vận hành ---------------------------------------------------
+  # Ghi theo TUẦN thay vì theo tháng: chi phí một tháng nén vào 17 ngày đã qua
+  # khiến mọi cửa sổ 30 ngày hứng hơn một tháng chi phí đọ với một tháng doanh
+  # thu, và lãi thô ra số âm vô lý. Ghi theo tuần thì khoảng nào cũng tỷ lệ đúng.
   if ws.expenses.count.zero?
-    (0..3).each do |month_ago|
-      month = Date.current.beginning_of_month - month_ago.months
+    # Cơ cấu chi phí THEO THÁNG của một spa hai cơ sở doanh thu ~500tr/tháng
+    # (mặt bằng + lương chiếm phần lớn, tổng ~65% doanh thu → lãi thô 15–25%).
+    monthly = [
+      ["rent",      "Thuê mặt bằng",          48_000_000],
+      ["payroll",   "Lương cứng nhân sự",     96_000_000],
+      ["supplies",  "Tinh dầu, khăn, mặt nạ", 24_000_000],
+      ["utility",   "Điện nước internet",     10_000_000],
+      ["marketing", "Quảng cáo Facebook",     14_000_000],
+      ["equipment", "Bảo trì giường & máy",    5_000_000]
+    ]
+    weeks = ((Date.current - 120)..Date.current).step(7).to_a
+    weeks.each do |week_start|
       branches.each_with_index do |br, bi|
-        # Cơ cấu chi phí của một spa hai cơ sở doanh thu ~500tr/tháng: mặt bằng
-        # và lương chiếm phần lớn (~65% doanh thu). Lãi thô ra khoảng 15–25% —
-        # mức thật, không phải con số đẹp.
-        [["rent", "Thuê mặt bằng", 48_000_000 - bi * 16_000_000],
-         ["payroll", "Lương cứng nhân sự", 96_000_000 - bi * 32_000_000],
-         ["supplies", "Tinh dầu, khăn, mặt nạ", 24_000_000 - bi * 8_000_000],
-         ["utility", "Điện nước internet", 10_000_000 - bi * 3_000_000],
-         ["marketing", "Quảng cáo Facebook", 14_000_000 - bi * 5_000_000],
-         ["equipment", "Bảo trì giường & máy", 5_000_000 - bi * 2_000_000]].each do |cat, note, amount|
-          # Rải TRONG đúng tháng đó. Dùng `min(..., hôm nay)` thì mọi khoản của
-          # tháng hiện tại bị dồn về hôm nay và cửa sổ 30 ngày hứng ~1,4 tháng
-          # chi phí đọ với 1 tháng doanh thu → lãi thô âm không hiểu nổi.
-          last_day = month == Date.current.beginning_of_month ?
-                       Date.current.day : month.end_of_month.day
-          day = month + rand(0...last_day)
+        scale = bi.zero? ? 1.0 : 0.62 # cơ sở thứ hai nhỏ hơn
+        monthly.each do |cat, note, month_amount|
+          amount = ((month_amount * scale) / 4.345).round(-4) # một tuần
+          next if amount.zero?
           ws.expenses.create!(branch: br, category: cat, note: note, amount: amount,
-                              spent_on: day)
+                              spent_on: [week_start + rand(0..6), Date.current].min)
         end
       end
     end
