@@ -101,7 +101,7 @@
       <% end %>
 
       <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--line);">
-        <div class="pos-sum"><span>Tạm tính</span><span><%= vnd(o.subtotal) %></span></div>
+        <div class="pos-sum"><span>Tạm tính</span><span><%= vnd(o.subtotal_before_discount) %></span></div>
         <% if o.discount_total.positive? %>
           <div class="pos-sum" style="color:var(--primary-ink);">
             <span>Giảm giá<%= " (#{o.discount_note})" if o.discount_note.present? %></span>

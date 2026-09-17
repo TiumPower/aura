@@ -340,3 +340,37 @@ class CapacityHoursTest < ActionDispatch::IntegrationTest
                  "mẫu số phải là giờ KTV có mặt (4h), không phải giờ mở cửa (20h)"
   end
 end
+
+# Dãy số in trên bill phải cộng ra được: lễ tân đứng trước mặt khách không giải
+# thích nổi "tạm tính 360.000 − giảm 40.000 = khách trả 360.000". Lỗi đó đã ra
+# production vì `subtotal` cộng từ `order_items.total` mà `total` từng dòng ĐÃ
+# trừ giảm giá rồi.
+class BillArithmeticTest < ActiveSupport::TestCase
+  def setup
+    @ws = create(:workspace)
+    ActsAsTenant.current_tenant = @ws
+    @branch = create(:branch, workspace: @ws)
+    @member = create(:member, workspace: @ws)
+    @order = Order.create!(workspace: @ws, branch: @branch, member: @member, status: "open")
+    @order.order_items.create!(workspace: @ws, kind: "service", name: "Chăm sóc da cơ bản",
+                               quantity: 1, unit_price: 400_000, discount_amount: 40_000,
+                               total: 360_000)
+    @order.recalculate!
+  end
+
+  test "tạm tính hiển thị là giá gốc, trừ giảm giá ra đúng số khách trả" do
+    o = @order.reload
+    assert_equal 400_000, o.subtotal_before_discount
+    assert_equal 40_000, o.discount_total
+    assert_equal o.subtotal_before_discount - o.discount_total, o.total,
+                 "tạm tính − giảm giá phải bằng đúng số khách trả"
+  end
+
+  test "bill không giảm giá thì tạm tính không đổi" do
+    o = Order.create!(workspace: @ws, branch: @branch, member: @member, status: "open")
+    o.order_items.create!(workspace: @ws, kind: "service", name: "Foot massage",
+                          quantity: 1, unit_price: 250_000, discount_amount: 0, total: 250_000)
+    o.recalculate!
+    assert_equal 250_000, o.reload.subtotal_before_discount
+  end
+end

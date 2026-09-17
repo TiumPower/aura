@@ -65,6 +65,12 @@ class Order < ApplicationRecord
             paid_total: order_payments.sum(:amount))
   end
 
+  # `subtotal` cộng từ `order_items.total`, mà `total` của từng dòng ĐÃ trừ giảm
+  # giá. Nên màn hình in "Tạm tính 360.000 / Giảm giá −40.000 / Khách trả
+  # 360.000" — dãy số không cộng ra được và lễ tân không giải thích nổi với
+  # khách. Chuỗi hiển thị phải bắt đầu từ giá gốc.
+  def subtotal_before_discount = subtotal.to_i + discount_total.to_i
+
   def payment_summary
     order_payments.group(:method).sum(:amount)
   end

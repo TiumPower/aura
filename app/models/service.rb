@@ -55,10 +55,11 @@ class Service < ApplicationRecord
 
   def price_label = "#{ActiveSupport::NumberHelper.number_to_delimited(price)}đ"
 
-  def duration_label
-    d = duration_minutes.to_i
-    d >= 60 && (d % 60).zero? ? "#{d / 60}h" : "#{d}′"
-  end
+  # Luôn tính bằng phút. Bản trước rút 60 phút thành "1h", nên trong CÙNG một
+  # danh sách merchant thấy "1h · 450.000đ" ngay cạnh "90′ · 750.000đ", còn menu
+  # của khách lại ghi "60′" cho đúng dịch vụ đó — hai cổng nói khác nhau về một
+  # con số. Bảng giá spa ở Việt Nam cũng luôn ghi theo phút.
+  def duration_label = "#{duration_minutes.to_i}′"
 
   # Nhãn hiện cho khách: "60′ · 450.000đ" hoặc danh sách biến thể.
   def variant_options(branch: nil)

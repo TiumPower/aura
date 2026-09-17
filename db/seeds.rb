@@ -525,6 +525,9 @@ ActsAsTenant.with_tenant(ws) do
       at = o.booking.starts_at + 1.hour
       PointTransaction.where(order_id: o.id).update_all(created_at: at, updated_at: at)
       WalletTransaction.where(order_id: o.id).update_all(created_at: at, updated_at: at)
+      # Dòng "Đã thu" trên bill in giờ của order_payments; không lùi thì bill
+      # đóng lúc 20:00 lại ghi đã thu lúc 22:32 (giờ chạy seed).
+      o.order_payments.update_all(created_at: at, updated_at: at, received_at: at)
     end
   end
 

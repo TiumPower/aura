@@ -36,7 +36,7 @@
       </tr>
     <% end %>
     <tr><td colspan="2"><hr style="margin:6px 0;"></td></tr>
-    <tr><td>Tạm tính</td><td class="r"><%= number_with_delimiter(o.subtotal) %></td></tr>
+    <tr><td>Tạm tính</td><td class="r"><%= number_with_delimiter(o.subtotal_before_discount) %></td></tr>
     <% if o.discount_total.positive? %>
       <tr><td>Giảm giá</td><td class="r">−<%= number_with_delimiter(o.discount_total) %></td></tr>
     <% end %>
