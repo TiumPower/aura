@@ -34,19 +34,19 @@
     <div class="v" style="font-size:24px; color:var(--primary);"><%= number_with_delimiter(@collected_range) %>đ</div>
     <div class="d" style="color:var(--ink-2);"><%= @invoices_range %> giao dịch</div>
   </div>
-  <div class="l-kpi"><div class="k">Chủ hộ mới</div><div class="v"><%= @new_workspaces %></div></div>
-  <div class="l-kpi"><div class="k">Người thuê mới</div><div class="v"><%= @new_customers %></div></div>
+  <div class="l-kpi"><div class="k">Spa mới</div><div class="v"><%= @new_workspaces %></div></div>
+  <div class="l-kpi"><div class="k">Khách mới</div><div class="v"><%= @new_customers %></div></div>
   <div class="l-kpi"><div class="k">Doanh thu định kỳ (MRR)</div><div class="v" style="font-size:22px;"><%= number_with_delimiter(@mrr) %>đ</div><div class="d" style="color:var(--ink-2);">hiện tại</div></div>
 </div>
 
 <%# ---- Current snapshot ---- %>
 <div class="l-eyebrow" style="margin-bottom:10px;">Hiện tại</div>
 <div class="l-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:18px;">
-  <div class="l-kpi"><div class="k">Chủ hộ</div><div class="v"><%= @workspaces_count %></div><div class="d" style="color:var(--ink-2);"><%= @active_count %> trả phí · <%= @trial_count %> dùng thử</div></div>
+  <div class="l-kpi"><div class="k">Spa đang dùng</div><div class="v"><%= @workspaces_count %></div><div class="d" style="color:var(--ink-2);"><%= @active_count %> trả phí · <%= @trial_count %> dùng thử</div></div>
   <div class="l-kpi"><div class="k">Cơ sở</div><div class="v"><%= @branches_count %></div></div>
   <div class="l-kpi"><div class="k">Phòng</div><div class="v"><%= @rooms_count %></div><div class="d" style="color:var(--ink-2);"><%= @seats_count %> chỗ phục vụ</div></div>
   <div class="l-kpi"><div class="k">Nhân sự</div><div class="v"><%= @staff_count %></div></div>
-  <div class="l-kpi"><div class="k">Người thuê</div><div class="v"><%= @members_count %></div></div>
+  <div class="l-kpi"><div class="k">Khách hàng</div><div class="v"><%= @members_count %></div></div>
 </div>
 
 <%# ---- Charts (follow the range) ---- %>
@@ -61,7 +61,7 @@
   </div>
   <div class="l-panel">
     <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
-      <div style="font-weight:700;">Chủ hộ mới</div>
+      <div style="font-weight:700;">Spa mới</div>
       <div style="font-size:12px; color:var(--ink-2);">workspace đăng ký mỗi tháng</div>
     </div>
     <div style="color:var(--primary-2, #3BA5B0);"><%= bar_chart_svg(@workspace_series, color: "var(--primary-2, #3BA5B0)") %></div>
@@ -70,7 +70,7 @@
 
 <div class="l-panel" style="margin-top:16px;">
   <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
-    <div style="font-weight:700;">Người thuê mới</div>
+    <div style="font-weight:700;">Khách mới</div>
     <div style="font-size:12px; color:var(--ink-2);">hồ sơ khách tạo mỗi tháng</div>
   </div>
   <div style="color:#8a5cf6;"><%= bar_chart_svg(@customer_series, color: "#8a5cf6") %></div>
@@ -78,7 +78,7 @@
 
 <%# ---- Recent ---- %>
 <div style="display:flex; align-items:center; justify-content:space-between; margin:22px 0 12px;">
-  <div class="l-eyebrow">Chủ hộ mới nhất</div>
+  <div class="l-eyebrow">Spa mới nhất</div>
   <%= link_to "Xem tất cả →", admin_workspaces_path, style: "font-size:13px; color:var(--primary);" %>
 </div>
 <div class="l-panel" style="padding:0; overflow:hidden;">

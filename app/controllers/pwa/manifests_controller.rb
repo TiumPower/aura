@@ -11,7 +11,7 @@ module Pwa
       render json: manifest_hash, content_type: "application/manifest+json"
     end
 
-    # Landlord management app (installable from /merchant).
+    # App quản lý cho nhân sự (cài được từ /merchant).
     def merchant
       ws = resolve_workspace
       name = ws ? "Quản lý - #{ws.name}" : "Quản lý - Aura"
@@ -82,7 +82,7 @@ module Pwa
     end
 
     def customer_start_path(ws)
-      # In dev/path mode the tenant app lives under /w/:slug.
+      # Ở chế độ đường dẫn (dev) app khách nằm dưới /w/:slug.
       Rails.env.production? && ws.subdomain.present? ? "/" : "/w/#{ws.slug}"
     end
   end

@@ -81,7 +81,7 @@ module Admin
     def suspend    = transition("suspended", "Đã tạm ngưng workspace.")
     def reactivate = transition("active",    "Đã kích hoạt lại workspace.")
 
-    # Open the landlord's dashboard AS that landlord (support/impersonation).
+    # Mở dashboard của spa VỚI TƯ CÁCH chủ spa (chế độ hỗ trợ).
     def impersonate
       owner = @workspace.owner
       return redirect_back(fallback_location: admin_workspace_path(@workspace), alert: "Workspace chưa có chủ spa.") if owner.nil?

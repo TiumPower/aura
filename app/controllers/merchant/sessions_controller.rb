@@ -1,5 +1,5 @@
 module Merchant
-  # Landlord login: email + OTP (no password). Platform-level (workspace_id NULL
+  # Đăng nhập nhân sự: email + OTP (hoặc mật khẩu). Ở cấp nền tảng (workspace_id NULL
   # on the challenge); after verify we land the owner on their workspace.
   class SessionsController < ApplicationController
     layout "auth"
@@ -26,7 +26,7 @@ module Merchant
       end
 
       if params[:mode] == "otp"
-        OtpChallenge.issue!(email: @email, scope: "landlord")
+        OtpChallenge.issue!(identifier: @email, scope: "merchant")
         session[:merchant_otp_email] = @email
         redirect_to merchant_verify_path
       elsif user.valid_password?(params[:password].to_s)
@@ -40,7 +40,7 @@ module Merchant
 
     # Log in by scanning the QR from the profile (on a phone). The token is a
     # short-lived signed id; the session is then remembered long-term so the
-    # landlord's phone stays logged into the PWA.
+    # điện thoại của nhân sự vẫn giữ đăng nhập trong PWA.
     def qr_login
       user = User.find_signed(params[:token], purpose: :merchant_qr_login)
       if user
@@ -64,7 +64,7 @@ module Merchant
       @email = session[:merchant_otp_email]
       redirect_to(merchant_login_path) and return if @email.blank?
 
-      challenge = OtpChallenge.latest_for(email: @email, scope: "landlord")
+      challenge = OtpChallenge.latest_for(identifier: @email, scope: "merchant")
       result = challenge&.verify(params[:code])
       if result == :ok
         user = User.find_by(email: @email)
@@ -113,7 +113,7 @@ module Merchant
     end
 
     def latest_dev_code(email)
-      OtpChallenge.latest_for(email: email, scope: "landlord")&.code
+      OtpChallenge.latest_for(identifier: email, scope: "merchant")&.code
     end
 
     def otp_error_message(result)

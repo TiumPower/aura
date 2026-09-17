@@ -1,5 +1,5 @@
 module Merchant
-  # Web Push subscriptions for the landlord's own device (merchant PWA).
+  # Web Push cho thiết bị của nhân sự (PWA cổng quản lý).
   class PushController < BaseController
     skip_before_action :verify_authenticity_token, only: [:subscribe, :unsubscribe], raise: false
 

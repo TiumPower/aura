@@ -6,7 +6,7 @@
     <tr><td style="padding:6px 0; color:#5C6B7A;">Tên workspace</td><td style="padding:6px 0; font-weight:700; text-align:right;"><%= @workspace.name %></td></tr>
     <tr><td style="padding:6px 0; color:#5C6B7A;">Subdomain</td><td style="padding:6px 0; text-align:right;"><%= @workspace.subdomain %></td></tr>
     <tr><td style="padding:6px 0; color:#5C6B7A;">Gói</td><td style="padding:6px 0; text-align:right;"><%= @workspace.plan_record&.name %></td></tr>
-    <tr><td style="padding:6px 0; color:#5C6B7A;">Chủ nhà</td><td style="padding:6px 0; text-align:right;"><%= @workspace.billing_email %></td></tr>
+    <tr><td style="padding:6px 0; color:#5C6B7A;">Chủ spa</td><td style="padding:6px 0; text-align:right;"><%= @workspace.billing_email %></td></tr>
     <tr><td style="padding:6px 0; color:#5C6B7A;">Trạng thái</td><td style="padding:6px 0; text-align:right;"><%= @workspace.status_label %></td></tr>
     <tr><td style="padding:6px 0; color:#5C6B7A;">Đăng ký lúc</td><td style="padding:6px 0; text-align:right;"><%= @workspace.created_at.strftime("%d/%m/%Y %H:%M") %></td></tr>
   </table>

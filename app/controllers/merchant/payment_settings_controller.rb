@@ -1,5 +1,5 @@
 module Merchant
-  # Landlord's bank details used to generate VietQR on tenant bills.
+  # Tài khoản ngân hàng của spa, dùng sinh VietQR trên bill của khách.
   class PaymentSettingsController < BaseController
     def show
       @bank = current_workspace.bank

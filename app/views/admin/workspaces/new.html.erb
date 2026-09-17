@@ -37,7 +37,7 @@
 
     <div class="l-panel" style="margin-bottom:16px;">
       <h3 class="l-display" style="font-size:18px; margin-bottom:12px;">Tài khoản chủ spa</h3>
-      <p style="color:var(--ink-2); font-size:13px; margin-bottom:10px;">Chủ hộ đăng nhập bằng email + OTP tại <span class="l-mono">/merchant/login</span>.</p>
+      <p style="color:var(--ink-2); font-size:13px; margin-bottom:10px;">Chủ spa đăng nhập bằng email + OTP tại <span class="l-mono">/merchant/login</span>.</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <div><label class="l-label">Tên chủ spa</label><%= text_field_tag :owner_name, params[:owner_name], class: "l-field" %></div>
         <div><label class="l-label">Email đăng nhập</label><%= email_field_tag :owner_email, params[:owner_email], class: "l-field", placeholder: "owner@example.com" %></div>

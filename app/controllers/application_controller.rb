@@ -83,11 +83,11 @@ class ApplicationController < ActionController::Base
 
   # Which workspace (and which side of the app) an error came from. Ids only —
   # config.send_default_pii is off, so no names, emails or request bodies leave
-  # the box; this is enough to find the landlord who hit the bug.
+  # the box; this is enough to find the spa that hit the bug.
   #
   # Deliberately reads the request rather than current_workspace/current_member:
   # this runs before the subclass callbacks that resolve those, and touching
-  # current_member early would memoize a nil @current_member and sign the tenant
+  # current_member early would memoize a nil @current_member and sign the guest
   # out. request.subdomain identifies the workspace just as well.
   def tag_error_context
     return unless defined?(Sentry) && Sentry.initialized?
