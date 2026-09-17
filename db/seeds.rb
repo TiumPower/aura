@@ -500,6 +500,15 @@ ActsAsTenant.with_tenant(ws) do
         end
       end
     end
+    # `last_visit_at` được đặt = Time.current mỗi lần hoàn tất buổi, nên sau khi
+    # seed cả 45 khách đều "lần cuối chưa đến 1 phút trước". Lùi về ngày buổi
+    # cuối thật của từng người.
+    ws.members.each do |m|
+      last = m.bookings.where(status: "completed").maximum(:starts_at)
+      first = m.bookings.where(status: "completed").minimum(:starts_at)
+      m.update_columns(last_visit_at: last, first_visit_at: first) if last
+    end
+
     # Lùi ngày đóng bill về đúng ngày phát sinh để báo cáo theo kỳ đúng.
     ws.orders.paid.each do |o|
       next if o.booking.nil? # bill bán thẻ đã được lùi ngay lúc tạo
@@ -523,9 +532,12 @@ ActsAsTenant.with_tenant(ws) do
          ["utility", "Điện nước internet", 10_000_000 - bi * 3_000_000],
          ["marketing", "Quảng cáo Facebook", 14_000_000 - bi * 5_000_000],
          ["equipment", "Bảo trì giường & máy", 5_000_000 - bi * 2_000_000]].each do |cat, note, amount|
-          # Không ghi chi phí vào ngày TƯƠNG LAI của tháng hiện tại — nó sẽ
-          # không nằm trong kỳ đang xem và làm lãi thô lệch không hiểu nổi.
-          day = [month + rand(0..27), Date.current].min
+          # Rải TRONG đúng tháng đó. Dùng `min(..., hôm nay)` thì mọi khoản của
+          # tháng hiện tại bị dồn về hôm nay và cửa sổ 30 ngày hứng ~1,4 tháng
+          # chi phí đọ với 1 tháng doanh thu → lãi thô âm không hiểu nổi.
+          last_day = month == Date.current.beginning_of_month ?
+                       Date.current.day : month.end_of_month.day
+          day = month + rand(0...last_day)
           ws.expenses.create!(branch: br, category: cat, note: note, amount: amount,
                               spent_on: day)
         end
