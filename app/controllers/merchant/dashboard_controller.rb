@@ -59,7 +59,7 @@ module Merchant
       @therapist_count   = ws.staff_members.active.at_branch(@branch&.id).therapists.count
 
       @today_open_hours = open_hours(today, today)
-      @today_capacity_hours = (@today_open_hours * @seat_capacity).round(1)
+      @today_capacity_hours = capacity_hours(today, today)
       sold = BookingItem.where(booking_id: @today_bookings.map(&:id)).live.sum(:duration_minutes)
       @today_sold_hours = (sold / 60.0).round(1)
       @utilization_today = @today_capacity_hours.positive? ?
@@ -108,7 +108,7 @@ module Merchant
       # RevPATH chỉ tính doanh thu DỊCH VỤ — tiền bán thẻ là thu trước cho các
       # buổi sau, cộng vào sẽ làm tháng bán được thẻ trông như tháng vận hành giỏi.
       @revpath = @treated_hours.positive? ? (@service_revenue / @treated_hours).round : 0
-      @seat_hours = (open_hours(@from, @to) * @seat_capacity).round(1)
+      @seat_hours = capacity_hours(@from, @to)
       @utilization = @seat_hours.positive? ? (@treated_hours * 100.0 / @seat_hours).round(1) : 0
 
       all_bk = by_branch(ws.bookings).where(starts_at: range)
@@ -139,13 +139,28 @@ module Merchant
       @profit = @revenue - @expenses - @commissions
     end
 
-    # Tổng (giờ mở cửa × ngày) của các cơ sở trong khoảng — mẫu số của tỷ lệ lấp chỗ.
+    # Tổng giờ mở cửa của các cơ sở trong khoảng (để hiện cho người đọc).
     def open_hours(from, to)
-      list = (@branch ? [@branch] : @branches)
-      list.sum do |b|
-        (from..to).sum { |d| b.open_windows(d).sum { |(f, t)| (t - f) / 3600.0 } }
+      branch_scope_list.sum { |b| branch_open_hours(b, from, to) }.round(1)
+    end
+
+    # GIỜ-CHỖ: mẫu số của tỷ lệ lấp chỗ. PHẢI nhân theo TỪNG cơ sở rồi mới cộng.
+    # Lấy (tổng giờ mở cửa mọi cơ sở) × (tổng số chỗ mọi cơ sở) là nhân chỗ của
+    # cơ sở A với giờ của cơ sở B — mẫu số phồng lên đúng bằng số cơ sở và tỷ lệ
+    # lấp chỗ bị chia nhỏ tương ứng.
+    def capacity_hours(from, to)
+      branch_scope_list.sum do |b|
+        seats = b.rooms.active.sum(:capacity)
+        next 0.0 if seats.zero?
+        branch_open_hours(b, from, to) * seats
       end.round(1)
     end
+
+    def branch_open_hours(branch, from, to)
+      (from..to).sum { |d| branch.open_windows(d).sum { |(f, t)| (t - f) / 3600.0 } }
+    end
+
+    def branch_scope_list = @branch ? [@branch] : @branches
 
     def period_range
       if params[:from].present? && params[:to].present?

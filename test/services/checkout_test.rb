@@ -291,3 +291,37 @@ class TenantIsolationTest < ActionDispatch::IntegrationTest
     assert_includes [404, 302], response.status
   end
 end
+
+# Giờ-chỗ (mẫu số của tỷ lệ lấp chỗ) phải nhân theo TỪNG cơ sở rồi cộng. Lấy
+# tổng giờ × tổng chỗ là nhân chỗ của cơ sở này với giờ của cơ sở kia — mẫu số
+# phồng đúng bằng số cơ sở.
+class CapacityHoursTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
+  setup do
+    @ws = create(:workspace, subdomain: "capspa")
+    @ws.update!(settings: @ws.settings.merge("onboarded" => true))
+    ActsAsTenant.current_tenant = @ws
+    # Cơ sở A: mở 10 giờ/ngày, 2 chỗ. Cơ sở B: mở 10 giờ/ngày, 3 chỗ.
+    @a = create(:branch, workspace: @ws, name: "Cơ sở A")
+    @b = create(:branch, workspace: @ws, name: "Cơ sở B")
+    [@a, @b].each do |br|
+      (0..6).each { |wd| br.branch_hours.create!(workspace: @ws, weekday: wd, opens_at: "09:00", closes_at: "19:00") }
+    end
+    create(:room, workspace: @ws, branch: @a, capacity: 2)
+    create(:room, workspace: @ws, branch: @b, capacity: 3)
+    ActsAsTenant.current_tenant = nil
+    @user = create(:user)
+    Membership.create!(user: @user, workspace: @ws, role: "owner")
+    sign_in @user
+  end
+
+  test "giờ-chỗ hôm nay = tổng theo từng cơ sở, không phải tổng giờ × tổng chỗ" do
+    get "/merchant"
+    assert_response :success
+    # Đúng: (10h × 2) + (10h × 3) = 50 giờ-chỗ.
+    # Sai (lỗi cũ): (10h + 10h) × (2 + 3) = 100 giờ-chỗ.
+    assert_match "/50.0 giờ-chỗ", response.body
+    assert_no_match(/\/100\.0 giờ-chỗ/, response.body)
+  end
+end

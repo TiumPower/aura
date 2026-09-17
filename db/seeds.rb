@@ -453,6 +453,25 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
+  # ---- Chi phí vận hành: không có nó thì "lãi thô" trong demo là 86%, con số
+  # không spa nào có thật và làm người xem mất tin.
+  if ws.expenses.count.zero?
+    (0..2).each do |month_ago|
+      month = Date.current.beginning_of_month - month_ago.months
+      branches.each_with_index do |br, bi|
+        [["rent", "Thuê mặt bằng", 25_000_000 - bi * 6_000_000],
+         ["payroll", "Lương cứng nhân sự", 38_000_000 - bi * 9_000_000],
+         ["supplies", "Tinh dầu, khăn, mặt nạ", 6_400_000 - bi * 1_200_000],
+         ["utility", "Điện nước internet", 4_800_000 - bi * 900_000],
+         ["marketing", "Quảng cáo Facebook", 3_500_000],
+         ["equipment", "Bảo trì giường & máy", 1_800_000]].each do |cat, note, amount|
+          ws.expenses.create!(branch: br, category: cat, note: note, amount: amount,
+                              spent_on: month + rand(0..25))
+        end
+      end
+    end
+  end
+
   # Một khách bỏ hẹn nhiều lần → thấy được cơ chế chặn đặt online.
   noshow = Member.find_by(workspace: ws, phone: "0977222333")
   noshow&.update!(no_show_count: 3, cancel_count: 1)
