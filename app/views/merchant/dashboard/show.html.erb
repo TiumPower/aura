@@ -62,11 +62,12 @@
     </div>
   </div>
   <div class="l-kpi">
-    <div class="k">Tỷ lệ lấp chỗ hôm nay</div>
-    <div class="v"><%= @utilization_today %>%</div>
-    <div class="db-bar"><span style="width:<%= [@utilization_today, 100].min %>%;"></span></div>
+    <div class="k">Tỷ lệ dùng KTV hôm nay</div>
+    <div class="v"><%= @today_staff_utilization %>%</div>
+    <div class="db-bar"><span style="width:<%= [@today_staff_utilization, 100].min %>%;"></span></div>
     <div style="font-size:12px; color:var(--ink-2); margin-top:6px;">
-      <%= @today_sold_hours %>/<%= @today_capacity_hours %> giờ-chỗ · <%= @on_duty_now %> KTV trong ca
+      <%= @today_sold_hours %>/<%= @today_staff_hours %> giờ KTV · <%= @on_duty_now %> đang trong ca
+      · lấp phòng <%= @utilization_today %>%
     </div>
   </div>
   <div class="l-kpi">
@@ -243,14 +244,15 @@
 
 <div class="db-grid" style="margin-bottom:16px;">
   <div class="l-kpi">
-    <div class="k">Tỷ lệ lấp chỗ kỳ</div>
-    <div class="v" style="font-size:26px;"><%= @utilization %>%</div>
-    <div class="db-bar"><span style="width:<%= [@utilization, 100].min %>%;"></span></div>
+    <div class="k">Tỷ lệ dùng KTV</div>
+    <div class="v" style="font-size:26px;"><%= @staff_utilization %>%</div>
+    <div class="db-bar"><span style="width:<%= [@staff_utilization, 100].min %>%;"></span></div>
     <div style="font-size:12px; color:var(--ink-2); margin-top:6px;">
-      <%= @treated_hours %>/<%= @seat_hours %> giờ-chỗ ·
-      <% if @utilization >= 60 %>trong vùng tốt (60–75%)
-      <% elsif @utilization >= 40 %>còn dư địa bán thêm
-      <% else %>thấp — xem lại giá hoặc cách lấp lịch trống<% end %>
+      <%= @treated_hours %>/<%= @staff_hours %> giờ KTV có mặt ·
+      <% if @staff_utilization >= 75 %>rất tốt — cân nhắc tăng ca hoặc tăng giá
+      <% elsif @staff_utilization >= 50 %>quanh mức trung bình ngành (50–60%)
+      <% else %>thấp — đang trả lương cho giờ trống<% end %>
+      <br>Lấp phòng <%= @room_utilization %>% (<%= @treated_hours %>/<%= @seat_hours %> giờ-chỗ)
     </div>
   </div>
   <div class="l-kpi">

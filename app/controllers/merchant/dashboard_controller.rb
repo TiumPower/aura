@@ -67,7 +67,13 @@ module Merchant
 
       shifts = ws.staff_shifts.working.on_date(today)
       shifts = shifts.where(branch_id: @branch.id) if @branch
-      @on_duty_now = shifts.select { |s| s.starts_at <= Time.current && s.ends_at >= Time.current }.size
+      shifts = shifts.to_a
+      @on_duty_now = shifts.count { |s| s.starts_at <= Time.current && s.ends_at >= Time.current }
+      # Giờ KTV có mặt hôm nay — MẪU SỐ chuẩn ngành cho "tỷ lệ dùng KTV"
+      # (therapist utilization, trung bình ngành 50–60%, tốt là >75%).
+      @today_staff_hours = shifts.sum(&:hours).round(1)
+      @today_staff_utilization = @today_staff_hours.positive? ?
+        (@today_sold_hours * 100.0 / @today_staff_hours).round : 0
 
       if ws.feature?("packages")
         @cards_low = ws.member_packages.usable.includes(:member, :package_credits).select(&:low_on_sessions?).first(6)
@@ -109,7 +115,18 @@ module Merchant
       # buổi sau, cộng vào sẽ làm tháng bán được thẻ trông như tháng vận hành giỏi.
       @revpath = @treated_hours.positive? ? (@service_revenue / @treated_hours).round : 0
       @seat_hours = capacity_hours(@from, @to)
-      @utilization = @seat_hours.positive? ? (@treated_hours * 100.0 / @seat_hours).round(1) : 0
+      @room_utilization = @seat_hours.positive? ? (@treated_hours * 100.0 / @seat_hours).round(1) : 0
+
+      # Tỷ lệ dùng KTV: giờ đã bán / giờ KTV có mặt. Đây là chỉ số ngành spa dùng
+      # để quản lý (50–60% là trung bình, >75% là tốt) — nó nói "người mình thuê
+      # có được dùng không". Tỷ lệ lấp PHÒNG tính trên toàn bộ giờ mở cửa × mọi
+      # chỗ luôn ra vài phần trăm với spa nhiều ghế, nên không dùng làm chỉ số
+      # chính được; giữ lại như số phụ để biết còn dư địa mở thêm ca.
+      staff_shifts = ws.staff_shifts.working.between(@from, @to)
+      staff_shifts = staff_shifts.where(branch_id: @branch.id) if @branch
+      @staff_hours = staff_shifts.to_a.sum(&:hours).round(1)
+      @staff_utilization = @staff_hours.positive? ?
+        (@treated_hours * 100.0 / @staff_hours).round(1) : 0
 
       all_bk = by_branch(ws.bookings).where(starts_at: range)
       slots = all_bk.count

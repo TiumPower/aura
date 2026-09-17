@@ -316,12 +316,27 @@ class CapacityHoursTest < ActionDispatch::IntegrationTest
     sign_in @user
   end
 
-  test "giờ-chỗ hôm nay = tổng theo từng cơ sở, không phải tổng giờ × tổng chỗ" do
+  test "giờ-chỗ = tổng theo từng cơ sở, không phải tổng giờ × tổng chỗ" do
+    # Kỳ mặc định 30 ngày. Đúng: ((10h × 2) + (10h × 3)) × 30 = 1500 giờ-chỗ.
+    # Sai (lỗi cũ): (10h + 10h) × (2 + 3) × 30 = 3000 giờ-chỗ.
     get "/merchant"
     assert_response :success
-    # Đúng: (10h × 2) + (10h × 3) = 50 giờ-chỗ.
-    # Sai (lỗi cũ): (10h + 10h) × (2 + 3) = 100 giờ-chỗ.
-    assert_match "/50.0 giờ-chỗ", response.body
-    assert_no_match(/\/100\.0 giờ-chỗ/, response.body)
+    assert_match "1500.0 giờ-chỗ", response.body
+    assert_no_match(/3000\.0 giờ-chỗ/, response.body)
+  end
+
+  test "tỷ lệ dùng KTV tính trên giờ KTV CÓ MẶT, không phải giờ mở cửa" do
+    ActsAsTenant.with_tenant(@ws) do
+      staff = create(:staff_member, workspace: @ws, branch: @a)
+      d = Date.current
+      # KTV có mặt 4 giờ hôm nay.
+      @ws.staff_shifts.create!(staff_member: staff, branch: @a, work_date: d, kind: "shift",
+                               starts_at: Time.zone.local(d.year, d.month, d.day, 9),
+                               ends_at:   Time.zone.local(d.year, d.month, d.day, 13))
+    end
+    get "/merchant"
+    assert_response :success
+    assert_match "4.0 giờ KTV", response.body,
+                 "mẫu số phải là giờ KTV có mặt (4h), không phải giờ mở cửa (20h)"
   end
 end

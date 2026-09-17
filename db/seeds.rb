@@ -408,10 +408,12 @@ ActsAsTenant.with_tenant(ws) do
     sellable = ws.services.main.active.where(requires_staff: true).to_a
     therapists = ws.staff_members.active.therapists.to_a
     customers = ws.members.to_a
-    (1..14).each do |days_ago|
+    (1..21).each do |days_ago|
       day = Date.current - days_ago
-      # 3–6 bill mỗi ngày, giờ rải trong ngày
-      rand(3..6).times do |n|
+      # 14–22 lượt mỗi ngày trên 23 chỗ / 7 KTV → tỷ lệ dùng KTV ~20–30%, mức
+      # thật của nhiều spa VN ngày thường. Ít hơn nữa thì mọi chỉ số hiệu suất
+      # trong demo đều ra gần 0 và người xem tưởng hệ thống tính sai.
+      rand(14..22).times do |n|
         svc = sellable.sample
         st  = therapists.sample
         cust = rand < 0.8 ? customers.sample : nil
@@ -459,12 +461,14 @@ ActsAsTenant.with_tenant(ws) do
     (0..2).each do |month_ago|
       month = Date.current.beginning_of_month - month_ago.months
       branches.each_with_index do |br, bi|
-        [["rent", "Thuê mặt bằng", 25_000_000 - bi * 6_000_000],
-         ["payroll", "Lương cứng nhân sự", 38_000_000 - bi * 9_000_000],
-         ["supplies", "Tinh dầu, khăn, mặt nạ", 6_400_000 - bi * 1_200_000],
-         ["utility", "Điện nước internet", 4_800_000 - bi * 900_000],
-         ["marketing", "Quảng cáo Facebook", 3_500_000],
-         ["equipment", "Bảo trì giường & máy", 1_800_000]].each do |cat, note, amount|
+        # Quy mô chi phí bám theo doanh thu mẫu (~250–350tr/tháng cho hai cơ sở),
+        # để lãi thô ra khoảng 20–30% — mức thật của một spa vận hành ổn.
+        [["rent", "Thuê mặt bằng", 45_000_000 - bi * 12_000_000],
+         ["payroll", "Lương cứng nhân sự", 60_000_000 - bi * 15_000_000],
+         ["supplies", "Tinh dầu, khăn, mặt nạ", 14_000_000 - bi * 3_000_000],
+         ["utility", "Điện nước internet", 7_000_000 - bi * 1_500_000],
+         ["marketing", "Quảng cáo Facebook", 8_000_000 - bi * 2_000_000],
+         ["equipment", "Bảo trì giường & máy", 3_000_000]].each do |cat, note, amount|
           ws.expenses.create!(branch: br, category: cat, note: note, amount: amount,
                               spent_on: month + rand(0..25))
         end
