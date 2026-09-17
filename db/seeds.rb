@@ -378,12 +378,14 @@ ActsAsTenant.with_tenant(ws) do
   if ws.bookings.count.zero?
     bookable = ws.services.main.active.where(requires_staff: true).to_a
     guests = ws.members.to_a
+    # Hôm nay và mai phải dày như các ngày khác: trang Tổng quan là thứ người
+    # xem mở đầu tiên, để nó trống thì cả sản phẩm trông như chưa ai dùng.
     [Date.current, Date.current + 1].each do |day|
-      # rải 7 lịch trong ngày, giờ chẵn để dễ nhìn trên lịch
-      [9, 10, 11, 14, 15, 17, 19].each_with_index do |hour, idx|
+      slots = (9..20).flat_map { |h| [[h, 0], [h, 30]] }.shuffle.first(rand(22..30))
+      slots.each_with_index do |(hour, minute), idx|
         svc = bookable[idx % bookable.size]
         member = guests[idx % guests.size]
-        at = Time.zone.local(day.year, day.month, day.day, hour, [0, 30].sample)
+        at = Time.zone.local(day.year, day.month, day.day, hour, minute)
         res = BookingScheduler.create(
           branch: branches[idx % branches.size], starts_at: at,
           lines: [{ service: svc }], member: member,
@@ -465,17 +467,20 @@ ActsAsTenant.with_tenant(ws) do
     (0..3).each do |month_ago|
       month = Date.current.beginning_of_month - month_ago.months
       branches.each_with_index do |br, bi|
-        # Cơ cấu chi phí của một spa hai cơ sở doanh thu ~800tr/tháng: mặt bằng
-        # và lương chiếm phần lớn. Để lãi thô ra khoảng 10–20% — mức thật, không
-        # phải con số đẹp.
-        [["rent", "Thuê mặt bằng", 90_000_000 - bi * 30_000_000],
-         ["payroll", "Lương cứng nhân sự", 180_000_000 - bi * 60_000_000],
-         ["supplies", "Tinh dầu, khăn, mặt nạ", 45_000_000 - bi * 15_000_000],
-         ["utility", "Điện nước internet", 18_000_000 - bi * 6_000_000],
-         ["marketing", "Quảng cáo Facebook", 25_000_000 - bi * 10_000_000],
-         ["equipment", "Bảo trì giường & máy", 8_000_000 - bi * 2_000_000]].each do |cat, note, amount|
+        # Cơ cấu chi phí của một spa hai cơ sở doanh thu ~500tr/tháng: mặt bằng
+        # và lương chiếm phần lớn (~65% doanh thu). Lãi thô ra khoảng 15–25% —
+        # mức thật, không phải con số đẹp.
+        [["rent", "Thuê mặt bằng", 48_000_000 - bi * 16_000_000],
+         ["payroll", "Lương cứng nhân sự", 96_000_000 - bi * 32_000_000],
+         ["supplies", "Tinh dầu, khăn, mặt nạ", 24_000_000 - bi * 8_000_000],
+         ["utility", "Điện nước internet", 10_000_000 - bi * 3_000_000],
+         ["marketing", "Quảng cáo Facebook", 14_000_000 - bi * 5_000_000],
+         ["equipment", "Bảo trì giường & máy", 5_000_000 - bi * 2_000_000]].each do |cat, note, amount|
+          # Không ghi chi phí vào ngày TƯƠNG LAI của tháng hiện tại — nó sẽ
+          # không nằm trong kỳ đang xem và làm lãi thô lệch không hiểu nổi.
+          day = [month + rand(0..27), Date.current].min
           ws.expenses.create!(branch: br, category: cat, note: note, amount: amount,
-                              spent_on: month + rand(0..25))
+                              spent_on: day)
         end
       end
     end
