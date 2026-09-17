@@ -1,7 +1,10 @@
 lock "~> 3.18"
 
 set :application, "aura"
-set :repo_url,    "git@github.com:vietlee/aura.git"
+# Repo bare NGAY TRÊN SERVER (như BƠI ĐẠT): máy này không có `gh` CLI và
+# ssh-agent không giữ khoá GitHub, nên clone qua agent forwarding sẽ thất bại.
+# Đẩy code: `git push production main` rồi `cap production deploy`.
+set :repo_url,    ENV.fetch("REPO_URL", "/home/deploy/repos/aura.git")
 
 set :deploy_to,   "/var/www/aura"
 set :branch,      ENV.fetch("BRANCH", "main")
@@ -27,8 +30,10 @@ set :keep_releases, 5
 set :assets_roles, [:web]
 
 # Puma
-set :puma_threads,        [2, 4]
-set :puma_workers,        2
+# Máy chủ đang chạy 5 ứng dụng Rails trên 3.7GB RAM. Aura dùng MỘT worker
+# (~200MB) thay vì hai — thêm worker thứ hai là đẩy cả máy vào swap.
+set :puma_threads,        [2, 5]
+set :puma_workers,        1
 set :puma_bind,           "unix://#{shared_path}/tmp/sockets/puma.sock"
 set :puma_state,          "#{shared_path}/tmp/pids/puma.state"
 set :puma_pid,            "#{shared_path}/tmp/pids/puma.pid"
@@ -58,17 +63,6 @@ namespace :deploy do
       within current_path do
         with rails_env: fetch(:rails_env) do
           execute :rake, "storage:to_spaces"
-        end
-      end
-    end
-  end
-
-  desc "Định vị các toà nhà chưa có toạ độ bản đồ (cap production deploy:geocode)"
-  task :geocode do
-    on roles(:app) do
-      within current_path do
-        with rails_env: fetch(:rails_env) do
-          execute :rake, "aura:geocode_buildings"
         end
       end
     end

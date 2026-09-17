@@ -1,0 +1,30 @@
+# Sidekiq system unit. BẮT BUỘC phải chạy: production dùng queue_adapter
+# :sidekiq, nên mail OTP, push thông báo và mọi `deliver_later` đứng im nếu
+# thiếu nó.
+[Unit]
+Description=sidekiq for aura (production)
+After=syslog.target network.target redis-server.service
+
+[Service]
+Type=notify
+WatchdogSec=30
+WorkingDirectory=/var/www/aura/current
+User=deploy
+Group=deploy
+
+Environment=RBENV_ROOT=/home/deploy/.rbenv
+Environment=RBENV_VERSION=3.2.2
+Environment=RAILS_ENV=production
+EnvironmentFile=/var/www/aura/shared/.env
+
+ExecStart=/home/deploy/.rbenv/bin/rbenv exec bundle exec sidekiq -e production -C /var/www/aura/current/config/sidekiq.yml
+ExecReload=/bin/kill -TSTP $MAINPID
+KillSignal=SIGTERM
+TimeoutStopSec=25
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/www/aura/shared/log/sidekiq.log
+StandardError=append:/var/www/aura/shared/log/sidekiq.log
+
+[Install]
+WantedBy=multi-user.target

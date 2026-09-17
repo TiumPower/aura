@@ -1,0 +1,27 @@
+# Bản ĐÚNG của puma user unit. `cap production puma:install` sinh bản HỎNG (đặt
+# biến môi trường ngay trong ExecStart, systemd từ chối với "bad unit file
+# setting") — chạy puma:install xong PHẢI chép tệp này lên và daemon-reload.
+# Bài học đã gặp ở loyalty, estate và xstudio.
+[Unit]
+Description=Puma HTTP Server for aura (production)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/aura/current
+
+Environment=RBENV_ROOT=/home/deploy/.rbenv
+Environment=RBENV_VERSION=3.2.2
+Environment=RAILS_ENV=production
+Environment=WEB_CONCURRENCY=1
+EnvironmentFile=/var/www/aura/shared/.env
+
+ExecStart=/home/deploy/.rbenv/bin/rbenv exec bundle exec puma -e production -C /var/www/aura/current/config/puma.rb
+ExecReload=/bin/kill -USR1 $MAINPID
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/www/aura/shared/log/puma.log
+StandardError=append:/var/www/aura/shared/log/puma.log
+
+[Install]
+WantedBy=default.target
