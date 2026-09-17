@@ -415,8 +415,11 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
-  # ---- Bill đã đóng của 14 ngày trước → báo cáo & hoa hồng có dữ liệu thật ---
-  if ws.orders.count.zero?
+  # ---- Bill đã đóng của 35 ngày trước → báo cáo & hoa hồng có dữ liệu thật ---
+  # Điều kiện phải độc lập với khối "hôm nay & mai" ở trên: khối đó cũng tạo
+  # bill, nên `ws.orders.count.zero?` sẽ luôn FALSE và toàn bộ dữ liệu lịch sử
+  # không bao giờ được sinh (đã vấp: seed chỉ ra 38 lịch hẹn thay vì ~750).
+  if ws.orders.where("closed_at < ?", Date.current.beginning_of_day).count.zero?
     cashier = owner
     sellable = ws.services.main.active.where(requires_staff: true).to_a
     therapists = ws.staff_members.active.therapists.to_a
