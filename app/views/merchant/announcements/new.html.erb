@@ -3,6 +3,7 @@
 <%= form_with url: merchant_announcements_path, method: :post do %>
   <div style="display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start;">
     <div class="l-panel">
+      <%= hidden_field_tag :operational, @operational ? "1" : "0", id: nil %>
       <div class="l-eyebrow" style="margin-bottom:12px;">Nội dung</div>
       <div style="margin-bottom:14px;">
         <label class="l-label">Tiêu đề <span style="color:#e5484d;">*</span></label>
@@ -51,9 +52,22 @@
             <% end %>
           </div>
         <% end %>
+        <label style="display:flex; align-items:flex-start; gap:9px; padding:12px 0 0;
+                      border-top:1px solid var(--line); margin-top:12px; font-size:13px;">
+          <%= check_box_tag :operational, "1", @operational, style: "margin-top:3px;",
+                onchange: "this.form.requestSubmit()" %>
+          <span>
+            <strong>Đây là thông báo vận hành</strong> (nghỉ lễ, đổi địa chỉ, sự cố)
+            <div style="color:var(--ink-2); margin-top:3px; line-height:1.5;">
+              Gửi cả cho <%= @opted_out %> khách đã tắt “nhận tin ưu đãi”. Tick ô này chỉ khi
+              thông báo THẬT SỰ cần tới họ — dùng nó cho khuyến mãi là phá vỡ đúng cái
+              cam kết mà app đã đưa ra với khách.
+            </div>
+          </span>
+        </label>
         <p style="font-size:12px; color:var(--ink-2); margin-top:12px;">
-          Khách đã tắt “nhận tin khuyến mãi” vẫn nằm trong nhóm — hãy dùng thông báo marketing
-          có chừng mực, đừng gửi mỗi ngày.
+          <%= @operational ? "Đang gửi cho MỌI khách, kể cả người đã tắt nhận tin." :
+              "Khách đã tắt “nhận tin ưu đãi” KHÔNG nằm trong nhóm — số ở trên đã trừ họ." %>
         </p>
       </div>
 

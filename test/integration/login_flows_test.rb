@@ -91,3 +91,46 @@ class AdminWorkspacePagesTest < ActionDispatch::IntegrationTest
     end
   end
 end
+
+# Khách tắt "nhận tin ưu đãi" trong app thì thông báo marketing KHÔNG được gửi
+# tới họ. Trước đây view còn ghi thẳng "khách đã tắt vẫn nằm trong nhóm" — tức
+# là app hứa một điều rồi hệ thống làm điều ngược lại.
+class AnnouncementConsentTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
+  setup do
+    @ws = create(:workspace, subdomain: "consentspa")
+    @ws.update!(settings: @ws.settings.merge("onboarded" => true))
+    @user = create(:user)
+    Membership.create!(user: @user, workspace: @ws, role: "owner")
+    ActsAsTenant.current_tenant = @ws
+    @yes = create(:member, workspace: @ws, marketing_opt_in: true)
+    @no  = create(:member, workspace: @ws, marketing_opt_in: false)
+    ActsAsTenant.current_tenant = nil
+    sign_in @user
+  end
+
+  def send_announcement(extra = {})
+    post "/merchant/announcements",
+         params: { title: "Ưu đãi tháng 10", body: "Giảm 20%", segment: "all" }.merge(extra)
+  end
+
+  test "thông báo marketing không gửi cho khách đã tắt nhận tin" do
+    send_announcement
+    assert_response :redirect
+    assert_equal 1, Notification.where(member_id: [@yes.id, @no.id]).count
+    assert_equal @yes.id, Notification.last.member_id
+  end
+
+  test "thông báo vận hành thì gửi cho cả khách đã tắt nhận tin" do
+    send_announcement(operational: "1")
+    assert_response :redirect
+    assert_equal 2, Notification.where(member_id: [@yes.id, @no.id]).count
+  end
+
+  test "trang soạn thông báo đếm đúng số người sẽ nhận" do
+    get "/merchant/announcements/new"
+    assert_response :success
+    assert_match "1 khách", response.body, "mặc định phải trừ khách đã tắt nhận tin"
+  end
+end

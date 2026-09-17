@@ -29,7 +29,8 @@ module Merchant
         created_by: current_user
       )
       broadcast.deliver!(members)
-      audit!("announcement.send", target: broadcast, summary: "#{members.size} khách · #{title}")
+      audit!("announcement.send", target: broadcast,
+             summary: "#{members.size} khách · #{operational? ? 'vận hành' : 'marketing'} · #{title}")
       redirect_to merchant_new_announcement_path, notice: "Đã gửi thông báo tới #{members.size} khách."
     end
 
@@ -39,18 +40,27 @@ module Merchant
       @segments = SEGMENTS
       @tiers    = current_workspace.member_tiers.ordered.to_a
       @branches = current_workspace.branches.ordered.to_a
+      # Đếm theo ĐÚNG nhóm sẽ nhận: đã trừ khách tắt nhận tin (trừ khi người gửi
+      # đánh dấu đây là thông báo vận hành).
+      base = current_workspace.members.active
+      base = base.where(marketing_opt_in: true) unless operational?
       @counts = {
-        "all"      => current_workspace.members.active.count,
-        "app"      => current_workspace.members.active.with_app.count,
-        "birthday" => current_workspace.members.active.birthday_in(Date.current.month).count,
+        "all"      => base.count,
+        "app"      => base.with_app.count,
+        "birthday" => base.birthday_in(Date.current.month).count,
         "lapsed"   => lapsed_scope.count
       }
+      @opted_out = current_workspace.members.active.where(marketing_opt_in: false).count
+      @operational = operational?
       @recent = current_workspace.broadcasts.recent.limit(10).to_a
     end
 
+    def operational? = params[:operational] == "1"
+
     def lapsed_scope
-      current_workspace.members.active
-        .where("last_visit_at IS NULL OR last_visit_at < ?", 60.days.ago)
+      scope = current_workspace.members.active
+      scope = scope.where(marketing_opt_in: true) unless operational?
+      scope.where("last_visit_at IS NULL OR last_visit_at < ?", 60.days.ago)
     end
 
     def reject(message)
@@ -59,8 +69,15 @@ module Merchant
       render :new, status: :unprocessable_entity
     end
 
+    # Khách đã TẮT "nhận tin khuyến mãi" thì không nhận thông báo marketing.
+    # Trước đây hệ thống vẫn gửi cho họ — khách bấm tắt trong app rồi vẫn bị gửi
+    # là phá vỡ đúng cái cam kết mà màn hình đó đưa ra.
+    #
+    # Thông báo VẬN HÀNH (nghỉ lễ, đổi địa chỉ, sự cố) là ngoại lệ hợp lý, nhưng
+    # phải do người gửi khai tường minh, không được là mặc định.
     def target_members
       base = current_workspace.members.active
+      base = base.where(marketing_opt_in: true) unless operational?
       case params[:segment]
       when "app"      then base.with_app
       when "tier"     then base.where(member_tier_id: Array(params[:tier_ids]).map(&:to_i))

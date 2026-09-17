@@ -1,4 +1,4 @@
-<% content_for :title, "Thanh toán" %>
+<% content_for :title, "Tài khoản nhận tiền" %>
 
 <div style="">
   <%# ---- How it works ---- %>
@@ -53,12 +53,23 @@
     <% end %>
   </div>
 
-  <%# ---- Auto reconciliation note ---- %>
+  <%# ---- Nói đúng luồng THẬT của Aura ----
+      Bản thừa kế từ Estate hứa "khách tải ảnh minh chứng → AI đối soát" — Aura
+      KHÔNG có luồng đó: khách trả tại quầy và lễ tân ghi nhận. Hứa tính năng
+      không tồn tại là thứ tệ nhất có thể viết trên một trang cài đặt. %>
   <div class="l-panel" style="margin-top:16px;">
-    <div style="font-weight:700; margin-bottom:4px;">⚡ Tự động xác nhận thanh toán</div>
-    <div style="font-size:13px; color:var(--ink-2);">
-      Hiện tại: khách chuyển khoản → tải ảnh minh chứng → <strong>AI tự đọc &amp; đối soát</strong> (số tiền, người nhận). VietQR thuần không có webhook.<br>
-      Muốn tự động 100% (webhook như PayOS): cần liên kết tài khoản ngân hàng qua <strong>SePay/Casso</strong> — liên hệ để bật tính năng này.
+    <div style="font-weight:700; margin-bottom:4px;">Mã QR này dùng ở đâu</div>
+    <div style="font-size:13px; color:var(--ink-2); line-height:1.6;">
+      Khi thu ngân mở bill, màn hình quầy hiện mã VietQR <strong>đã nhúng đúng số tiền
+      còn thiếu</strong> và nội dung “Bill &lt;mã bill&gt;”. Khách quét bằng app ngân hàng là
+      chuyển đúng số, không phải nhập tay. In được ra biên lai.
+    </div>
+    <div style="font-weight:700; margin:14px 0 4px;">⚡ Đối soát tự động — chưa có</div>
+    <div style="font-size:13px; color:var(--ink-2); line-height:1.6;">
+      VietQR thuần <strong>không có webhook</strong>, nên hệ thống không tự biết khách đã
+      chuyển hay chưa: lễ tân bấm “VietQR” trên bill để ghi nhận đã thu. Muốn tự động
+      100% thì cần liên kết tài khoản ngân hàng qua một dịch vụ như SePay hoặc Casso —
+      <strong>hiện chưa nối</strong>.
     </div>
   </div>
 </div>
