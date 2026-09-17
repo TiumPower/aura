@@ -140,6 +140,14 @@ class Booking < ApplicationRecord
   end
 
   # Khách còn được tự huỷ / đổi giờ không (theo tham số của cơ sở).
+  # `live?` gồm cả "completed" vì buổi đã xong VẪN chiếm phòng (SlotFinder phải
+  # đếm nó), nên đừng dùng nó để hỏi "còn huỷ/đổi được không". Buổi đã xong từ
+  # tháng trước mà màn hình khách báo "đã sát giờ hẹn nên không tự huỷ được" là
+  # vô nghĩa — đó là lỗi đã gặp thật ở /lich-hen/:id.
+  def cancel_window_closed?
+    %w[pending confirmed].include?(status) && starts_at.future? && !member_can_cancel?
+  end
+
   def member_can_cancel?
     return false unless %w[pending confirmed].include?(status)
     cutoff = branch.setting_i("cancel_cutoff_hours").hours

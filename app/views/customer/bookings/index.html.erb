@@ -24,8 +24,14 @@
   <% else %>
     <div class="l-tile" style="text-align:center; padding:32px 18px;">
       <div style="font-size:38px;">🌿</div>
-      <p style="font-weight:700; margin-top:8px;">Bạn chưa có lịch hẹn nào</p>
-      <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">Đặt trước để chọn được giờ và KTV mình thích.</p>
+      <%# Nhánh này chỉ nói về lịch SẮP TỚI. Viết "chưa có lịch hẹn nào" là
+          nói sai với khách đang có cả một danh sách buổi đã qua bên dưới. %>
+      <p style="font-weight:700; margin-top:8px;">
+        <%= @past.any? ? "Bạn chưa có lịch hẹn nào sắp tới" : "Bạn chưa có lịch hẹn nào" %>
+      </p>
+      <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+        <%= @past.any? ? "Đặt buổi tiếp theo để giữ đúng giờ và KTV mình thích." : "Đặt trước để chọn được giờ và KTV mình thích." %>
+      </p>
     </div>
   <% end %>
 

@@ -520,6 +520,11 @@ ActsAsTenant.with_tenant(ws) do
       next if o.booking.nil? # bill bán thẻ đã được lùi ngay lúc tạo
       o.update_columns(closed_at: o.booking.starts_at + 1.hour, created_at: o.booking.starts_at)
       o.commission_entries.update_all(earned_on: o.booking.starts_at.to_date)
+      # Sổ điểm và biến động ví của khách hiển thị theo `created_at`; không lùi
+      # thì "Biến động điểm" trong app khách ra cả trang cùng một phút hôm nay.
+      at = o.booking.starts_at + 1.hour
+      PointTransaction.where(order_id: o.id).update_all(created_at: at, updated_at: at)
+      WalletTransaction.where(order_id: o.id).update_all(created_at: at, updated_at: at)
     end
   end
 

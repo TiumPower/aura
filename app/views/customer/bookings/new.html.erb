@@ -109,7 +109,7 @@
       <div class="l-tile" style="margin-bottom:14px;">
         <div style="font-weight:700; font-size:15px;"><%= @service.name %></div>
         <div style="font-size:13px; color:var(--ink-2); margin-top:3px;">
-          <%= @variant ? "#{@variant.name} · #{@variant.duration_minutes}′" : @service.duration_label %>
+          <%= @variant ? @variant.duration_label : @service.duration_label %>
           · <%= vnd(@service.price_for(@variant, branch: @branch)) %>
         </div>
         <%= link_to "Đổi dịch vụ", member_new_booking_path(branch_id: @branch.id),
