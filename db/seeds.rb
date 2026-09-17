@@ -329,6 +329,33 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
+  # ---- Thêm khách để số lượt đến hợp lý ----------------------------------
+  # 748 lịch hẹn chia cho 5 khách ra "123 lượt đến" cho một hồ sơ tạo hôm nay —
+  # con số tự tố là dữ liệu giả. Với ~45 khách thì mỗi người 10–25 lượt, đúng
+  # như tệp khách của một spa chạy vài năm.
+  if ws.members.count < 40
+    tiers_by_key = ws.member_tiers.index_by(&:key)
+    40.times do |i|
+      phone = format("09%08d", 20_000_000 + i * 137)
+      next if ws.members.exists?(phone: phone)
+      female = i.even?
+      ws.members.create!(
+        phone: phone,
+        name: Faker::Name.public_send(female ? "female_first_name" : "male_first_name")
+                        .then { |first| "#{Faker::Name.last_name} #{first}" },
+        gender: female ? "female" : "male",
+        member_tier: tiers_by_key.values.sample,
+        home_branch: branches[i % branches.size],
+        dob: Date.new(1980 + (i % 25), (i % 12) + 1, (i % 27) + 1),
+        source: %w[walk_in self_signup online referral][i % 4],
+        marketing_opt_in: (i % 7) != 0,
+        preferences: i.even? ? { "pressure" => ["Nhẹ", "Trung bình", "Mạnh"].sample } : {},
+        last_seen_at: (i % 3).zero? ? rand(1..40).days.ago : nil
+      )
+    end
+  end
+
+
   # ---- Gói / thẻ liệu trình ----------------------------------------------
   body   = ws.services.find_by(name: "Massage body tinh dầu")
   foot   = ws.services.find_by(name: "Foot massage")
@@ -421,6 +448,7 @@ ActsAsTenant.with_tenant(ws) do
   # không bao giờ được sinh (đã vấp: seed chỉ ra 38 lịch hẹn thay vì ~750).
   if ws.orders.where("closed_at < ?", Date.current.beginning_of_day).count.zero?
     cashier = owner
+    ws.members.reload
     sellable = ws.services.main.active.where(requires_staff: true).to_a
     therapists = ws.staff_members.active.therapists.to_a
     customers = ws.members.to_a
