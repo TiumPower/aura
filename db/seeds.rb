@@ -352,9 +352,11 @@ ActsAsTenant.with_tenant(ws) do
         preferences: i.even? ? { "pressure" => ["Nhẹ", "Trung bình", "Mạnh"].sample } : {},
         last_seen_at: (i % 3).zero? ? rand(1..40).days.ago : nil
       ).tap do |m|
-        # Rải ngày tạo hồ sơ trong 2 năm: để nguyên hôm nay thì chỉ số "hồ sơ
-        # mới trong kỳ" luôn bằng toàn bộ tệp khách.
-        m.update_columns(created_at: rand(15..730).days.ago)
+        # Rải ngày tạo hồ sơ: để nguyên hôm nay thì chỉ số "hồ sơ mới trong
+        # kỳ" luôn bằng toàn bộ tệp khách. Spa thật nào cũng có khách mới mỗi
+        # tháng, nên 1/5 tệp khách nằm trong 30 ngày gần nhất, còn lại rải 2 năm.
+        age = (i % 5).zero? ? rand(1..29) : rand(30..730)
+        m.update_columns(created_at: age.days.ago)
       end
     end
   end
