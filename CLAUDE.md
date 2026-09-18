@@ -107,6 +107,26 @@ mọi URL nhiều tham số bị gửi sai), soi nội dung tìm `translation mi
 `>nil<`, `#<Model`, `\bEstate\b`; rồi **đọc bằng mắt** các trang cốt lõi —
 dãy số phải cộng ra được, câu chữ phải khớp dữ liệu ngay bên dưới nó.
 
+## Popup lịch hẹn (lịch ngày & hàng chờ)
+
+- **Cùng MỘT URL trả hai dạng.** `bookings#show` trả bản xem nhanh không layout
+  khi `turbo_frame_request_id == "booking_peek"`, trả trang đầy đủ khi không.
+  Nhờ vậy link vẫn mở được ở tab mới và JS hỏng thì vẫn dùng được.
+- **`<dialog>` PHẢI định vị tường minh.** UA stylesheet căn giữa nó bằng
+  `margin:auto`; reset CSS của app xoá margin nên hộp dán vào góc trên trái.
+  Dùng `position:fixed; top:50%; left:50%; transform:translate(-50%,-50%)`.
+  Đã có system test đo hình học thật (`test/system/booking_peek_test.rb`) —
+  không assert nào về NỘI DUNG bắt được lỗi này.
+- **Bắt cả sự kiện `close` của dialog,** không chỉ nút ✕: nhấn Esc thì
+  `<dialog>` tự đóng mà không đi qua Stimulus, và frame giữ lại nội dung cũ.
+- **Nút trong popup chạy tiếp TRONG popup.** `status` trả Turbo Stream vẽ lại
+  ruột popup + các khối trên lịch khi có `cal_from`. Vị trí khối phụ thuộc khung
+  giờ đang hiển thị nên KHÔNG suy được từ bản ghi — popup mang theo `cal_from`,
+  và `CAL_PX` là hằng số để view và stream dùng cùng một con số.
+- **Việc cần cân nhắc ở lại trang đầy đủ** (đổi giờ, gán lại KTV/phòng, ghi chú,
+  huỷ có lý do): chúng cần nhìn cả ngày để quyết, nhồi vào popup là mời người ta
+  quyết vội.
+
 ## Quy ước phải giữ
 
 - **Một sự thật một nguồn.** `SlotFinder` là nơi DUY NHẤT trả lời "còn chỗ không";

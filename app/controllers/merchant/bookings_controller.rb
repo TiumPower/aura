@@ -2,6 +2,11 @@ module Merchant
   # Lịch hẹn ở quầy: xem lịch một ngày theo PHÒNG, nhận khách mới, check-in,
   # bắt đầu / kết thúc, huỷ, đánh no-show, đổi giờ.
   class BookingsController < BaseController
+    # px mỗi phút trên lịch ngày. Là hằng số vì sau khi đổi trạng thái trong
+    # popup, Turbo Stream phải vẽ lại khối trên lịch ở ĐÚNG vị trí cũ, nên
+    # controller và view buộc phải dùng cùng một con số.
+    CAL_PX = 1.5
+
     before_action :set_booking, only: [:show, :edit, :update, :destroy, :status, :reschedule, :assign]
 
     # ---- Lịch ngày ---------------------------------------------------------
@@ -49,7 +54,8 @@ module Merchant
       # Cùng một URL phục vụ cả hai, nên link vẫn mở được ở tab mới như thường.
       if turbo_frame_request_id == "booking_peek"
         return render partial: "merchant/bookings/peek",
-                      locals: { booking: @booking, items: @items }, layout: false
+                      locals: { booking: @booking, items: @items,
+                                cal_from: params[:cal_from] }, layout: false
       end
       @staff = current_workspace.staff_members.active.therapists.at_branch(@booking.branch_id).ordered.to_a
       @rooms = @booking.branch.rooms.active.ordered.to_a
@@ -115,8 +121,41 @@ module Merchant
       end
       @booking.transition_to!(target, actor: current_user, reason: params[:reason].presence)
       audit!("booking.#{target}", target: @booking, summary: @booking.code)
+
+      # Bấm nút ngay trong popup thì ở lại popup: trả về Turbo Stream vừa vẽ lại
+      # ruột popup (nút đổi theo trạng thái mới) vừa vẽ lại khối trên lịch phía
+      # sau (đổi màu). Không có nhánh này thì mỗi lần check-in là một lần tải
+      # lại cả trang và lễ tân mất chỗ đang xem.
+      if params[:cal_from].present?
+        return render turbo_stream: peek_streams
+      end
+
       redirect_back fallback_location: merchant_booking_path(@booking),
                     notice: "#{@booking.code}: #{@booking.status_label}."
+    end
+
+    # Hai luồng cập nhật cho một lần bấm nút trong popup.
+    def peek_streams
+      items = @booking.booking_items.ordered.to_a
+      from  = Time.zone.parse(params[:cal_from].to_s)
+      streams = [
+        turbo_stream.replace("booking_peek",
+          partial: "merchant/bookings/peek",
+          locals: { booking: @booking, items: items, cal_from: params[:cal_from] })
+      ]
+      # Khối trên lịch chỉ vẽ lại được khi biết khung giờ đang hiển thị của
+      # trang — đó là lý do popup mang theo `cal_from`.
+      if from
+        items.reject(&:cancelled?).each do |item|
+          streams << turbo_stream.replace(
+            helpers.dom_id(item, :cal),
+            partial: "merchant/bookings/cal_item",
+            locals: { item: item,
+                      top: ((item.starts_at - from) / 60) * CAL_PX,
+                      height: item.duration_minutes * CAL_PX })
+        end
+      end
+      streams
     end
 
     # Gán KTV / phòng cho một lượt (lễ tân xếp tay).

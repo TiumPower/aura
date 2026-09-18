@@ -5,6 +5,11 @@
 
     Mọi form đặt data-turbo-frame="_top": đổi trạng thái xong thì cả trang lịch
     phải tải lại để khối trên lịch đổi màu, không phải chỉ mỗi popup. %>
+<%# `cal_from` là mốc giờ đầu khung lịch đang hiển thị. Có nó thì nút trong
+    popup chạy TIẾP TRONG POPUP (server trả Turbo Stream vẽ lại popup + khối
+    trên lịch); không có nó — ví dụ mở từ hàng chờ quầy — thì quay về hành vi
+    tải lại trang, vẫn đúng. %>
+<% in_calendar = cal_from.present? %>
 <%= turbo_frame_tag "booking_peek" do %>
   <div style="display:flex; gap:10px; align-items:flex-start;">
     <div style="flex:1; min-width:0;">
@@ -69,10 +74,18 @@
     <% [["confirmed", "Xác nhận"], ["checked_in", "Khách đã đến"],
         ["in_progress", "Bắt đầu làm"], ["completed", "Hoàn thành"]].each do |target, label| %>
       <% if booking.can_transition_to?(target) %>
-        <%= button_to label, status_merchant_booking_path(booking, value: target), method: :patch,
-              class: "l-btn l-btn-primary", style: "padding:9px 14px;",
-              form: { style: "display:inline;", data: { turbo_frame: "_top" } } %>
+        <%= button_to label, status_merchant_booking_path(booking, value: target, cal_from: cal_from),
+              method: :patch, class: "l-btn l-btn-primary", style: "padding:9px 14px;",
+              form: { style: "display:inline;",
+                      data: in_calendar ? {} : { turbo_frame: "_top" } } %>
       <% end %>
+    <% end %>
+    <% if booking.can_transition_to?("no_show") %>
+      <%= button_to "Khách không đến", status_merchant_booking_path(booking, value: "no_show", cal_from: cal_from),
+            method: :patch, class: "l-btn l-btn-ghost", style: "padding:9px 14px; color:#B4402F;",
+            form: { style: "display:inline;",
+                    data: (in_calendar ? {} : { turbo_frame: "_top" }).merge(
+                      turbo_confirm: "Đánh dấu khách không đến? Số lần bỏ hẹn của khách sẽ tăng và có thể bị chặn đặt online.") } %>
     <% end %>
     <% if module_on?("pos") && !booking.cancelled? && !booking.no_show? %>
       <% bill = booking.order %>

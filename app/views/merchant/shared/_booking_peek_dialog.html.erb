@@ -4,7 +4,12 @@
     Nơi render partial này PHẢI nằm trong một phần tử có data-controller="modal",
     cùng với các link trỏ vào frame. %>
 <style>
-  .bk-peek { border:none; padding:0; background:transparent; max-width:520px; width:calc(100% - 28px); }
+  /* <dialog> tự căn giữa bằng `margin:auto` của UA stylesheet, nhưng reset CSS
+     của app xoá margin nên hộp dán vào góc trên trái. Định vị tường minh để
+     không phụ thuộc vào thứ tự nạp CSS. */
+  .bk-peek { border:none; padding:0; background:transparent; margin:0;
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(520px, calc(100vw - 28px)); max-height:calc(100vh - 32px); }
   .bk-peek::backdrop { background:rgba(32,22,16,.42); backdrop-filter:blur(2px); }
   .bk-peek-card { background:#fff; border-radius:18px; padding:20px; box-shadow:0 24px 60px rgba(32,22,16,.28);
     max-height:min(86vh, 760px); overflow:auto; }

@@ -1,5 +1,5 @@
 <% content_for :title, "Lịch hẹn" %>
-<% px = 1.5 %><%# px mỗi phút — 60′ = 90px %>
+<% px = Merchant::BookingsController::CAL_PX %><%# px mỗi phút — 60′ = 90px %>
 <% total_min = ((@to - @from) / 60).round %>
 
 <style>
@@ -143,19 +143,8 @@
             <% (@by_room[room.id] || []).each do |item| %>
               <% top = (((item.starts_at - @from) / 60) * px) %>
               <% h   = ((item.duration_minutes) * px) %>
-              <% b   = item.booking %>
-              <%= link_to merchant_booking_path(b), class: "cal-b",
-                    style: "top:#{top.round}px; height:#{[h.round, 26].max}px; background:#{b.status_color};",
-                    title: "#{b.code} · #{b.customer_name} · #{item.service_label}",
-                    data: { turbo_frame: "booking_peek" } do %>
-                <b><%= item.starts_at.strftime("%H:%M") %> <%= b.customer_name.truncate(16) %></b>
-                <span><%= item.service_label.truncate(26) %></span>
-                <% if item.staff_member %>
-                  <span style="display:block;">👤 <%= item.staff_member.display_name.truncate(18) %></span>
-                <% else %>
-                  <span style="display:block; font-weight:700;">⚠ chưa gán KTV</span>
-                <% end %>
-              <% end %>
+              <%= render "merchant/bookings/cal_item", item: item, top: top, height: h,
+                                                      cal_from: @from %>
               <% if item.buffer_minutes.to_i.positive? %>
                 <% bh = [(item.buffer_minutes * px).round, 6].min %>
                 <div class="cal-buf" style="top:<%= (top + h).round %>px; height:<%= bh %>px;"

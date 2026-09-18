@@ -1,0 +1,18 @@
+<%# Một khối trên lịch ngày. Tách riêng để sau khi đổi trạng thái NGAY TRONG
+    popup, Turbo Stream thay đúng khối này và màu trên lịch đổi theo — không
+    phải tải lại cả trang. `top`/`height` truyền vào vì chúng phụ thuộc khung
+    giờ đang hiển thị của trang, không suy ra được từ bản ghi. %>
+<% b = item.booking %>
+<% cal_from = local_assigns[:cal_from] %>
+<%= link_to merchant_booking_path(b, cal_from: cal_from&.iso8601), id: dom_id(item, :cal), class: "cal-b",
+      style: "top:#{top.round}px; height:#{[height.round, 26].max}px; background:#{b.status_color};",
+      title: "#{b.code} · #{b.customer_name} · #{item.service_label}",
+      data: { turbo_frame: "booking_peek" } do %>
+  <b><%= item.starts_at.strftime("%H:%M") %> <%= b.customer_name.truncate(16) %></b>
+  <span><%= item.service_label.truncate(26) %></span>
+  <% if item.staff_member %>
+    <span style="display:block;">👤 <%= item.staff_member.display_name.truncate(18) %></span>
+  <% else %>
+    <span style="display:block; font-weight:700;">⚠ chưa gán KTV</span>
+  <% end %>
+<% end %>
