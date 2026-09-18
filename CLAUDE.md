@@ -107,6 +107,28 @@ mọi URL nhiều tham số bị gửi sai), soi nội dung tìm `translation mi
 `>nil<`, `#<Model`, `\bEstate\b`; rồi **đọc bằng mắt** các trang cốt lõi —
 dãy số phải cộng ra được, câu chữ phải khớp dữ liệu ngay bên dưới nó.
 
+## `form_with` bỏ im lặng mọi thuộc tính lạ
+
+**`form_with` chỉ chuyển `id`, `class`, `multipart`, `method`, `data`,
+`authenticity_token` ra thẻ `<form>`.** Mọi thứ khác — kể cả `style` — bị BỎ
+KHÔNG BÁO GÌ nếu không bọc trong `html: { ... }`.
+
+Đã vấp thật: **31 form ở cả ba cổng** khai `style: "display:grid; gap:8px"` ở
+cấp ngoài, render ra `<form>` trần, nên các ô xếp chồng và DÍNH VÀO NHAU. Cả
+trang thu ngân vỡ layout. Không có gì báo lỗi — view render bình thường, HTTP
+200, 134 test nội dung xanh.
+
+- **Ưu tiên `class:`** thay vì `style:`: form_with CÓ chuyển class ra thẻ form,
+  nên dùng class là không vấp lại được (xem `.pos-add`, `.pos-pay-row`).
+- `test/views/form_with_style_test.rb` quét toàn bộ view và đỏ nếu lỗi quay lại.
+- `test/system/merchant_spacing_test.rb` + `pos_layout_test.rb` ĐO hình học thật
+  trên Chrome. Helper `cramped_pairs` ở `ApplicationSystemTestCase` không đo gap
+  trần giữa hai hộp — kiểu "danh sách có vạch phân cách" hở 0px là hợp lệ vì mỗi
+  dòng tự có padding. Nó đo KHOẢNG THỞ: padding chỉ tính là khoảng cách khi cạnh
+  đó không có viền/nền. Hai ô có viền mà viền chạm nhau thì luôn là dính.
+- **Cột nút trong bảng nhiều dòng phải CỐ ĐỊNH, không `auto`** — nhãn dài khác
+  nhau làm các ô nhập so le (xem `.pos-pay-row`).
+
 ## Popup lịch hẹn (lịch ngày & hàng chờ)
 
 - **Cùng MỘT URL trả hai dạng.** `bookings#show` trả bản xem nhanh không layout

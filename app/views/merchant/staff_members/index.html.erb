@@ -1,7 +1,7 @@
 <% content_for :title, "Nhân sự & KTV" %>
 
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-  <%= form_with url: merchant_staff_index_path, method: :get, style: "display:flex; gap:8px; flex-wrap:wrap;" do %>
+  <%= form_with url: merchant_staff_index_path, method: :get, html: { style: "display:flex; gap:8px; flex-wrap:wrap;" } do %>
     <%= select_tag :status,
           options_for_select(StaffMember::STATUSES.map { |s| ["#{StaffMember::STATUS_LABELS[s]} (#{@counts[s].to_i})", s] }, @status),
           class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>

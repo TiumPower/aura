@@ -38,7 +38,7 @@
             </div>
             <% if current_membership&.can_manage? %>
               <%= form_with url: grant_merchant_member_package_path(c), method: :patch,
-                    style: "display:grid; grid-template-columns:.5fr 1.3fr auto; gap:6px; margin-top:8px; align-items:end;" do %>
+                    html: { style: "display:grid; grid-template-columns:.5fr 1.3fr auto; gap:6px; margin-top:8px; align-items:end;" } do %>
                 <%= hidden_field_tag :credit_id, credit.id %>
                 <div>
                   <label class="l-label" style="font-size:11px;">Tặng</label>
@@ -70,7 +70,7 @@
           <% end %>
         </div>
         <%= form_with url: extend_expiry_merchant_member_package_path(c), method: :patch,
-              style: "display:flex; gap:8px; align-items:end;" do %>
+              html: { style: "display:flex; gap:8px; align-items:end;" } do %>
           <div>
             <label class="l-label">Gia hạn thêm (ngày)</label>
             <%= number_field_tag :days, 30, min: 1, class: "l-field", style: "max-width:140px;" %>

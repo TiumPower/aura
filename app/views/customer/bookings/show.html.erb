@@ -57,7 +57,7 @@
   <% end %>
 
   <% if b.member_can_cancel? %>
-    <%= form_with url: member_cancel_booking_path(id: b.id), method: :patch, style: "margin-top:14px;" do %>
+    <%= form_with url: member_cancel_booking_path(id: b.id), method: :patch, html: { style: "margin-top:14px;" } do %>
       <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do huỷ (tuỳ chọn)", style: "margin-bottom:8px;" %>
       <%= submit_tag "Huỷ lịch hẹn này", class: "l-btn l-btn-ghost l-btn-block",
             data: { turbo_confirm: "Huỷ lịch hẹn #{b.starts_at.strftime('%H:%M %d/%m')}?" } %>

@@ -13,7 +13,7 @@
     </div>
 
     <span style="color:var(--ink-2); font-size:12px;">hoặc</span>
-    <%= form_with url: admin_root_path, method: :get, data: { turbo: false }, style: "display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;" do %>
+    <%= form_with url: admin_root_path, method: :get, data: { turbo: false }, html: { style: "display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;" } do %>
       <input type="date" name="from" value="<%= @from.to_s %>" class="l-field" style="width:auto; padding:7px 10px;">
       <span style="color:var(--ink-2);">→</span>
       <input type="date" name="to" value="<%= @to.to_s %>" class="l-field" style="width:auto; padding:7px 10px;">

@@ -1,7 +1,7 @@
 <% content_for :title, "Thẻ của khách" %>
 
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-  <%= form_with url: merchant_member_packages_path, method: :get, style: "display:flex; gap:8px;" do %>
+  <%= form_with url: merchant_member_packages_path, method: :get, html: { style: "display:flex; gap:8px;" } do %>
     <%= search_field_tag :q, params[:q], class: "l-field", style: "max-width:240px;", placeholder: "Tìm khách…" %>
     <%= select_tag :status,
           options_for_select(MemberPackage::STATUSES.map { |s| ["#{MemberPackage::STATUS_LABELS[s]} (#{@counts[s].to_i})", s] }, @status),

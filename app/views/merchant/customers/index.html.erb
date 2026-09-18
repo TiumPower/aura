@@ -1,7 +1,7 @@
 <% content_for :title, "Khách hàng" %>
 
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-  <%= form_with url: merchant_customers_path, method: :get, style: "display:flex; gap:8px; flex-wrap:wrap; flex:1;" do %>
+  <%= form_with url: merchant_customers_path, method: :get, html: { style: "display:flex; gap:8px; flex-wrap:wrap; flex:1;" } do %>
     <%= search_field_tag :q, params[:q], class: "l-field", style: "max-width:260px;",
           placeholder: "Tìm tên, số điện thoại, mã KH…" %>
     <%= select_tag :tier_id, options_from_collection_for_select(@tiers, :id, :name, params[:tier_id]),

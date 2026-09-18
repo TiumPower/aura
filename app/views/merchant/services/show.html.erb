@@ -58,7 +58,7 @@
 
       <% if current_membership&.can_manage? %>
         <%= form_with model: @new_variant, url: merchant_service_service_variants_path(s), method: :post,
-              style: "display:grid; grid-template-columns:1.2fr .8fr 1fr auto; gap:8px; align-items:end; margin-top:14px;" do |f| %>
+              html: { style: "display:grid; grid-template-columns:1.2fr .8fr 1fr auto; gap:8px; align-items:end; margin-top:14px;" } do |f| %>
           <div>
             <label class="l-label">Tên</label>
             <%= f.text_field :name, class: "l-field", placeholder: "90′" %>

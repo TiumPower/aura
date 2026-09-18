@@ -11,10 +11,24 @@
   .pos-line .amt { font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .pos-sum { display:flex; justify-content:space-between; padding:5px 0; font-size:13.5px; }
   .pos-sum.big { font-size:18px; font-weight:700; padding-top:11px; margin-top:6px; border-top:2px solid var(--ink); }
-  .pos-pay { display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr)); gap:8px; }
-  .pos-pay button { border:1px solid var(--line); background:#fff; border-radius:12px; padding:11px 6px;
-    font-size:13px; font-weight:600; cursor:pointer; }
-  .pos-pay button:hover { border-color:var(--primary); }
+  /* Form thêm dòng vào bill. Dùng CLASS chứ không phải `style:` trên form_with:
+     form_with chỉ chuyển id/class/method/data/multipart/authenticity_token ra
+     thẻ <form>, `style:` ở cấp ngoài bị BỎ IM LẶNG — đúng lỗi đã làm mọi ô trên
+     trang này dính vào nhau. Dùng class thì không vấp lại được. */
+  .pos-add { display:grid; gap:10px; align-items:end; margin-top:10px;
+    grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); }
+  .pos-add [type="submit"] { justify-self:start; }
+  /* Một dòng thu tiền: [số tiền][phương thức]. Dưới 420px thì xuống dòng, vì
+     ô số tiền bị bóp còn ~120px là không đọc được. */
+  /* Cột nút CỐ ĐỊNH, không `auto`: mỗi nhãn phương thức dài khác nhau nên với
+     `auto` các ô số tiền so le nhau — cột thu ngân nhìn cả ngày thì phải thẳng. */
+  .pos-pay-row { display:grid; grid-template-columns:1fr 150px; gap:8px;
+    align-items:center; margin-bottom:10px; }
+  .pos-pay-row [type="submit"] { width:100%; }
+  @media (max-width:420px) {
+    .pos-pay-row { grid-template-columns:1fr; }
+    .pos-pay-row [type="submit"] { width:auto; justify-self:start; }
+  }
 </style>
 
 <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:16px;">
@@ -138,7 +152,7 @@
         <details open>
           <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Dịch vụ</summary>
           <%= form_with url: add_item_merchant_order_path(o), method: :post,
-                style: "display:grid; grid-template-columns:1.6fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+                class: "pos-add" do %>
             <%= hidden_field_tag :kind, "service" %>
             <div>
               <label class="l-label">Dịch vụ</label>
@@ -160,7 +174,7 @@
           <details style="margin-top:14px;">
             <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Bán thẻ liệu trình / gói</summary>
             <%= form_with url: add_item_merchant_order_path(o), method: :post,
-                  style: "display:grid; grid-template-columns:1.6fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+                  class: "pos-add" do %>
               <%= hidden_field_tag :kind, "package" %>
               <div>
                 <label class="l-label">Gói</label>
@@ -183,7 +197,7 @@
           <details style="margin-top:14px;">
             <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Nạp ví trả trước</summary>
             <%= form_with url: add_item_merchant_order_path(o), method: :post,
-                  style: "display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+                  class: "pos-add" do %>
               <%= hidden_field_tag :kind, "topup" %>
               <div>
                 <label class="l-label">Số tiền nạp</label>
@@ -210,7 +224,7 @@
           <details style="margin-top:14px;">
             <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Tip cho KTV</summary>
             <%= form_with url: add_item_merchant_order_path(o), method: :post,
-                  style: "display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+                  class: "pos-add" do %>
               <%= hidden_field_tag :kind, "tip" %>
               <div>
                 <label class="l-label">KTV nhận tip</label>
@@ -233,7 +247,7 @@
         <details style="margin-top:14px;">
           <summary style="cursor:pointer; font-weight:600; font-size:13.5px;">Giảm giá cả bill</summary>
           <%= form_with url: discount_merchant_order_path(o), method: :post,
-                style: "display:grid; grid-template-columns:.7fr .7fr 1.4fr auto; gap:8px; align-items:end; margin-top:10px;" do %>
+                class: "pos-add" do %>
             <div>
               <label class="l-label">Theo %</label>
               <%= number_field_tag :percent, nil, min: 0, max: 100, class: "l-field" %>
@@ -266,7 +280,7 @@
           <% next if method == "wallet" && !current_workspace.feature?("wallet") %>
           <% next if method == "points" && !current_workspace.feature?("loyalty") %>
           <%= form_with url: pay_merchant_order_path(o), method: :post,
-                style: "display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:8px; align-items:center;" do %>
+                class: "pos-pay-row" do %>
             <%= hidden_field_tag :method, method %>
             <%= number_field_tag :amount, o.due, step: 1000, class: "l-field",
                   style: "padding:9px 12px;", "aria-label": OrderPayment::METHOD_LABELS[method] %>

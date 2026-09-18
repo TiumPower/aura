@@ -1,7 +1,7 @@
 <% content_for :title, "Dịch vụ" %>
 
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-  <%= form_with url: merchant_services_path, method: :get, style: "display:flex; gap:8px;" do %>
+  <%= form_with url: merchant_services_path, method: :get, html: { style: "display:flex; gap:8px;" } do %>
     <%= select_tag :category_id, options_from_collection_for_select(@categories, :id, :name, params[:category_id]),
           include_blank: "Mọi nhóm", class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
     <%= hidden_field_tag :addons, params[:addons] %>

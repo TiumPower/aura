@@ -33,7 +33,7 @@
 <%# ---- Thanh điều khiển ---- %>
 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
   <%= link_to "‹", merchant_calendar_path(date: @date - 1), class: "l-chip" %>
-  <%= form_with url: merchant_calendar_path, method: :get, style: "display:flex; gap:8px; align-items:center;" do %>
+  <%= form_with url: merchant_calendar_path, method: :get, html: { style: "display:flex; gap:8px; align-items:center;" } do %>
     <%= date_field_tag :date, @date.to_s, class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
   <% end %>
   <%= link_to "›", merchant_calendar_path(date: @date + 1), class: "l-chip" %>

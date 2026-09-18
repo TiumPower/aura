@@ -62,7 +62,7 @@
         <details style="margin-top:16px;">
           <summary style="cursor:pointer; font-weight:600; font-size:13.5px; color:var(--primary-ink);">+ Thêm phòng nhanh</summary>
           <%= form_with model: @new_room, url: merchant_branch_rooms_path(@branch), method: :post,
-                style: "display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-top:12px; align-items:end;" do |f| %>
+                html: { style: "display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-top:12px; align-items:end;" } do |f| %>
             <div>
               <label class="l-label">Tên phòng</label>
               <%= f.text_field :name, class: "l-field", placeholder: "Phòng 1" %>
@@ -152,7 +152,7 @@
       <% end %>
 
       <%= form_with model: @new_closure, url: merchant_branch_branch_closures_path(@branch), method: :post,
-            style: "margin-top:12px; display:grid; gap:10px;" do |f| %>
+            html: { style: "margin-top:12px; display:grid; gap:10px;" } do |f| %>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <div>
             <label class="l-label">Từ ngày</label>

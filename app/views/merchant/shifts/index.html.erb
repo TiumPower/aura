@@ -80,7 +80,7 @@
                 <% if current_membership&.can_manage? %>
                   <details>
                     <summary class="sh-add" style="cursor:pointer;">+ ca</summary>
-                    <%= form_with url: merchant_shifts_path, method: :post, style: "display:grid; gap:4px; margin-top:5px;" do %>
+                    <%= form_with url: merchant_shifts_path, method: :post, html: { style: "display:grid; gap:4px; margin-top:5px;" } do %>
                       <%= hidden_field_tag :staff_member_id, s.id %>
                       <%= hidden_field_tag :work_date, d.to_s %>
                       <%= hidden_field_tag :week, @week_start.to_s %>

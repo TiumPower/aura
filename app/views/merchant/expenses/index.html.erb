@@ -13,7 +13,7 @@
 </style>
 
 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
-  <%= form_with url: merchant_expenses_path, method: :get, style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" do %>
+  <%= form_with url: merchant_expenses_path, method: :get, html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do %>
     <label class="l-label" style="margin:0;">Tháng</label>
     <%= month_field_tag :month, @month.strftime("%Y-%m"), class: "l-field", style: "width:auto;",
           onchange: "this.form.requestSubmit()" %>

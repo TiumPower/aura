@@ -193,7 +193,7 @@
             class: "l-chip #{'l-chip-brand' if @period_days == days && params[:from].blank?}" %>
     <% end %>
   </div>
-  <%= form_with url: merchant_root_path, method: :get, style: "display:flex; gap:6px; align-items:center;" do %>
+  <%= form_with url: merchant_root_path, method: :get, html: { style: "display:flex; gap:6px; align-items:center;" } do %>
     <%= date_field_tag :from, @from.to_s, class: "l-field", style: "width:auto; padding:7px 10px;" %>
     <%= date_field_tag :to, @to.to_s, class: "l-field", style: "width:auto; padding:7px 10px;" %>
     <%= submit_tag "Xem", class: "l-chip", style: "cursor:pointer;" %>

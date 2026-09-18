@@ -72,7 +72,7 @@
 
     <% if current_membership&.can_manage? %>
       <%= form_with model: @new_template, url: merchant_staff_shift_templates_path(@staff), method: :post,
-            style: "display:grid; grid-template-columns:1.1fr .8fr .8fr auto; gap:8px; align-items:end; margin-top:14px;" do |f| %>
+            html: { style: "display:grid; grid-template-columns:1.1fr .8fr .8fr auto; gap:8px; align-items:end; margin-top:14px;" } do |f| %>
         <div>
           <label class="l-label">Thứ</label>
           <%= f.select :weekday, (0..6).map { |wd| [Branch.weekday_label(wd), wd] }, {}, class: "l-field" %>

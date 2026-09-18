@@ -54,7 +54,7 @@
   </div>
   <% if b.can_transition_to?("cancelled") %>
     <%= form_with url: status_merchant_booking_path(b, value: "cancelled"), method: :patch,
-          style: "display:flex; gap:8px; margin-top:12px; max-width:520px;" do %>
+          html: { style: "display:flex; gap:8px; margin-top:12px; max-width:520px;" } do %>
       <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do huỷ (khách đổi ý, spa hết chỗ…)" %>
       <%= submit_tag "Huỷ lịch", class: "l-btn l-btn-ghost", style: "color:#B4402F; white-space:nowrap;",
             data: { turbo_confirm: "Huỷ lịch hẹn này?" } %>
@@ -93,7 +93,7 @@
 
           <% unless b.finished? %>
             <%= form_with url: assign_merchant_booking_path(b), method: :patch,
-                  style: "display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;" do %>
+                  html: { style: "display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;" } do %>
               <%= hidden_field_tag :item_id, item.id %>
               <%= select_tag :staff_member_id,
                     options_from_collection_for_select(@staff, :id, :display_name, item.staff_member_id),
@@ -113,7 +113,7 @@
       <div class="l-panel">
         <div class="l-eyebrow" style="margin-bottom:10px;">Đổi giờ hẹn</div>
         <%= form_with url: reschedule_merchant_booking_path(b), method: :patch,
-              style: "display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;" do %>
+              html: { style: "display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;" } do %>
           <div>
             <label class="l-label">Ngày</label>
             <%= date_field_tag :date, b.starts_at.to_date.to_s, class: "l-field" %>

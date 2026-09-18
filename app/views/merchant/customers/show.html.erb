@@ -112,7 +112,7 @@
         <% if @member.blocked? %>
           <%= button_to "Bỏ chặn khách", unblock_merchant_customer_path(@member), method: :patch, class: "l-btn l-btn-primary" %>
         <% else %>
-          <%= form_with url: block_merchant_customer_path(@member), method: :patch, style: "display:flex; gap:8px; flex:1;" do %>
+          <%= form_with url: block_merchant_customer_path(@member), method: :patch, html: { style: "display:flex; gap:8px; flex:1;" } do %>
             <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do chặn (tuỳ chọn)" %>
             <%= submit_tag "Chặn", class: "l-btn l-btn-ghost", style: "color:#B4402F;",
                   data: { turbo_confirm: "Chặn khách này khỏi đặt lịch?" } %>

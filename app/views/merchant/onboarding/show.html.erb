@@ -130,12 +130,12 @@
         </div>
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <%= form_with url: merchant_onboarding_path, method: :patch, style: "display:inline;" do %>
+        <%= form_with url: merchant_onboarding_path, method: :patch, html: { style: "display:inline;" } do %>
           <%= hidden_field_tag :step, "presets" %>
           <%= hidden_field_tag :seed, "1" %>
           <%= submit_tag "Nạp danh mục & hoàn tất", class: "l-btn l-btn-primary" %>
         <% end %>
-        <%= form_with url: merchant_onboarding_path, method: :patch, style: "display:inline;" do %>
+        <%= form_with url: merchant_onboarding_path, method: :patch, html: { style: "display:inline;" } do %>
           <%= hidden_field_tag :step, "presets" %>
           <%= hidden_field_tag :seed, "0" %>
           <%= submit_tag "Tôi tự khai từ đầu", class: "l-btn l-btn-ghost" %>

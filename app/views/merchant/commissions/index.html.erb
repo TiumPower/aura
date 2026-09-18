@@ -1,7 +1,7 @@
 <% content_for :title, "Hoa hồng & hiệu suất KTV" %>
 
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-  <%= form_with url: merchant_commissions_path, method: :get, style: "display:flex; gap:8px; align-items:center;" do %>
+  <%= form_with url: merchant_commissions_path, method: :get, html: { style: "display:flex; gap:8px; align-items:center;" } do %>
     <label class="l-label" style="margin:0;">Kỳ</label>
     <%= month_field_tag :month, @from.strftime("%Y-%m"), class: "l-field", style: "width:auto;",
           onchange: "this.form.requestSubmit()" %>

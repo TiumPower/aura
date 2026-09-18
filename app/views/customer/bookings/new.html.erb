@@ -193,7 +193,7 @@
             <%= @branch.name %> · <%= @branch.short_address %>
           </div>
 
-          <%= form_with url: member_bookings_path, method: :post, style: "margin-top:14px;" do %>
+          <%= form_with url: member_bookings_path, method: :post, html: { style: "margin-top:14px;" } do %>
             <%= hidden_field_tag :branch_id, @branch.id %>
             <%= hidden_field_tag :service_id, @service.id %>
             <%= hidden_field_tag :service_variant_id, @variant&.id %>

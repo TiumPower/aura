@@ -1,7 +1,7 @@
 <% content_for :title, "Bill & doanh thu" %>
 
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-  <%= form_with url: merchant_orders_path, method: :get, style: "display:flex; gap:8px; align-items:center;" do %>
+  <%= form_with url: merchant_orders_path, method: :get, html: { style: "display:flex; gap:8px; align-items:center;" } do %>
     <%= date_field_tag :date, @date.to_s, class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
   <% end %>
   <div style="margin-left:auto; display:flex; gap:8px;">
