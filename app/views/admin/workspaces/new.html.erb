@@ -1,7 +1,8 @@
 <% content_for :title, "Tạo workspace" %>
 
 <div style="max-width:640px;">
-  <%= link_to "← Workspaces", admin_workspaces_path, style: "color:var(--ink-2); font-size:13px; text-decoration:none;" %>
+  <%= link_to "← Workspaces", admin_workspaces_path, class: "l-textlink",
+        style: "color:var(--ink-2); font-size:13px;" %>
   <h2 class="l-display" style="font-size:24px; margin:8px 0 16px;">Tạo spa mới</h2>
 
   <% if @workspace.errors.any? %>

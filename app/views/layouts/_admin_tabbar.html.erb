@@ -1,0 +1,25 @@
+<%# Thanh điều hướng dưới cho điện thoại. Sidebar bị ẩn từ ≤900px
+    (`@media .l-side { display:none }`), và trước đây cổng admin KHÔNG có gì thay
+    thế — mở trên điện thoại là không đi được đâu ngoài trang đang xem, phải tự
+    gõ URL. Cổng quản lý đã có `_merchant_tabbar`; đây là bản tương ứng.
+    Dùng chung CSS `.l-mtab` (lưới 5 cột) nên số mục phải là 5. %>
+<% nav = defined?(nav_key) ? nav_key : nil %>
+<nav class="l-mtab">
+  <div class="l-mtab-inner">
+    <%= link_to admin_workspaces_path, class: ("active" if nav == :workspaces) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:users, size: 22) %></span><span>Spa</span>
+    <% end %>
+    <%= link_to admin_billing_path, class: ("active" if nav == :billing) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:receipt, size: 22) %></span><span>Doanh thu</span>
+    <% end %>
+    <%= link_to admin_root_path, class: "ce-tab-home #{'active' if nav == :dashboard}" do %>
+      <span class="ce-tab-ic"><%= ui_icon(:home, size: 27) %></span><span>Tổng quan</span>
+    <% end %>
+    <%= link_to admin_plans_path, class: ("active" if nav == :plans) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:card, size: 22) %></span><span>Gói</span>
+    <% end %>
+    <%= link_to admin_account_path, class: ("active" if nav == :account) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Tài khoản</span>
+    <% end %>
+  </div>
+</nav>

@@ -65,6 +65,14 @@ body {
 .l-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px;
   font-size:12px; font-weight:600; background: var(--surface-2); color: var(--ink-2); transition: background .15s, color .15s; }
 .l-chip-brand { background: var(--primary-soft); color: var(--primary-ink); }
+/* Chỉ chip BẤM ĐƯỢC mới cần đủ cao cho ngón tay (28px là bấm nhầm). Chip dùng
+   làm nhãn tĩnh giữ nguyên cỡ, nếu không mọi nhãn ở ba cổng đều phình ra. */
+a.l-chip, button.l-chip, input.l-chip, label.l-chip { min-height:34px; padding-inline:13px; }
+/* Link ĐỨNG RIÊNG làm nhiệm vụ của một nút ("Xem tất cả →", "Đổi dịch vụ").
+   Link nằm trong câu thì đừng dùng class này — padding sẽ phá nhịp dòng chữ.
+   Chuẩn WCAG 2.2 đòi vùng bấm tối thiểu 24px; 16–20px là bấm nhầm trên điện thoại. */
+.l-textlink { display:inline-block; padding:7px 0; min-height:32px; box-sizing:border-box;
+  font-weight:600; text-decoration:none; }
 /* interactive chips (links / buttons) get a hover */
 a.l-chip:hover, button.l-chip:hover { background: color-mix(in srgb, var(--ink) 10%, var(--surface-2)); color: var(--ink); }
 a.l-chip-brand:hover, button.l-chip-brand:hover { background: color-mix(in srgb, var(--primary) 22%, #fff); color: var(--primary-ink); }
@@ -279,7 +287,8 @@ a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
 
 .l-main { min-width:0; display:flex; flex-direction:column; }
 
-/* ---- Landlord mobile bottom nav (only when the sidebar is hidden) ---- */
+/* ---- Thanh điều hướng dưới cho điện thoại (chỉ khi sidebar bị ẩn) ----
+   Dùng cho CẢ cổng quản lý và cổng super admin. */
 .l-mtab { display:none; }
 @media (max-width:900px) {
   /* Hide the sidebar on phones (a base .l-side rule declared later than the
@@ -337,11 +346,32 @@ a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
 .l-topbar .title .en { display:block; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2); }
 .l-content { padding: clamp(16px,3vw,32px); }
 
-.l-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+/* Mức tối thiểu 150px, không phải 200px: ở 358px (điện thoại trừ lề) thì 200px
+   chỉ vừa MỘT cột, nên bốn thẻ số xếp dọc ngốn gần hết màn hình. */
+.l-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; }
 .l-kpi { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow: var(--shadow); }
 .l-kpi .k { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-weight:600; }
 .l-kpi .v { font-family:var(--font-display); font-size:34px; margin-top:6px; font-variant-numeric:tabular-nums; }
 .l-kpi .d { font-size:12px; color:var(--good); margin-top:2px; font-weight:600; }
+
+/* Lưới "nội dung + cột phụ": inline style không khai được media query, nên lưới
+   kiểu này BUỘC phải là class. Trang chi tiết workspace ở cổng admin từng viết
+   `grid-template-columns:1fr 320px` bằng inline style và tràn ngang 179px trên
+   điện thoại — cột phụ ăn 320px trong 358px, cột chính còn 18px. */
+.l-2col { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
+@media (max-width:900px) { .l-2col { grid-template-columns:1fr; } }
+
+/* Bảng dữ liệu nhiều cột: cho BẢNG cuộn ngang, đừng để cả TRANG cuộn ngang. */
+.l-tablewrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.l-tablewrap > table { min-width:640px; }
+
+/* Đầu thẻ: tiêu đề bên trái, chú thích bên phải. PHẢI cho xuống dòng, nếu không
+   ở khổ hẹp tiêu đề vỡ giữa chữ ("Doanh / thu") và xen vào chú thích cũng đang
+   vỡ dòng — đọc ra thành "Doanh hoá đơn thuê bao đã / thu thanh toán". */
+.l-cardhead { display:flex; align-items:baseline; justify-content:space-between;
+  gap:2px 12px; flex-wrap:wrap; margin-bottom:6px; }
+.l-cardhead > :first-child { font-weight:700; white-space:nowrap; }
+.l-cardhead > :last-child { font-size:12px; color:var(--ink-2); }
 
 .l-panel { background:#fff; border:1px solid var(--line); border-radius:20px; padding:22px; box-shadow: var(--shadow); }
 .l-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); }

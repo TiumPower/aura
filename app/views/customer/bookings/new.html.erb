@@ -112,8 +112,8 @@
           <%= @variant ? @variant.duration_label : @service.duration_label %>
           · <%= vnd(@service.price_for(@variant, branch: @branch)) %>
         </div>
-        <%= link_to "Đổi dịch vụ", member_new_booking_path(branch_id: @branch.id),
-              style: "font-size:13px; font-weight:600; color:var(--primary-ink); text-decoration:none; display:inline-block; margin-top:8px;" %>
+        <%= link_to "Đổi dịch vụ", member_new_booking_path(branch_id: @branch.id), class: "l-textlink",
+              style: "font-size:13px; color:var(--primary-ink); margin-top:2px;" %>
       </div>
 
       <%# KTV %>
@@ -131,7 +131,9 @@
               <div class="av" style="background:<%= st.color %>;"><%= st.initials %></div>
               <div class="nm"><%= st.nickname.presence || st.name.split.last %></div>
               <% if st.surcharge.positive? %>
-                <div style="font-size:10.5px; color:var(--ink-2); margin-top:2px;">+<%= number_to_human(st.surcharge, units: { thousand: "k" }) %></div>
+                <%# `number_to_human` chèn dấu cách: "+100 k". Đây là tiền khách phải
+                    trả thêm nên viết theo cách người Việt vẫn viết: "+100k". %>
+                <div style="font-size:10.5px; color:var(--ink-2); margin-top:2px;">+<%= (st.surcharge / 1000.0).round %>k</div>
               <% end %>
             <% end %>
           <% end %>

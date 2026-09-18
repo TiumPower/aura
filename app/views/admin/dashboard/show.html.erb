@@ -51,18 +51,19 @@
 
 <%# ---- Charts (follow the range) ---- %>
 <div class="l-eyebrow" style="margin-bottom:12px;">Biểu đồ theo tháng</div>
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+<%# auto-fit: ở khổ điện thoại hai biểu đồ cạnh nhau chỉ còn ~150px mỗi cái. %>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;">
   <div class="l-panel">
-    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
-      <div style="font-weight:700;">Doanh thu</div>
-      <div style="font-size:12px; color:var(--ink-2);">hoá đơn thuê bao đã thanh toán</div>
+    <div class="l-cardhead">
+      <div>Doanh thu</div>
+      <div>hoá đơn thuê bao đã thanh toán</div>
     </div>
     <div style="color:var(--primary);"><%= bar_chart_svg(@revenue_series) %></div>
   </div>
   <div class="l-panel">
-    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
-      <div style="font-weight:700;">Spa mới</div>
-      <div style="font-size:12px; color:var(--ink-2);">workspace đăng ký mỗi tháng</div>
+    <div class="l-cardhead">
+      <div>Spa mới</div>
+      <div>workspace đăng ký mỗi tháng</div>
     </div>
     <div style="color:var(--primary-2, #3BA5B0);"><%= bar_chart_svg(@workspace_series, color: "var(--primary-2, #3BA5B0)") %></div>
   </div>
@@ -79,7 +80,8 @@
 <%# ---- Recent ---- %>
 <div style="display:flex; align-items:center; justify-content:space-between; margin:22px 0 12px;">
   <div class="l-eyebrow">Spa mới nhất</div>
-  <%= link_to "Xem tất cả →", admin_workspaces_path, style: "font-size:13px; color:var(--primary);" %>
+  <%= link_to "Xem tất cả →", admin_workspaces_path, class: "l-textlink",
+        style: "font-size:13px; color:var(--primary);" %>
 </div>
 <div class="l-panel" style="padding:0; overflow:hidden;">
   <% @recent.each do |ws| %>

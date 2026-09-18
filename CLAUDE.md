@@ -129,6 +129,37 @@ trang thu ngân vỡ layout. Không có gì báo lỗi — view render bình th�
 - **Cột nút trong bảng nhiều dòng phải CỐ ĐỊNH, không `auto`** — nhãn dài khác
   nhau làm các ô nhập so le (xem `.pos-pay-row`).
 
+## Soát UI bằng ĐO hình học, không bằng mắt thường
+
+`test/application_system_test_case.rb` có bốn phép đo dùng cho cả ba cổng:
+`cramped_pairs` (ô dính nhau), `horizontal_overflow` (trang cuộn ngang),
+`tiny_targets` (vùng bấm < 24px — mức tối thiểu WCAG 2.2), `clipped_text`.
+Ba bài soát: `merchant_spacing_test`, `customer_ui_audit_test`,
+`admin_ui_audit_test` — chạy ở 390px và 1400px.
+
+Những gì chúng đã tìm ra và phải giữ:
+
+- **Inline style KHÔNG khai được media query.** Lưới hai cột có cột phụ cố định
+  buộc phải là class (`.l-2col`). Trang chi tiết workspace ở cổng admin từng
+  viết `grid-template-columns:1fr 320px` inline và tràn ngang 179px trên điện
+  thoại: cột phụ ăn 320px trong 358px.
+- **Bảng nhiều cột bọc trong `.l-tablewrap`** — cho BẢNG cuộn ngang, đừng để cả
+  TRANG cuộn ngang (`/admin/workspaces` từng tràn 164px).
+- **Đừng ghi đè `grid-template-columns` của `.l-kpis`** — nó đã là
+  `auto-fit minmax(150px,1fr)`. Ghi đè bằng `repeat(3,1fr)` cho bốn thẻ là vừa
+  tràn ngang vừa lệch hàng.
+- **Đầu thẻ dùng `.l-cardhead`**, đừng flex `space-between` trơ: ở khổ hẹp tiêu
+  đề vỡ giữa chữ và xen vào chú thích — "Doanh hoá đơn thuê bao đã / thu thanh toán".
+- **Chip bấm được cao ≥34px** (`a.l-chip, button.l-chip…`); chip dùng làm nhãn
+  tĩnh giữ nguyên cỡ. Link đứng riêng làm nhiệm vụ nút dùng `.l-textlink`.
+- **Cổng admin cũng cần `_admin_tabbar`.** Sidebar ẩn từ ≤900px; trước khi có
+  tabbar, mở cổng admin trên điện thoại là không đi được đâu ngoài trang đang
+  xem. `.l-mtab` là lưới 5 cột nên số mục phải đúng 5.
+- **Bẫy khi viết test:** `click_on` trả về TRƯỚC khi POST xong. Đọc DB ngay sau
+  đó là đọc lúc request còn đang bay (OTP khách ra nil). Phải `assert_text` ở
+  trang đích trước. Và checkbox/radio bọc trong `<label>`/`.l-switch` thì vùng
+  bấm là label — đo ô input là dương tính giả.
+
 ## Popup lịch hẹn (lịch ngày & hàng chờ)
 
 - **Cùng MỘT URL trả hai dạng.** `bookings#show` trả bản xem nhanh không layout

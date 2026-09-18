@@ -1,5 +1,5 @@
 <% content_for :title, @workspace.name %>
-<div style="display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start;">
+<div class="l-2col">
   <div>
     <div class="l-panel" style="margin-bottom:16px;">
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
@@ -7,7 +7,9 @@
         <div><h2 class="l-display" style="font-size:22px;"><%= @workspace.name %></h2>
           <div style="color:var(--ink-2); font-size:13px;"><%= @workspace.subdomain %>.aura.czin.net · <%= @workspace.status_label %></div></div>
       </div>
-      <div class="l-kpis" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+      <%# Không ghi đè grid-template-columns: .l-kpis đã là auto-fit minmax(200px,1fr).
+          Ghi đè bằng repeat(3,1fr) cho BỐN thẻ là vừa tràn ngang vừa lệch hàng. %>
+      <div class="l-kpis" style="gap:12px;">
         <div class="l-kpi"><div class="k">Cơ sở</div><div class="v"><%= @branches_count %></div></div>
         <div class="l-kpi"><div class="k">Phòng</div><div class="v"><%= @rooms_count %></div></div>
         <div class="l-kpi"><div class="k">Nhân sự</div><div class="v"><%= @staff_count %></div></div>
@@ -30,7 +32,9 @@
 
   <div class="l-panel">
     <h3 class="l-display" style="font-size:18px; margin-bottom:10px;">Quản trị</h3>
-    <div style="display:flex; gap:8px; margin-bottom:16px;">
+    <%# button_to đặt style lên <button>, còn flex item là <form class="button_to">
+         bọc ngoài — nên cho chính form co được. %>
+    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
       <% if @workspace.pending? || @workspace.status == "suspended" %>
         <%= button_to "✓ Duyệt / Kích hoạt", approve_admin_workspace_path(@workspace), method: :patch, class: "l-btn l-btn-primary", style: "flex:1;" %>
       <% elsif @workspace.active? %>
