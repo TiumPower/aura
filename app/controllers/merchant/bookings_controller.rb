@@ -44,6 +44,13 @@ module Merchant
 
     def show
       @items = @booking.booking_items.ordered.to_a
+      # Bấm vào một khối trên lịch ngày mở POPUP, không rời trang: Turbo nạp
+      # đúng action này vào frame "booking_peek" và ta trả về bản xem nhanh.
+      # Cùng một URL phục vụ cả hai, nên link vẫn mở được ở tab mới như thường.
+      if turbo_frame_request_id == "booking_peek"
+        return render partial: "merchant/bookings/peek",
+                      locals: { booking: @booking, items: @items }, layout: false
+      end
       @staff = current_workspace.staff_members.active.therapists.at_branch(@booking.branch_id).ordered.to_a
       @rooms = @booking.branch.rooms.active.ordered.to_a
     end

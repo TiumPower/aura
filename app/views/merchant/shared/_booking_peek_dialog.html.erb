@@ -1,0 +1,20 @@
+<%# Hộp popup dùng chung cho lịch ngày và hàng chờ quầy. Frame rỗng lúc đầu;
+    link nào trỏ vào frame "booking_peek" thì Turbo nạp bản xem nhanh vào đây và
+    `modal_controller` mở <dialog> khi frame nạp xong.
+    Nơi render partial này PHẢI nằm trong một phần tử có data-controller="modal",
+    cùng với các link trỏ vào frame. %>
+<style>
+  .bk-peek { border:none; padding:0; background:transparent; max-width:520px; width:calc(100% - 28px); }
+  .bk-peek::backdrop { background:rgba(32,22,16,.42); backdrop-filter:blur(2px); }
+  .bk-peek-card { background:#fff; border-radius:18px; padding:20px; box-shadow:0 24px 60px rgba(32,22,16,.28);
+    max-height:min(86vh, 760px); overflow:auto; }
+</style>
+
+<dialog class="bk-peek" data-modal-target="dialog" data-action="click->modal#backdrop"
+        aria-label="Chi tiết lịch hẹn">
+  <div class="bk-peek-card">
+    <%= turbo_frame_tag "booking_peek", data: { modal_target: "frame" } do %>
+      <p style="font-size:13.5px; color:var(--ink-2); margin:0;">Đang tải lịch hẹn…</p>
+    <% end %>
+  </div>
+</dialog>

@@ -125,6 +125,39 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # Bấm vào một khối trên lịch ngày phải mở POPUP, không rời trang. Cùng một URL
+  # phục vụ cả hai: có header Turbo-Frame thì trả bản xem nhanh, không có thì
+  # trả trang đầy đủ (để link vẫn mở được ở tab mới, và để hỏng JS vẫn dùng được).
+  test "lịch hẹn trả bản xem nhanh cho frame popup và trang đầy đủ cho điều hướng thường" do
+    peek_headers = { "Turbo-Frame" => "booking_peek" }
+
+    get "/merchant/bookings/#{@booking.id}", headers: peek_headers
+    assert_response :success
+    assert_match 'id="booking_peek"', response.body
+    assert_match "Mở trang đầy đủ", response.body
+    # Popup chỉ giữ việc làm ngay; đổi giờ và gán KTV ở lại trang đầy đủ.
+    refute_match "Đổi giờ hẹn", response.body
+    refute_match "Ghi chú nội bộ", response.body
+    # Không có layout: popup nằm trong trang đang mở, không kéo theo thanh điều hướng.
+    refute_match "<html", response.body
+
+    get "/merchant/bookings/#{@booking.id}"
+    assert_response :success
+    assert_match "Đổi giờ hẹn", response.body
+    assert_match "Thao tác quầy", response.body
+    refute_match 'id="booking_peek"', response.body
+  end
+
+  test "lịch ngày và hàng chờ có hộp popup và link trỏ vào đúng frame" do
+    ["/merchant/calendar", "/merchant/bookings/queue"].each do |path|
+      get path
+      assert_response :success
+      assert_match 'data-controller="modal"', response.body, "#{path} thiếu controller mở popup"
+      assert_match 'data-modal-target="dialog"', response.body, "#{path} thiếu hộp dialog"
+      assert_match 'data-turbo-frame="booking_peek"', response.body, "#{path} chưa có link trỏ vào frame"
+    end
+  end
+
   test "record pages render" do
     [
       "/merchant/branches/#{@branch.slug}",

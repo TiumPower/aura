@@ -1,5 +1,7 @@
 <% content_for :title, "Hàng chờ tại quầy" %>
 
+<div data-controller="modal">
+
 <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
   <strong style="font-size:14.5px;"><%= l(Date.current, format: "%A, %d/%m/%Y") %><%= " · #{@branch.name}" if @branch %></strong>
   <div style="margin-left:auto; display:flex; gap:8px;">
@@ -13,7 +15,8 @@
     <div style="font-weight:700; font-size:14px; color:#a11;">⏰ <%= @late.size %> khách đã quá giờ hẹn</div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
       <% @late.each do |b| %>
-        <%= link_to merchant_booking_path(b), class: "l-chip", style: "text-decoration:none;" do %>
+        <%= link_to merchant_booking_path(b), class: "l-chip", style: "text-decoration:none;",
+              data: { turbo_frame: "booking_peek" } do %>
           <%= b.customer_name %> · trễ <%= b.late_minutes %>′
         <% end %>
       <% end %>
@@ -40,7 +43,8 @@
               <%= " · #{b.rooms_summary}" if b.rooms_summary.present? %>
             </div>
             <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-              <%= link_to "Chi tiết", merchant_booking_path(b), class: "l-chip" %>
+              <%= link_to "Chi tiết", merchant_booking_path(b), class: "l-chip",
+                    data: { turbo_frame: "booking_peek" } %>
               <% if b.can_transition_to?("checked_in") %>
                 <%= button_to "Khách đã đến", status_merchant_booking_path(b, value: "checked_in"), method: :patch,
                       class: "l-chip l-chip-brand", form: { style: "display:inline;" } %>
@@ -63,4 +67,7 @@
       <% end %>
     </div>
   <% end %>
+</div>
+
+  <%= render "merchant/shared/booking_peek_dialog" %>
 </div>
