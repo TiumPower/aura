@@ -10,7 +10,11 @@
     max-height:min(86vh, 760px); overflow:auto; }
 </style>
 
-<dialog class="bk-peek" data-modal-target="dialog" data-action="click->modal#backdrop"
+<%# `close->modal#close` để bấm Esc cũng dọn frame: <dialog> tự đóng khi nhấn Esc
+    mà không đi qua controller, nên nếu không bắt sự kiện `close` thì frame giữ
+    lại nội dung cũ. %>
+<dialog class="bk-peek" data-modal-target="dialog"
+        data-action="click->modal#backdrop close->modal#close"
         aria-label="Chi tiết lịch hẹn">
   <div class="bk-peek-card">
     <%= turbo_frame_tag "booking_peek", data: { modal_target: "frame" } do %>
