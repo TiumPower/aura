@@ -46,6 +46,19 @@ set :puma_init_active_record, true
 set :sidekiq_config, "#{current_path}/config/sidekiq.yml"
 
 namespace :deploy do
+  desc "XOÁ toàn bộ spa rồi dựng lại bộ dữ liệu test (cap production deploy:test_data PASSWORD=...)"
+  task :test_data do
+    pw = ENV["PASSWORD"].to_s
+    raise "Cần PASSWORD='<mật khẩu ≥12 ký tự>'" if pw.length < 12
+    on roles(:db) do
+      within release_path do
+        with rails_env: fetch(:rails_env), password: pw, confirm: "yes" do
+          execute :rake, "aura:test_data"
+        end
+      end
+    end
+  end
+
   desc "Seed database (run manually: cap production deploy:seed)"
   task :seed do
     on roles(:db) do

@@ -1,0 +1,41 @@
+<% content_for :title, "Thiết lập nền tảng" %>
+<% content_for :title_en, "SETTINGS" %>
+
+<div style="max-width:660px;">
+  <div class="l-panel">
+    <div class="l-eyebrow">Kiểm thử</div>
+    <h3 class="l-display" style="font-size:20px; margin:6px 0 4px;">Hiện mã OTP trên màn hình</h3>
+    <p style="color:var(--ink-2); font-size:13px; margin:0 0 14px;">
+      Khi bật, mã OTP 6 số hiện thẳng trên trang đăng nhập, không cần mở hộp thư hay tin nhắn.
+      Dùng để test và demo. Hai công tắc tách riêng vì mức rủi ro khác nhau — bật cho nhân sự nghĩa là
+      ai biết email một nhân viên cũng vào được toàn bộ dữ liệu spa.
+    </p>
+
+    <% [["customer", "App khách (đăng nhập bằng SĐT)", @customer,
+         "Cần bật khi test bằng số điện thoại demo chưa khai email — hiện chưa nối SMS/Zalo ZNS."],
+        ["staff", "Cổng quản lý spa (đăng nhập bằng email)", @staff,
+         "Chỉ bật khi thật sự cần; nhân sự thấy toàn bộ dữ liệu của spa."]].each do |scope, label, on, hint| %>
+      <div class="l-panel" style="margin-bottom:12px; <%= on ? "background:#F7E0DA; border:none;" : "" %>">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div style="min-width:0;">
+            <div style="font-weight:600;"><%= label %></div>
+            <div style="font-size:12.5px; color:<%= on ? "#B4402F" : "var(--ink-2)" %>;">
+              <%= on ? "⚠ ĐANG BẬT — nhớ tắt trước khi có người dùng thật." : hint %>
+            </div>
+          </div>
+          <%= form_with url: admin_settings_path, method: :patch do %>
+            <%= hidden_field_tag :scope, scope %>
+            <%= hidden_field_tag :on, on ? "false" : "true" %>
+            <%= submit_tag on ? "Tắt" : "Bật", class: "l-btn #{on ? '' : 'l-btn-primary'}" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <p style="color:var(--ink-2); font-size:12px; margin:8px 0 0;">
+      Công tắc áp dụng cho toàn hệ thống (mọi spa) và có hiệu lực ngay, không cần deploy lại.
+      Biến môi trường <span class="l-mono">SHOW_CUSTOMER_OTP</span> / <span class="l-mono">SHOW_OTP</span>
+      trong <span class="l-mono">shared/.env</span> vẫn bật được, nhưng công tắc này là cách khuyên dùng.
+    </p>
+  </div>
+</div>

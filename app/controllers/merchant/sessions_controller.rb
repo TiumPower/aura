@@ -109,7 +109,8 @@ module Merchant
     def normalize(email) = email.to_s.strip.downcase
 
     def show_otp_onscreen?
-      ENV["SHOW_OTP"] == "true" || !Rails.env.production? || !EmailOtp.configured?
+      AppSetting.show_otp_staff? || ENV["SHOW_OTP"] == "true" ||
+        !Rails.env.production? || !EmailOtp.configured?
     end
 
     def latest_dev_code(email)

@@ -76,7 +76,7 @@ module Customer
     # nhiều — nhưng vẫn phải TẮT trước khi có khách thật.
     def show_otp_onscreen?
       return true unless Rails.env.production?
-      ENV["SHOW_CUSTOMER_OTP"] == "true"
+      AppSetting.show_otp_customer? || ENV["SHOW_CUSTOMER_OTP"] == "true"
     end
 
     # Mã gửi được qua email khi hồ sơ khách đã có email.
