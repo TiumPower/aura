@@ -108,7 +108,7 @@ Rails.application.configure do
   config.active_job.queue_adapter = :sidekiq
 
   # Mailer URLs
-  config.action_mailer.default_url_options = { host: "aura.czin.net", protocol: "https" }
+  config.action_mailer.default_url_options = { host: "aura.tiumpower.com", protocol: "https" }
 
   # Email delivery for OTP. Prefer Brevo's HTTP API (works over 443 where SMTP
   # ports are blocked, e.g. DigitalOcean); fall back to SMTP if configured.
@@ -125,13 +125,16 @@ Rails.application.configure do
       port:                 ENV.fetch("SMTP_PORT", 587).to_i,
       user_name:            ENV["SMTP_USERNAME"],
       password:             ENV["SMTP_PASSWORD"],
-      domain:               ENV.fetch("SMTP_DOMAIN", "aura.czin.net"),
+      domain:               ENV.fetch("SMTP_DOMAIN", "aura.tiumpower.com"),
       authentication:       :login,
       enable_starttls_auto: true
     }
   end
 
   # Host authorization — apex + every shop subdomain (white-label PWA).
+  config.hosts << "aura.tiumpower.com"
+  config.hosts << /.*\.aura\.tiumpower\.com/
+  # Tên miền cũ (czin.net) — nginx đã 301 sang domain mới, giữ lại cho chắc.
   config.hosts << "aura.czin.net"
   config.hosts << /.*\.aura\.czin\.net/
   # Skip DNS rebinding protection for the default health check endpoint.

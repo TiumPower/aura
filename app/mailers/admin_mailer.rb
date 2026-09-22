@@ -11,5 +11,5 @@ class AdminMailer < ApplicationMailer
 
   private
 
-  def platform_from = %(Aura <#{ENV.fetch("MAIL_FROM", "no-reply@aura.czin.net")}>)
+  def platform_from = %(Aura <#{ENV.fetch("MAIL_FROM", "no-reply@aura.tiumpower.com")}>)
 end

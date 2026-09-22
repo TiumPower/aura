@@ -12,7 +12,7 @@ class OtpMailer < ApplicationMailer
     to_addr    = challenge.delivery_email
     return if to_addr.blank?
 
-    from_addr = ENV.fetch("MAIL_FROM", "no-reply@aura.czin.net")
+    from_addr = ENV.fetch("MAIL_FROM", "no-reply@aura.tiumpower.com")
     mail(to: to_addr,
          from: "#{@brand} <#{from_addr}>",
          subject: "#{@brand}: Mã đăng nhập #{@code}")

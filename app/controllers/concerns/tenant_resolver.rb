@@ -1,7 +1,7 @@
 # Xác định Workspace (spa) cho app khách, theo thứ tự:
 #   1. đoạn đường dẫn /w/:workspace_slug (dự phòng cho dev)
 #   2. tên miền riêng của spa (VD: booking.auraspa.vn)
-#   3. subdomain của spa      (VD: auraspa.aura.czin.net / auraspa.lvh.me)
+#   3. subdomain của spa      (VD: auraspa.aura.tiumpower.com / auraspa.lvh.me)
 # Các subdomain dành riêng (app, admin, www, api) không bao giờ là một spa.
 module TenantResolver
   extend ActiveSupport::Concern

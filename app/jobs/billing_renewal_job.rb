@@ -41,7 +41,7 @@ class BillingRenewalJob < ApplicationJob
 
   def attach_payos_link(invoice, ws, service)
     return unless service.configured?
-    host = "#{ws.subdomain}.aura.czin.net"
+    host = "#{ws.subdomain}.aura.tiumpower.com"
     data = service.create_payment_link(
       order_code:  invoice.payos_order_code,
       amount:      invoice.amount,

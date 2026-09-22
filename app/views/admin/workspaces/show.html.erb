@@ -5,7 +5,7 @@
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
         <div class="av" style="width:44px;height:44px;"><%= @workspace.logo_initials %></div>
         <div><h2 class="l-display" style="font-size:22px;"><%= @workspace.name %></h2>
-          <div style="color:var(--ink-2); font-size:13px;"><%= @workspace.subdomain %>.aura.czin.net · <%= @workspace.status_label %></div></div>
+          <div style="color:var(--ink-2); font-size:13px;"><%= @workspace.subdomain %>.aura.tiumpower.com · <%= @workspace.status_label %></div></div>
       </div>
       <%# Không ghi đè grid-template-columns: .l-kpis đã là auto-fit minmax(200px,1fr).
           Ghi đè bằng repeat(3,1fr) cho BỐN thẻ là vừa tràn ngang vừa lệch hàng. %>
@@ -45,7 +45,7 @@
       <label class="l-label">Subdomain</label>
       <div style="display:flex; align-items:center; gap:6px;">
         <%= f.text_field :subdomain, class: "l-field", style: "text-align:right;" %>
-        <span class="l-mono" style="color:var(--ink-2); white-space:nowrap; font-size:12px;">.aura.czin.net</span>
+        <span class="l-mono" style="color:var(--ink-2); white-space:nowrap; font-size:12px;">.aura.tiumpower.com</span>
       </div>
       <label class="l-label" style="margin-top:12px;">Tên miền riêng (tuỳ chọn)</label>
       <%= f.text_field :custom_domain, class: "l-field", placeholder: "canho.tenmiennha.vn" %>

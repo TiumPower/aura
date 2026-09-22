@@ -1,7 +1,7 @@
 # Aura — phần mềm quản lý spa & massage đa cơ sở
 
 Sản phẩm SaaS multi-tenant: mỗi spa là một workspace riêng, có subdomain riêng
-(`tenspa.aura.czin.net`), tuỳ chọn tên miền riêng, bộ màu/phông riêng, bộ module
+(`tenspa.aura.tiumpower.com`), tuỳ chọn tên miền riêng, bộ màu/phông riêng, bộ module
 riêng và bộ tham số nghiệp vụ riêng. Cùng một bộ mã chạy cho một tiệm foot
 massage một cơ sở và một chuỗi thẩm mỹ viện nhiều cơ sở.
 

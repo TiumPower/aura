@@ -1,7 +1,7 @@
 # Aura — hạ tầng production
 
-Live: **https://aura.czin.net** (apex: `/admin`, `/merchant`) và
-`https://<subdomain>.aura.czin.net` (app khách, white-label theo từng spa).
+Live: **https://aura.tiumpower.com** (apex: `/admin`, `/merchant`) và
+`https://<subdomain>.aura.tiumpower.com` (app khách, white-label theo từng spa).
 
 ## Máy chủ
 
@@ -16,8 +16,8 @@ quyết định về cấu hình đều phải tính tới bốn app kia.
 | Redis | database **6** (loyalty 2, estate 3, boidat 4, xstudio 5) |
 | Puma | systemd **user** unit `aura_puma_production`, single mode, unix socket |
 | Sidekiq | system unit `sidekiq-aura`, concurrency 3 |
-| nginx | `/etc/nginx/sites-available/aura.czin.net` (bản gốc ở `config/nginx/`) |
-| TLS | cert `aura-wildcard` (`*.aura.czin.net` + apex), DNS-01 qua Cloudflare, tự gia hạn |
+| nginx | `/etc/nginx/sites-available/aura.tiumpower.com` (bản gốc ở `config/nginx/`) |
+| TLS | cert `aura-wildcard` (`*.aura.tiumpower.com` + apex), DNS-01 qua Cloudflare, tự gia hạn |
 | Sao lưu | cron 4:15 hằng ngày → `/var/www/aura/backups` (30 ngày) |
 | Tệp tải lên | DigitalOcean Spaces, bucket `czin`, tiền tố `aura/`, mirror xuống đĩa |
 

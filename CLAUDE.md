@@ -40,7 +40,7 @@
   một khoá ở riêng `vi.yml` KHÔNG làm test đỏ — nó lặng lẽ rơi về tiếng Anh và
   người Việt thấy chuỗi tiếng Anh.
 - **`tld_length` suy từ `PLATFORM_HOST`, đừng viết cứng.** Host nền tảng ba nhãn
-  (`aura.czin.net`) mà tld_length mặc định là 1 thì Rails đọc chính apex thành
+  (`aura.tiumpower.com`) mà tld_length mặc định là 1 thì Rails đọc chính apex thành
   "subdomain aura".
 - **Test trang `/merchant/commissions` và `/merchant/reports` phải có dữ liệu thật.**
   Kỳ rỗng không đi qua phần lớn mã của mấy trang đó — lỗi
@@ -228,7 +228,7 @@ bundle exec cap production deploy:seed        # chỉ lần đầu
 
 ## Deploy
 
-Live tại **https://aura.czin.net** + `*.aura.czin.net`, cùng máy với
+Live tại **https://aura.tiumpower.com** + `*.aura.tiumpower.com`, cùng máy với
 loyalty/estate/boidat/xstudio (`103.116.38.152`). Chi tiết hạ tầng: xem
 `docs/DEPLOY.md`.
 
