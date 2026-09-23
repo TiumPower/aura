@@ -24,12 +24,17 @@ quyết định về cấu hình đều phải tính tới bốn app kia.
 ## Deploy
 
 ```bash
-git push production main
+git push origin main
 bundle exec cap production deploy
 ```
 
-Repo **bare ngay trên server** (`/home/deploy/repos/aura.git`) chứ không qua
-GitHub: máy dev không có `gh` CLI và ssh-agent không giữ khoá GitHub.
+Mã nguồn ở **GitHub** `git@github.com:vietlee/aura.git`; server kéo về qua
+**agent forwarding** (`forward_agent: true`), giống loyalty/estate/xstudio.
+
+> Repo bare cũ `/home/deploy/repos/aura.git` (remote `production`) vẫn còn
+> nhưng **không còn là nguồn deploy** và không tự đồng bộ với GitHub. Chỉ dùng
+> khi GitHub không với tới được:
+> `git push production main && REPO_URL=/home/deploy/repos/aura.git bundle exec cap production deploy`.
 
 Deploy dùng **hot restart USR2** nên không gián đoạn (đo được 30/30 request đều
 200 xuyên suốt một lần deploy). Điều kiện để hot restart nạp đúng code mới:

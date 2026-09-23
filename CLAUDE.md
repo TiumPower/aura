@@ -221,8 +221,8 @@ bin/rails test test/services/slot_finder_test.rb
 bin/rails test test/services/checkout_test.rb
 bundle exec brakeman -q --no-pager
 
-# deploy (repo bare trên server, không qua GitHub)
-git push production main && bundle exec cap production deploy
+# deploy (mã ở GitHub: vietlee/aura)
+git push origin main && bundle exec cap production deploy
 bundle exec cap production deploy:seed        # chỉ lần đầu
 ```
 

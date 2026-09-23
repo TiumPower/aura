@@ -1,10 +1,13 @@
 lock "~> 3.18"
 
 set :application, "aura"
-# Repo bare NGAY TRÊN SERVER (như BƠI ĐẠT): máy này không có `gh` CLI và
-# ssh-agent không giữ khoá GitHub, nên clone qua agent forwarding sẽ thất bại.
-# Đẩy code: `git push production main` rồi `cap production deploy`.
-set :repo_url,    ENV.fetch("REPO_URL", "/home/deploy/repos/aura.git")
+# GitHub, kéo về qua agent forwarding (`forward_agent: true` trong
+# config/deploy/production.rb) — giống loyalty/estate/xstudio.
+# Đẩy code: `git push origin main` rồi `cap production deploy`.
+# Repo bare cũ trên server vẫn còn ở /home/deploy/repos/aura.git; nếu GitHub
+# không với tới được thì chạy `REPO_URL=/home/deploy/repos/aura.git cap production deploy`
+# (nhớ `git push production main` trước, nó KHÔNG tự đồng bộ với GitHub).
+set :repo_url,    ENV.fetch("REPO_URL", "git@github.com:vietlee/aura.git")
 
 set :deploy_to,   "/var/www/aura"
 set :branch,      ENV.fetch("BRANCH", "main")
