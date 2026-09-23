@@ -93,7 +93,7 @@ group :development, :test do
   gem "capistrano-rails",   "~> 1.6",  require: false
   gem "capistrano-rbenv",   "~> 2.2",  require: false
   gem "capistrano3-puma",   "~> 6.0",  require: false
-  gem "capistrano-sidekiq", "~> 2.3",  require: false
+  gem "capistrano-sidekiq", "~> 3.2",  require: false
   # net-ssh cần hai gem này để đọc khoá SSH định dạng OPENSSH mới
   # (`-----BEGIN OPENSSH PRIVATE KEY-----`) — kể cả khoá RSA. Thiếu chúng thì
   # `cap production deploy` chết ngay ở bước rbenv:validate với
