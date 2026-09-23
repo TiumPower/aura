@@ -17,7 +17,7 @@ gem "stimulus-rails"
 # Use Tailwind CSS [https://github.com/rails/tailwindcss-rails]
 gem "tailwindcss-rails"
 # Redis — cache, sessions, ActionCable, Sidekiq
-gem "redis", ">= 4.0.1", "< 6"
+gem "redis", ">= 4.0.1", "< 7"
 gem "rack-attack"
 # json 3.x bỏ keyword `quirks_mode` mà ActiveRecord 7.2 còn dùng khi ghi cột jsonb
 # → mọi migration tạo bảng có jsonb đều nổ. Ghim lại như estate/loyalty/boidat.
