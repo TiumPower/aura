@@ -22,7 +22,7 @@ gem "rack-attack"
 # json 3.x bỏ keyword `quirks_mode` mà ActiveRecord 7.2 còn dùng khi ghi cột jsonb
 # → mọi migration tạo bảng có jsonb đều nổ. Ghim lại như estate/loyalty/boidat.
 gem "json", "~> 2.21"
-gem "connection_pool", "~> 2.4"
+gem "connection_pool", "~> 3.0"
 
 # --- Dynamic Loyalty stack (mirrors Orbit CRM / VOX) ---
 # Authentication & Authorization
