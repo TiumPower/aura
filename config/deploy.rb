@@ -7,7 +7,7 @@ set :application, "aura"
 # Repo bare cũ trên server vẫn còn ở /home/deploy/repos/aura.git; nếu GitHub
 # không với tới được thì chạy `REPO_URL=/home/deploy/repos/aura.git cap production deploy`
 # (nhớ `git push production main` trước, nó KHÔNG tự đồng bộ với GitHub).
-set :repo_url,    ENV.fetch("REPO_URL", "git@github.com:vietlee/aura.git")
+set :repo_url,    ENV.fetch("REPO_URL", "git@github.com:TiumPower/aura.git")
 
 set :deploy_to,   "/var/www/aura"
 set :branch,      ENV.fetch("BRANCH", "main")
