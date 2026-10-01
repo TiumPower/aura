@@ -35,11 +35,14 @@ nào phải xoay vòng.**
 ## Hai secret cần có
 
 Bốn app (`loyalty`, `estate`, `aura`, `xstudio`) deploy lên **cùng một máy chủ
-bằng cùng một user `deploy`**, nên dùng chung đúng một khoá. Cách gọn nhất là
-đặt ở cấp tổ chức một lần, thay vì lặp lại ở từng repo:
+bằng cùng một user `deploy`**, nên dùng chung đúng một khoá — cùng một giá trị
+dán vào cả bốn repo.
 
-**TiumPower → Settings → Secrets and variables → Actions → New organization
-secret**, phạm vi *Selected repositories* gồm cả bốn repo.
+Secret cấp tổ chức sẽ gọn hơn, nhưng **gói GitHub hiện tại không cho repo
+riêng tư dùng organization secret** ("Organization secrets and variables cannot
+be used by private repositories with your plan"). Nên đặt ở cấp repo:
+
+**https://github.com/TiumPower/aura/settings/secrets/actions → New repository secret**
 
 | Tên secret | Lấy từ đâu |
 |---|---|
