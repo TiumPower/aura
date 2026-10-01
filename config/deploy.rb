@@ -11,6 +11,10 @@ set :repo_url,    ENV.fetch("REPO_URL", "git@github.com:TiumPower/aura.git")
 
 set :deploy_to,   "/var/www/aura"
 set :branch,      ENV.fetch("BRANCH", "main")
+# Token sai thì git phải hỏng ngay. Không có ai ngồi trước máy chủ để gõ mật
+# khẩu, nên một lời nhắc đăng nhập là một deploy treo cho tới khi hết giờ.
+set :default_env, { "GIT_TERMINAL_PROMPT" => "0" } if ENV["REPO_URL"].to_s.start_with?("https://")
+
 
 # rbenv
 set :rbenv_type,   :user
@@ -92,6 +96,19 @@ namespace :deploy do
           execute :rake, "storage:verify"
         end
       end
+    end
+  end
+
+  # Capistrano ghi :repo_url vào config của git mirror trên máy chủ. Token của
+  # CI hết hạn ngay khi lần chạy kết thúc, nhưng một chuỗi bí mật đã chết vẫn
+  # không nên nằm lại trên đĩa — CI gọi task này sau mỗi lần deploy, kể cả khi
+  # deploy hỏng.
+  desc "Trả git mirror trên máy chủ về URL SSH (xoá token HTTPS của CI)"
+  task :scrub_repo_url do
+    on roles(:app) do
+      next unless test("[ -d #{repo_path} ]")
+      execute :git, "-C", repo_path, "remote", "set-url", "origin",
+              "git@github.com:TiumPower/aura.git"
     end
   end
 
