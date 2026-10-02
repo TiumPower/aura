@@ -1,4 +1,11 @@
 Rails.application.routes.draw do
+  # Ảnh đi thẳng từ CDN khi được, nếu không thì rơi về đường redirect của
+  # Rails. Xem lib/cdn_routes.rb. Bật bằng
+  # `config.active_storage.resolve_model_to_route = :cdn_storage`.
+  direct :cdn_storage do |model, options|
+    CdnRoutes.url_for(model) || route_for(:rails_storage_redirect, model, options)
+  end
+
   # ---- Devise mappings ---------------------------------------------------
   # Nhân sự (User) đăng nhập bằng email + OTP, khách (Member) bằng SĐT + OTP,
   # cả hai qua controller riêng — Devise chỉ để lại phần session của Warden.

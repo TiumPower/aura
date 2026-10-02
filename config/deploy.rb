@@ -112,6 +112,17 @@ namespace :deploy do
     end
   end
 
+  desc "Gắn Cache-Control cho tệp R2 cũ (cap production deploy:cdn_headers)"
+  task :cdn_headers do
+    on roles(:app) do
+      within current_path do
+        with rails_env: fetch(:rails_env) do
+          execute :rake, "aura:cdn_headers"
+        end
+      end
+    end
+  end
+
   after :publishing, :restart
 
   after :finishing, :restart_sidekiq do

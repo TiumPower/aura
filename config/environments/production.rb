@@ -41,6 +41,10 @@ Rails.application.configure do
   # máy chủ, để thiếu cấu hình không làm hỏng việc tải tệp lên.
   # Mặc định ghi cả hai nơi (R2 là chính, đĩa là bản sao cho backup đêm);
   # R2_MIRROR_LOCAL=false để chỉ ghi lên R2.
+  # Ảnh phát thẳng URL CDN khi bucket có domain công khai; biến thể chưa dựng
+  # rơi về redirect của Rails rồi lần sau đi thẳng. Xem lib/cdn_routes.rb.
+  config.active_storage.resolve_model_to_route = :cdn_storage
+
   config.active_storage.service =
     if ENV["R2_KEY"].present? && ENV["R2_ACCOUNT_ID"].present?
       ENV["R2_MIRROR_LOCAL"] == "false" ? :spaces : :spaces_mirrored
