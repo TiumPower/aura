@@ -881,6 +881,9 @@ en:
       resend: "Resend code"
       change_phone: "Use another number"
       dev_code: "Your code (test mode): %{code}"
+      phone_invalid: "Please enter a valid phone number (e.g. 0901234567)."
+      delivery_failed: "We couldn't send the code on Zalo. This number may not be on Zalo."
+      delivery_failed_email_hint: "Tap Resend code — we'll try the email on your profile instead."
     home:
       hello: "Hello"
       book_title: "Book an appointment"

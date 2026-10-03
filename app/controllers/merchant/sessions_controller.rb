@@ -26,7 +26,9 @@ module Merchant
       end
 
       if params[:mode] == "otp"
-        OtpChallenge.issue!(identifier: @email, scope: "merchant")
+        # Ghim `channel: "email"`: nhân sự định danh bằng email và không có
+        # workspace để tra SĐT.
+        OtpChallenge.issue!(identifier: @email, scope: "merchant", channel: "email")
         session[:merchant_otp_email] = @email
         redirect_to merchant_verify_path
       elsif user.valid_password?(params[:password].to_s)
@@ -56,7 +58,7 @@ module Merchant
     def verify_form
       @email = session[:merchant_otp_email]
       redirect_to(merchant_login_path) and return if @email.blank?
-      @dev_code = latest_dev_code(@email) if show_otp_onscreen?
+      load_challenge
     end
 
     # Step 2 submit — check OTP, sign in
@@ -72,7 +74,7 @@ module Merchant
         sign_in(:user, user)
         redirect_to after_login_url, allow_other_host: true, notice: "Chào mừng trở lại 👋"
       else
-        @dev_code = latest_dev_code(@email) if show_otp_onscreen?
+        load_challenge
         flash.now[:alert] = otp_error_message(result)
         render :verify_form, status: :unprocessable_entity
       end
@@ -108,13 +110,11 @@ module Merchant
 
     def normalize(email) = email.to_s.strip.downcase
 
-    def show_otp_onscreen?
-      AppSetting.show_otp_staff? || ENV["SHOW_OTP"] == "true" ||
-        !Rails.env.production? || !EmailOtp.configured?
-    end
-
-    def latest_dev_code(email)
-      OtpChallenge.latest_for(identifier: email, scope: "merchant")&.code
+    # Challenge tự quyết có in mã lên màn hình hay không — một quy tắc duy
+    # nhất, dùng chung với cổng khách. Xem OtpChallenge#show_on_screen?.
+    def load_challenge
+      @challenge = OtpChallenge.latest_for(identifier: @email, scope: "merchant")
+      @dev_code  = @challenge.code if @challenge&.show_on_screen?
     end
 
     def otp_error_message(result)

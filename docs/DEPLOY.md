@@ -50,9 +50,13 @@ máy này là chắc chắn swap nặng.
 
 ## Việc hạ tầng còn thiếu
 
-- **Cổng gửi SMS/Zalo ZNS cho OTP của khách.** Hiện mã hiện trực tiếp trên màn
-  hình (`SHOW_CUSTOMER_OTP=true`) — chỉ dùng được cho demo, PHẢI tắt trước khi
-  có khách thật. Khách đã khai email thì OTP đã đi bằng email.
+- **Cổng gửi Zalo ZNS cho OTP của khách: code đã có, CHƯA có credentials.**
+  Hai adapter (`ZaloZns` dùng OA của mình, `EsmsZns` qua đại lý) chọn bằng
+  `OTP_ZALO_PROVIDER`; xem `docs/ZALO_OTP.md` cho các bước đăng ký OA/ZCA/template
+  hoặc mở tài khoản eSMS. Chừng nào chưa có khoá, mã OTP vẫn hiện trực tiếp trên
+  màn hình (`SHOW_CUSTOMER_OTP=true`) — chỉ dùng được cho demo, PHẢI tắt trước
+  khi có khách thật. Nối xong thì dùng nút **Gửi thử** ở `/admin/settings` để
+  kiểm chứng, rồi tắt cờ.
 - Bản sao lưu vẫn nằm trên cùng ổ đĩa với database — chưa đẩy ra ngoài máy.
 - Chưa diễn tập phục hồi từ bản sao lưu.
 - Ruby 3.2.2 và Rails 7.2 đều đã hết hạn hỗ trợ bảo mật (giống bốn app kia).

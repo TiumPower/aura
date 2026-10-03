@@ -2,7 +2,11 @@ module Merchant
   # Hồ sơ khách hàng. Lễ tân tạo được chỉ với tên + SĐT; khi khách tự tải app
   # bằng đúng số đó thì toàn bộ lịch sử đã nằm sẵn ở đây.
   class CustomersController < BaseController
-    before_action :set_member, only: [:show, :edit, :update, :destroy, :block, :unblock, :preferences]
+    before_action :set_member, only: [:show, :edit, :update, :destroy, :block, :unblock,
+                                      :preferences, :merge, :merge_into]
+    # Gộp hồ sơ xoá hẳn một hồ sơ và không hoàn lại được, nên không để lễ tân
+    # thường làm.
+    before_action :require_manager!, only: [:merge, :merge_into]
 
     def index
       scope = current_workspace.members.includes(:member_tier, :preferred_staff)
@@ -87,6 +91,31 @@ module Merchant
       @member.destroy
       audit!("customer.destroy", summary: name)
       redirect_to merchant_customers_path, notice: "Đã xoá hồ sơ khách."
+    end
+
+    # Khách đăng nhập bằng SĐT, nhưng lễ tân cũng tạo hồ sơ cho khách walk-in,
+    # nên một người có thể có hai hồ sơ. Màn này chọn hồ sơ trùng rồi liệt kê
+    # đúng những gì sẽ chuyển, trước khi làm bất cứ gì.
+    def merge
+      @candidates = Member.likely_duplicates_of(@member, q: params[:q])
+      @other      = current_workspace.members.find_by(id: params[:with]) if params[:with].present?
+      @summary    = MemberMerge.preview(keeper: @member, loser: @other) if @other
+    end
+
+    def merge_into
+      other = current_workspace.members.find_by(id: params[:with])
+      return redirect_to merge_merchant_customer_path(@member), alert: "Chưa chọn hồ sơ để gộp." if other.nil?
+
+      result = MemberMerge.call(keeper: @member, loser: other, actor: current_user)
+      if result.ok?
+        audit!("customer.merge", target: @member,
+               summary: "Gộp ##{other.id} vào #{@member.display_name}")
+        redirect_to merchant_customer_path(@member),
+                    notice: "Đã gộp hồ sơ vào #{@member.reload.display_name}."
+      else
+        redirect_to merge_merchant_customer_path(@member, with: other.id),
+                    alert: "Không gộp được: #{result.error}"
+      end
     end
 
     private

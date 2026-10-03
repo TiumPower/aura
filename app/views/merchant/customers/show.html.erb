@@ -122,6 +122,17 @@
       <% if @member.blocked_reason.present? %>
         <p style="font-size:12.5px; color:#B4402F; margin-top:8px;">Lý do chặn: <%= @member.blocked_reason %></p>
       <% end %>
+
+      <%# Khách tự đăng nhập bằng SĐT, lễ tân cũng tạo hồ sơ cho khách walk-in,
+          nên một người có thể có hai hồ sơ. Chỉ quản lý được gộp. %>
+      <% if current_membership&.can_manage? %>
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:8px;">
+            Khách này có hai hồ sơ? Gộp lại để lịch sử, ví và thẻ liệu trình về cùng một chỗ.
+          </div>
+          <%= link_to "Gộp hồ sơ trùng", merge_merchant_customer_path(@member), class: "l-btn" %>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>

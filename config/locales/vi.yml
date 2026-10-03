@@ -924,6 +924,9 @@ vi:
       resend: "Gửi lại mã"
       change_phone: "Đổi số khác"
       dev_code: "Mã của bạn (chế độ thử nghiệm): %{code}"
+      phone_invalid: "Vui lòng nhập số điện thoại hợp lệ (ví dụ 0901234567)."
+      delivery_failed: "Chưa gửi được mã qua Zalo. Có thể số này chưa dùng Zalo."
+      delivery_failed_email_hint: "Hãy bấm Gửi lại mã — chúng tôi sẽ thử gửi qua email trong hồ sơ của bạn."
     home:
       hello: "Xin chào"
       book_title: "Đặt lịch hẹn"

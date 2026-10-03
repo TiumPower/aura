@@ -14,6 +14,19 @@ module ActiveSupport
 
     # Run a block with a tenant set (acts_as_tenant).
     def with_tenant(ws, &blk) = ActsAsTenant.with_tenant(ws, &blk)
+
+    # Đọc mã ngay trên challenge mà luồng vừa phát ra, thay vì để từng test tự
+    # biết cột nào giữ identifier.
+    def otp_code_for(identifier, workspace: nil, purpose: "login", scope: "customer")
+      otp_challenge_for(identifier, workspace: workspace, purpose: purpose, scope: scope)&.code
+    end
+
+    def otp_challenge_for(identifier, workspace: nil, purpose: "login", scope: "customer")
+      OtpChallenge.unscoped
+                  .where(workspace_id: workspace&.id, scope: scope, purpose: purpose,
+                         identifier: OtpChallenge.normalize(identifier))
+                  .order(:id).last
+    end
   end
 end
 

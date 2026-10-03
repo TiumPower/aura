@@ -44,6 +44,8 @@ Rails.application.routes.draw do
     patch "account", to: "account#update"
     get   "settings", to: "settings#show",   as: :settings
     patch "settings", to: "settings#update"
+    patch "settings/otp-gateway", to: "settings#update_gateway", as: :settings_otp_gateway
+    post  "settings/otp-test",    to: "settings#test_otp",        as: :settings_otp_test
   end
 
   # ---- Cổng nhân sự: đăng nhập -------------------------------------------
@@ -171,6 +173,8 @@ Rails.application.routes.draw do
         patch :block
         patch :unblock
         patch :preferences
+        get  :merge        # chọn hồ sơ trùng rồi xác nhận
+        post :merge_into   # gộp thật
       end
     end
     resources :member_tiers, path: "tiers", except: [:show] do

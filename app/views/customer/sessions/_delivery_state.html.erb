@@ -1,0 +1,14 @@
+<%# Hiện khi lần gửi Zalo thật sự thất bại. Không có nó thì khách cứ ngồi nhìn
+    màn hình "đã gửi mã" chờ một cái mã không bao giờ tới. Mã KHÔNG bao giờ bị
+    tiết lộ ở đây — xem OtpChallenge#show_on_screen?. %>
+<% if challenge&.delivery_error.present? %>
+  <div class="l-panel" style="margin-bottom:16px; font-size:13px; line-height:1.5;
+              background:color-mix(in srgb, #B4402F 8%, #fff); border-color:#EBD2CC; color:#B4402F;">
+    <%= t("customer.session.delivery_failed") %>
+    <% if challenge.delivery_email.present? %>
+      <div style="margin-top:6px; color:var(--ink-2);">
+        <%= t("customer.session.delivery_failed_email_hint") %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

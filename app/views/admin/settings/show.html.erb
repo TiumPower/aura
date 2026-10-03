@@ -12,7 +12,7 @@
     </p>
 
     <% [["customer", "App khách (đăng nhập bằng SĐT)", @customer,
-         "Cần bật khi test bằng số điện thoại demo chưa khai email — hiện chưa nối SMS/Zalo ZNS."],
+         "Chỉ cần bật khi test bằng số demo không nhận được Zalo. Xem cổng gửi ở panel dưới."],
         ["staff", "Cổng quản lý spa (đăng nhập bằng email)", @staff,
          "Chỉ bật khi thật sự cần; nhân sự thấy toàn bộ dữ liệu của spa."]].each do |scope, label, on, hint| %>
       <div class="l-panel" style="margin-bottom:12px; <%= on ? "background:#F7E0DA; border:none;" : "" %>">
@@ -38,4 +38,5 @@
       trong <span class="l-mono">shared/.env</span> vẫn bật được, nhưng công tắc này là cách khuyên dùng.
     </p>
   </div>
+  <%= render "admin/settings/otp_gateway" %>
 </div>

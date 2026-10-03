@@ -16,7 +16,7 @@ module Customer
     def create
       @phone = Member.canonical_phone(params[:phone])
       unless @phone&.match?(/\A0\d{8,10}\z/)
-        flash.now[:alert] = "Vui lòng nhập số điện thoại hợp lệ (ví dụ 0901234567)."
+        flash.now[:alert] = t("customer.session.phone_invalid")
         return render :new, status: :unprocessable_entity
       end
       OtpChallenge.issue!(identifier: @phone, scope: "customer", workspace: current_workspace)
@@ -27,15 +27,15 @@ module Customer
     def verify_form
       @phone = session[:otp_phone]
       redirect_to(member_login_path) and return if @phone.blank?
-      @dev_code = latest_code(@phone) if show_otp_onscreen?
-      @emailed  = otp_emailed?
+      load_challenge
     end
 
     def verify
       @phone = session[:otp_phone]
       redirect_to(member_login_path) and return if @phone.blank?
 
-      challenge = OtpChallenge.latest_for(identifier: @phone, scope: "customer", workspace: current_workspace)
+      challenge = OtpChallenge.latest_for(identifier: @phone, scope: "customer",
+                                          workspace: current_workspace)
       result = challenge&.verify(params[:code])
       if result == :ok
         member = find_or_create_member(@phone)
@@ -45,8 +45,7 @@ module Customer
         redirect_to (session.delete(:return_to).presence || member_root_path),
                     notice: "Chào mừng quý khách đến với #{current_workspace.name} 🌿"
       else
-        @dev_code = latest_code(@phone) if show_otp_onscreen?
-        @emailed  = otp_emailed?
+        load_challenge
         flash.now[:alert] = otp_error_message(result)
         render :verify_form, status: :unprocessable_entity
       end
@@ -67,27 +66,14 @@ module Customer
                                         locale: current_workspace.locale_default)
     end
 
-    # Hiện mã ngay trên màn hình. Ở production đây là CHẾ ĐỘ TẠM: chưa nối cổng
-    # SMS/Zalo nên không có đường nào gửi mã cho khách chưa khai email.
-    #
-    # Cờ riêng `SHOW_CUSTOMER_OTP`, KHÔNG dùng chung `SHOW_OTP` với cổng nhân
-    # sự: bật chung là ai biết email một nhân viên cũng vào được toàn bộ dữ
-    # liệu spa. Khách chỉ thấy dữ liệu của chính họ nên phạm vi rủi ro hẹp hơn
-    # nhiều — nhưng vẫn phải TẮT trước khi có khách thật.
-    def show_otp_onscreen?
-      return true unless Rails.env.production?
-      AppSetting.show_otp_customer? || ENV["SHOW_CUSTOMER_OTP"] == "true"
-    end
-
-    # Mã gửi được qua email khi hồ sơ khách đã có email.
-    def otp_emailed?
-      challenge = OtpChallenge.latest_for(identifier: @phone, scope: "customer", workspace: current_workspace)
-      challenge&.channel == "email" && EmailOtp.configured?
-    end
-    helper_method :otp_emailed?
-
-    def latest_code(phone)
-      OtpChallenge.latest_for(identifier: phone, scope: "customer", workspace: current_workspace)&.code
+    # Challenge quyết định cả hai việc: có in mã lên màn hình hay không, và có
+    # phải giải thích một lần gửi thất bại hay không. Một quy tắc duy nhất, dùng
+    # chung với cổng nhân sự — xem OtpChallenge#show_on_screen?.
+    def load_challenge
+      @challenge = OtpChallenge.latest_for(identifier: @phone, scope: "customer",
+                                           workspace: current_workspace)
+      @dev_code  = @challenge.code if @challenge&.show_on_screen?
+      @emailed   = @challenge&.channel == "email" && @challenge.deliverable?
     end
 
     def otp_error_message(result)

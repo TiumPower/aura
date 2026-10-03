@@ -111,6 +111,22 @@ class Member < ApplicationRecord
     update!(member_tier: best)
   end
 
+  # Những hồ sơ khác trong spa này trông như cùng một người, cho màn gộp hồ sơ.
+  # `phone` unique theo workspace nên hồ sơ trùng không bao giờ khớp y nguyên số
+  # — dấu hiệu là cùng tên mà hai số/email nằm ở hai dòng. Có từ khoá tìm thì
+  # ưu tiên từ khoá, vì lễ tân biết khách của mình rõ hơn suy đoán này.
+  def self.likely_duplicates_of(member, q: nil, limit: 25)
+    scope = where(workspace_id: member.workspace_id).where.not(id: member.id)
+    if q.present?
+      scope.search(q).order(created_at: :desc).limit(limit)
+    elsif member.name.present?
+      scope.where("lower(btrim(members.name)) = ?", member.name.strip.downcase)
+           .order(created_at: :desc).limit(limit)
+    else
+      none
+    end
+  end
+
   # Chuẩn hoá số VN về dạng 0xxxxxxxxx: +84 / 84 / 0084 đều về một dạng, bỏ mọi
   # dấu cách và gạch. Không làm việc này thì cùng một khách tạo được ba hồ sơ.
   def self.canonical_phone(raw)
