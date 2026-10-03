@@ -41,9 +41,19 @@ Rails.application.configure do
   # máy chủ, để thiếu cấu hình không làm hỏng việc tải tệp lên.
   # Mặc định ghi cả hai nơi (R2 là chính, đĩa là bản sao cho backup đêm);
   # R2_MIRROR_LOCAL=false để chỉ ghi lên R2.
-  # Ảnh phát thẳng URL CDN khi bucket có domain công khai; biến thể chưa dựng
-  # rơi về redirect của Rails rồi lần sau đi thẳng. Xem lib/cdn_routes.rb.
-  config.active_storage.resolve_model_to_route = :cdn_storage
+  # Ảnh đi qua route redirect của Rails rồi mới tới CDN (302 → img.tiumpower.com).
+  #
+  # ĐỪNG nối thẳng CDN bằng `resolve_model_to_route` + một route `direct` trả về
+  # URL tuyệt đối. Đã thử và nó hỏng âm thầm: khối `direct` KHÔNG nhận được cờ
+  # `only_path`, mà mọi helper dạng path (`image_tag`, `url_for` trong view) thì
+  # Rails PARSE chuỗi trả về rồi chỉ lấy phần path — nên
+  # "https://img.tiumpower.com/loyalty/<key>" thành "/loyalty/<key>", giải theo
+  # domain của chính shop và 404. Bản `_url` thì đúng, nên lỗi chỉ hiện ở ảnh
+  # chứ không hiện ở test đơn vị của resolver.
+  #
+  # Redirect tốn một lượt đi tới Rails cho mỗi ảnh, nhưng đích đến giờ là URL
+  # công khai VĨNH VIỄN (bucket R2 đã mở sau img.tiumpower.com), không còn chữ
+  # ký hết hạn — nên service worker của PWA cache lại cũng không gãy như trước.
 
   config.active_storage.service =
     if ENV["R2_KEY"].present? && ENV["R2_ACCOUNT_ID"].present?
